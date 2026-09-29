@@ -191,11 +191,6 @@
     display: flex; align-items: center; justify-content: center;
     min-height: 0;
   }
-  .palco-vazio {
-    text-align: center; color: var(--celeste-claro);
-    padding: 24px; max-width: 32ch; line-height: 1.5;
-  }
-  .palco-vazio strong { display: block; font-family: var(--display); font-size: clamp(1.4rem, 4vw, 2rem); color: var(--celeste); margin-bottom: .4rem; }
   #conteudoPalco { position: absolute; inset: 0; }
 
   .faixa-player {
@@ -217,12 +212,33 @@
     background: var(--ambar); color: var(--preto);
     display: grid; place-items: center;
     box-shadow: 0 0 0 6px rgba(255,194,75,.18);
-    transition: transform .15s ease, box-shadow .2s ease;
+    transition: transform .15s ease, box-shadow .2s ease, opacity .7s ease, visibility 0s;
   }
   .btn-play:hover { transform: scale(1.05); }
   .btn-play:active { transform: scale(.95); }
   .btn-play svg { width: 34px; height: 34px; }
   .btn-play.tocando { box-shadow: 0 0 0 10px rgba(255,194,75,.28); }
+
+  /* abertura da página: play grande no centro do palco */
+  .btn-play.central {
+    position: absolute; z-index: 3;
+    left: var(--play-x, 50%); top: var(--play-y, 50%);
+    width: clamp(120px, 22vmin, 180px); height: clamp(120px, 22vmin, 180px);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 12px rgba(255,194,75,.16), 0 18px 60px rgba(255,194,75,.25);
+    animation: pulsar 2.2s ease-in-out infinite;
+  }
+  .btn-play.central svg { width: 44%; height: 44%; margin-left: 6%; }
+  .btn-play.central:hover { transform: translate(-50%, -50%) scale(1.05); }
+  .btn-play.central:active { transform: translate(-50%, -50%) scale(.96); }
+  @keyframes pulsar {
+    50% { box-shadow: 0 0 0 26px rgba(255,194,75,.06), 0 18px 60px rgba(255,194,75,.32); }
+  }
+  /* depois do 1º toque: some e só volta (no canto, em fade) quando a narração termina */
+  .btn-play.oculto { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .3s ease, visibility 0s .3s; }
+  #pagina1.abertura .info-faixa { opacity: 0; }
+  .info-faixa { transition: opacity .6s ease; }
+  @media (prefers-reduced-motion: reduce) { .btn-play.central { animation: none; } }
 
   .nav-rapida-barra {
     border-top: 2px solid var(--grafite);
@@ -293,6 +309,19 @@
   @media (prefers-reduced-motion: reduce) {
     .gaveta, .veu { transition: none; }
   }
+
+  /* ---------- TRANSIÇÃO EM CUBO entre capa e página ---------- */
+  body { perspective: 1800px; }
+  .tela { backface-visibility: hidden; }
+  body.girando { pointer-events: none; }
+  .cubo-sai        { transform-origin: 100% 50%; animation: cuboSai   .9s cubic-bezier(.65,0,.35,1) both; }
+  .cubo-entra      { transform-origin:   0% 50%; animation: cuboEntra .9s cubic-bezier(.65,0,.35,1) both; }
+  .cubo-sai-volta  { transform-origin:   0% 50%; animation: cuboSaiVolta   .9s cubic-bezier(.65,0,.35,1) both; }
+  .cubo-entra-volta{ transform-origin: 100% 50%; animation: cuboEntraVolta .9s cubic-bezier(.65,0,.35,1) both; }
+  @keyframes cuboSai        { to   { transform: translateX(-100%) rotateY(-90deg); filter: brightness(.35); } }
+  @keyframes cuboEntra      { from { transform: translateX(100%)  rotateY(90deg);  filter: brightness(.35); } }
+  @keyframes cuboSaiVolta   { to   { transform: translateX(100%)  rotateY(90deg);  filter: brightness(.35); } }
+  @keyframes cuboEntraVolta { from { transform: translateX(-100%) rotateY(-90deg); filter: brightness(.35); } }
 </style>
 </head>
 <body>
@@ -353,11 +382,7 @@
   </header>
 
   <main class="palco" id="palco">
-    <div class="palco-vazio" id="palcoVazio">
-      <strong>Pronto para começar?</strong>
-      Toque no botão de play para ouvir a primeira narração.
-    </div>
-    <!-- Os eventos das narrações serão desenhados aqui -->
+    <!-- Os eventos das narrações são desenhados aqui -->
     <div id="conteudoPalco"></div>
   </main>
 
@@ -401,10 +426,13 @@
    - src: caminho ou data URI do áudio. Enquanto estiver vazio,
      o app simula o áudio com "duracaoTeste" segundos para
      que os eventos possam ser testados.
-   - eventos: lista de { tempo: segundos, acao: função }
+   - eventos: lista de { tempo: segundos, acao: função(palco) }
+     Os eventos são presos ao ÁUDIO, não ao relógio: cada um
+     dispara quando o áudio passa pelo seu tempo, e pausar o áudio
+     congela as animações que estiverem rodando no palco.
    ========================================================= */
 const NARRACOES = [
-  { id: "dialogo0", titulo: "Boas-vindas às Moléculas",       src: "", duracaoTeste: 15, eventos: [] },
+  { id: "dialogo0", titulo: "Boas-vindas às Moléculas",       src: "audio/audio_moleculas_0.mp3", eventos: [] },
   { id: "dialogo1", titulo: "Átomos: as peças da fábrica",         src: "", duracaoTeste: 15, eventos: [] },
   { id: "dialogo2", titulo: "Ligações: como as peças se unem",     src: "", duracaoTeste: 15, eventos: [] },
   { id: "dialogo3", titulo: "Montando a primeira molécula",        src: "", duracaoTeste: 15, eventos: [] }
@@ -413,11 +441,16 @@ const NARRACOES = [
 /* ---------- Palco: área onde os eventos aparecem ---------- */
 const Palco = {
   el: document.getElementById("conteudoPalco"),
-  vazio: document.getElementById("palcoVazio"),
+  pausado: false,
   limpar() { this.el.innerHTML = ""; },
-  mostrar(html) { this.vazio.hidden = true; this.el.innerHTML = html; },
-  adicionar(html) { this.vazio.hidden = true; this.el.insertAdjacentHTML("beforeend", html); },
-  reiniciar() { this.limpar(); this.vazio.hidden = false; }
+  mostrar(html) { this.el.innerHTML = html; this.sincronizar(); },
+  adicionar(html) { this.el.insertAdjacentHTML("beforeend", html); this.sincronizar(); },
+  reiniciar() { this.limpar(); this.pausado = false; },
+  // Animações (CSS ou Web Animations) do palco seguem o estado do áudio
+  animacoes() { return this.el.getAnimations ? this.el.getAnimations({ subtree: true }) : []; },
+  pausar() { this.pausado = true; this.animacoes().forEach(a => a.pause()); },
+  retomar() { this.pausado = false; this.animacoes().forEach(a => { if (a.playState === "paused") a.play(); }); },
+  sincronizar() { if (this.pausado) this.pausar(); }
 };
 
 /* ---------- Fonte de áudio (real ou simulada) ---------- */
@@ -425,6 +458,10 @@ function criarFonte(narracao) {
   if (narracao.src) {
     const a = new Audio(narracao.src);
     a.preload = "auto";
+    a.addEventListener("loadedmetadata", () => ui.progresso(a.currentTime, a.duration));
+    // pausa/retomada vinda de fora (fone, teclas de mídia, tela de bloqueio)
+    a.addEventListener("pause", () => { if (!a.ended && Player.fonte === a) Player.pausar(); });
+    a.addEventListener("play", () => { if (Player.fonte === a) Player.tocar(); });
     return a;
   }
   // Simulação: mesmo "formato" de um elemento <audio>
@@ -463,20 +500,24 @@ const Player = {
 
   tocar() {
     if (!this.fonte) return;
-    this.fonte.play().catch(() => {});
+    if (this.fonte.paused) this.fonte.play().catch(() => { this.pausar(); });
+    Palco.retomar();
     this.acompanhar();
     ui.atualizarBotao(true);
   },
 
   pausar() {
     if (!this.fonte) return;
-    this.fonte.pause();
+    if (!this.fonte.paused) this.fonte.pause();
+    Palco.pausar();
     cancelAnimationFrame(this.loop);
     ui.atualizarBotao(false);
   },
 
   parar() {
-    if (this.fonte) { this.fonte.pause(); this.fonte.currentTime = 0; }
+    const f = this.fonte;
+    this.fonte = null;               // solta a fonte antes, para os eventos de "pause" dela serem ignorados
+    if (f) { f.pause(); f.currentTime = 0; }
     cancelAnimationFrame(this.loop);
     ui.atualizarBotao(false);
   },
@@ -489,8 +530,9 @@ const Player = {
   acompanhar() {
     const passo = () => {
       const f = this.fonte;
+      if (!f) return;
       const t = f.currentTime;
-      const d = f.duration || NARRACOES[this.indice].duracaoTeste || 0;
+      const d = Number.isFinite(f.duration) ? f.duration : 0;
       ui.progresso(t, d);
 
       // Dispara eventos cujo tempo já passou
@@ -513,11 +555,13 @@ const Player = {
     if (this.fonte && !this.fonte.src) { this.fonte.paused = true; this.fonte.ended = true; }
     ui.atualizarBotao(false);
     this.terminou = true;
+    ui.playNoCanto();
   },
 
-  // Botão play: 1º clique = dialogo0; depois alterna pausa;
+  // Botão play: 1º clique (play grande) = dialogo0; depois alterna pausa;
   // ao fim de uma narração, o próximo clique toca a seguinte.
   cliquePlay() {
+    if (ui.btnPlay.classList.contains("central")) { ui.esconderPlayCentral(); this.tocar(); return; }
     if (this.indice === -1) { this.irPara(0); return; }
     if (this.terminou) {
       this.terminou = false;
@@ -534,7 +578,6 @@ const Player = {
     this.fonte = null;
     this.terminou = false;
     Palco.reiniciar();
-    ui.nome.textContent = "Nenhuma narração tocando";
     ui.progresso(0, 0);
     atualizarSumario();
   }
@@ -559,16 +602,66 @@ const ui = {
     const fmt = s => { s = Math.floor(s || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
     this.barra.style.width = d ? `${(t / d) * 100}%` : "0%";
     this.tempo.textContent = `${fmt(t)} / ${fmt(d)}`;
+  },
+
+  // Play grande no centro do palco, só na abertura da página
+  playCentral() {
+    const palco = document.getElementById("palco");
+    pagina1.style.setProperty("--play-x", `${palco.offsetLeft + palco.offsetWidth / 2}px`);
+    pagina1.style.setProperty("--play-y", `${palco.offsetTop + palco.offsetHeight / 2}px`);
+    this.btnPlay.classList.remove("oculto");
+    this.btnPlay.classList.add("central");
+    pagina1.classList.add("abertura");
+  },
+  // 1º toque: o play some (e a faixa de informações aparece)
+  esconderPlayCentral() {
+    this.btnPlay.classList.remove("central");
+    this.btnPlay.classList.add("oculto");
+    pagina1.classList.remove("abertura");
+  },
+  // Fim da narração (ou navegação rápida): o play reaparece no canto, em fade
+  playNoCanto() {
+    this.btnPlay.classList.remove("central", "oculto");
+    pagina1.classList.remove("abertura");
   }
 };
+window.addEventListener("resize", () => { if (ui.btnPlay.classList.contains("central")) ui.playCentral(); });
 
 /* ---------- Navegação entre telas ---------- */
 const capa = document.getElementById("capa");
 const pagina1 = document.getElementById("pagina1");
 
-function mostrarTela(tela) {
-  [capa, pagina1].forEach(t => t.classList.toggle("ativa", t === tela));
+const semMovimento = matchMedia("(prefers-reduced-motion: reduce)");
+
+// O que cada tela faz ao aparecer
+function aoEntrar(tela) {
   if (tela === capa) { capa.classList.remove("play"); void capa.offsetWidth; capa.classList.add("play"); }
+  if (tela === pagina1) { Player.carregar(0); ui.playCentral(); }
+}
+
+// Troca de tela girando um cubo: ida gira para a esquerda, volta para a direita
+function mostrarTela(tela) {
+  const atual = document.querySelector(".tela.ativa");
+  if (!atual || atual === tela || semMovimento.matches) {
+    [capa, pagina1].forEach(t => t.classList.toggle("ativa", t === tela));
+    aoEntrar(tela);
+    return;
+  }
+  const volta = tela === capa;
+  const sai = volta ? "cubo-sai-volta" : "cubo-sai";
+  const entra = volta ? "cubo-entra-volta" : "cubo-entra";
+  document.body.classList.add("girando");
+  tela.classList.add("ativa", entra);
+  atual.classList.add(sai);
+  aoEntrar(tela);
+  tela.addEventListener("animationend", function fim(e) {
+    if (e.target !== tela) return;          // ignora animações dos filhos
+    tela.removeEventListener("animationend", fim);
+    atual.classList.remove("ativa", sai);
+    tela.classList.remove(entra);
+    document.body.classList.remove("girando");
+    if (tela === pagina1) ui.playCentral();  // recalcula o centro sem a rotação
+  });
 }
 
 document.getElementById("btnIniciar").addEventListener("click", () => mostrarTela(pagina1));
@@ -618,6 +711,7 @@ sumario.addEventListener("click", e => {
   if (!b) return;
   fecharGaveta();
   Player.terminou = false;
+  ui.playNoCanto();
   Player.irPara(Number(b.dataset.indice));
 });
 

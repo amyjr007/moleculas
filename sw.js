@@ -1,6 +1,6 @@
 /* Service worker do app. Guarda tudo na instalação: depois da primeira
    visita, o app abre inteiro sem internet. */
-const CACHE = 'moleculas-v3';
+const CACHE = 'moleculas-v4';
 const ARQUIVOS = [
   './',
   './index.html',
@@ -10,7 +10,10 @@ const ARQUIVOS = [
   './imagens/amauri_jr.jpg',
   './fontes/bricolage-grotesque.woff2',
   './fontes/atkinson-hyperlegible-400.woff2',
-  './fontes/atkinson-hyperlegible-700.woff2'
+  './fontes/atkinson-hyperlegible-700.woff2',
+  './audio/audio_moleculas_0.mp3',
+  './audio/audio_moleculas_1.mp3',
+  './audio/audio_moleculas_2.mp3'
 ];
 
 self.addEventListener('install', (e) => {
