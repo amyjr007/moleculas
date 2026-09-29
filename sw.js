@@ -1,0 +1,56 @@
+/* Service worker do app. Guarda tudo na instalação: depois da primeira
+   visita, o app abre inteiro sem internet. */
+const CACHE = 'moleculas-v1';
+const ARQUIVOS = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './icone-192.png',
+  './icone-512.png',
+  './imagens/amauri_jr.jpg',
+  './fontes/bricolage-grotesque.woff2',
+  './fontes/atkinson-hyperlegible-400.woff2',
+  './fontes/atkinson-hyperlegible-700.woff2'
+];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE)
+    /* 'reload' força cada arquivo a vir da rede, e não do cache HTTP do
+       navegador (o GitHub Pages manda guardar por dez minutos). */
+    .then(c => c.addAll(ARQUIVOS.map(u => new Request(u, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(caches.keys()
+    .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    .then(() => self.clients.claim()));
+});
+
+self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
+
+  /* A página vem da rede quando há rede, para que uma versão nova apareça
+     logo no primeiro recarregamento. Sem rede, o cache assume. */
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request.url, { cache: 'reload' }).then(resp => {
+        const copia = resp.clone();
+        caches.open(CACHE).then(c => c.put('./index.html', copia));
+        return resp;
+      }).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  /* o resto (imagens, ícones, fontes, áudios) sai do cache */
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
+      if (resp && resp.status === 200) {
+        const copia = resp.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copia));
+      }
+      return resp;
+    }))
+  );
+});
