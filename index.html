@@ -95,6 +95,8 @@
   .btn-iniciar:focus-visible { outline-color: var(--branco); outline-offset: 4px; }
   /* crédito do autor: retrato em "átomo" com anel celeste */
   #capa .credit { display: flex; align-items: center; gap: 14px; margin-top: 2.2rem; }
+  /* versão publicada (atualizada automaticamente pelo publicar.ps1) */
+  #capa .versao { position: absolute; right: var(--pad-x); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: .72rem; letter-spacing: .08em; color: #93A3BA; opacity: .75; font-variant-numeric: tabular-nums; }
   #capa .avatar {
     position: relative; flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%; overflow: hidden;
     background: var(--celeste-claro);
@@ -358,6 +360,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
+    <span class="versao" id="versao">v5 · 29/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
