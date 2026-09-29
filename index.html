@@ -196,17 +196,9 @@
   #conteudoPalco { position: absolute; inset: 0; }
 
   .faixa-player {
-    display: flex; align-items: center; gap: 14px;
-    padding: 14px clamp(16px, 4vw, 32px) 10px;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 14px clamp(16px, 4vw, 32px) 6px;
   }
-  .info-faixa { flex: 1; min-width: 0; }
-  .nome-faixa {
-    color: var(--celeste-claro); font-size: .95rem;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .barra { height: 6px; background: var(--grafite); border-radius: 3px; margin-top: 8px; overflow: hidden; }
-  .barra-preenchida { height: 100%; width: 0%; background: linear-gradient(90deg, var(--celeste), var(--ambar)); border-radius: 3px; }
-  .tempo { font-size: .8rem; color: #93A3BA; margin-top: 5px; font-variant-numeric: tabular-nums; }
 
   .btn-play {
     width: 76px; height: 76px; flex-shrink: 0;
@@ -238,23 +230,22 @@
   }
   /* depois do 1º toque: some e só volta (no canto, em fade) quando a narração termina */
   .btn-play.oculto { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .3s ease, visibility 0s .3s; }
-  #pagina1.abertura .info-faixa { opacity: 0; }
-  .info-faixa { transition: opacity .6s ease; }
   @media (prefers-reduced-motion: reduce) { .btn-play.central { animation: none; } }
 
+  /* navegação rápida: aba discreta colada na base */
   .nav-rapida-barra {
-    border-top: 2px solid var(--grafite);
-    padding: 10px clamp(16px, 4vw, 32px) 12px;
+    display: flex; justify-content: center;
+    padding: 0 0 calc(4px + env(safe-area-inset-bottom, 0px));
   }
   .btn-nav-rapida {
-    width: 100%;
-    display: flex; align-items: center; justify-content: center; gap: .6em;
-    color: var(--celeste);
-    font-weight: 700; font-size: 1rem;
-    padding: 12px; border-radius: 14px;
+    display: flex; align-items: center; gap: .4em;
+    color: #93A3BA; opacity: .7;
+    font-weight: 700; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 999px;
+    transition: opacity .2s ease, color .2s ease, background-color .2s ease;
   }
-  .btn-nav-rapida:hover { background: var(--grafite); }
-  .btn-nav-rapida svg { width: 22px; height: 22px; }
+  .btn-nav-rapida:hover, .btn-nav-rapida:focus-visible { opacity: 1; color: var(--celeste); background: var(--grafite); }
+  .btn-nav-rapida svg { width: 14px; height: 14px; }
 
   /* ---------- SUMÁRIO (sobe de baixo) ---------- */
   .veu {
@@ -360,7 +351,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v5 · 29/09/2026</span>
+    <span class="versao" id="versao">v6 · 29/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -390,11 +381,6 @@
   </main>
 
   <div class="faixa-player">
-    <div class="info-faixa" aria-live="polite">
-      <p class="nome-faixa" id="nomeFaixa">Nenhuma narração tocando</p>
-      <div class="barra"><div class="barra-preenchida" id="barraProgresso"></div></div>
-      <p class="tempo" id="tempoFaixa">0:00 / 0:00</p>
-    </div>
     <button class="btn-play" id="btnPlay" aria-label="Tocar narração">
       <svg id="iconePlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
     </button>
@@ -461,7 +447,6 @@ function criarFonte(narracao) {
   if (narracao.src) {
     const a = new Audio(narracao.src);
     a.preload = "auto";
-    a.addEventListener("loadedmetadata", () => ui.progresso(a.currentTime, a.duration));
     // pausa/retomada vinda de fora (fone, teclas de mídia, tela de bloqueio)
     a.addEventListener("pause", () => { if (!a.ended && Player.fonte === a) Player.pausar(); });
     a.addEventListener("play", () => { if (Player.fonte === a) Player.tocar(); });
@@ -497,7 +482,6 @@ const Player = {
     this.fonte = criarFonte(n);
     this.disparados = new Set();
     Palco.limpar();
-    ui.nome.textContent = `${i + 1}. ${n.titulo}`;
     atualizarSumario();
   },
 
@@ -536,7 +520,6 @@ const Player = {
       if (!f) return;
       const t = f.currentTime;
       const d = Number.isFinite(f.duration) ? f.duration : 0;
-      ui.progresso(t, d);
 
       // Dispara eventos cujo tempo já passou
       NARRACOES[this.indice].eventos.forEach((ev, k) => {
@@ -581,7 +564,6 @@ const Player = {
     this.fonte = null;
     this.terminou = false;
     Palco.reiniciar();
-    ui.progresso(0, 0);
     atualizarSumario();
   }
 };
@@ -591,20 +573,12 @@ const ICONE_PLAY  = '<path d="M7 4.5v15l12-7.5z"/>';
 const ICONE_PAUSE = '<rect x="6" y="4.5" width="4.2" height="15" rx="1"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1"/>';
 
 const ui = {
-  nome: document.getElementById("nomeFaixa"),
-  barra: document.getElementById("barraProgresso"),
-  tempo: document.getElementById("tempoFaixa"),
   btnPlay: document.getElementById("btnPlay"),
   icone: document.getElementById("iconePlay"),
   atualizarBotao(tocando) {
     this.icone.innerHTML = tocando ? ICONE_PAUSE : ICONE_PLAY;
     this.btnPlay.classList.toggle("tocando", tocando);
     this.btnPlay.setAttribute("aria-label", tocando ? "Pausar narração" : "Tocar narração");
-  },
-  progresso(t, d) {
-    const fmt = s => { s = Math.floor(s || 0); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
-    this.barra.style.width = d ? `${(t / d) * 100}%` : "0%";
-    this.tempo.textContent = `${fmt(t)} / ${fmt(d)}`;
   },
 
   // Play grande no centro do palco, só na abertura da página
