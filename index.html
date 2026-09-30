@@ -232,10 +232,19 @@
 
   /* narração 1 — definição */
   .c1-definicao {
-    position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%);
+    position: absolute; left: 50%; top: calc(54% - 3px); transform: translate(-50%, -50%);
     width: min(92%, 26ch); margin: 0; text-align: center;
     font-family: var(--display); font-weight: 500; line-height: 1.3; color: #fff;
     font-size: clamp(1.35rem, 3.4vmin + .7rem, 2.6rem); letter-spacing: -.01em;
+  }
+
+  /* narração 2 — molécula de água em 3D */
+  .c2-cena { position: absolute; left: 0; right: 0; top: 33%; bottom: 15%; }
+  .c2-cena canvas { display: block; width: 100%; height: 100%; }
+  .c2-legenda {
+    position: absolute; left: 0; right: 0; top: 86%; margin: 0; text-align: center;
+    font-family: var(--display); font-weight: 800; color: #fff; line-height: 1.1;
+    font-size: clamp(1.3rem, 3vmin + .6rem, 2.3rem); letter-spacing: -.01em;
   }
 
   /* narração 0 — boas-vindas */
@@ -393,7 +402,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v11 · 29/09/2026</span>
+    <span class="versao" id="versao">v12 · 29/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -457,6 +466,7 @@
   <ol class="sumario" id="sumario"></ol>
 </div>
 
+<script src="libs/three.min.js"></script>
 <script>
 /* =========================================================
    CONFIGURAÇÃO DAS NARRAÇÕES
@@ -489,7 +499,15 @@ const NARRACOES = [
       { tempo: 2.6,  acao: () => Cena1.desmoronar() },     // tudo cai; fica só "Moléculas"
       { tempo: 4,    acao: () => Cena1.definicao() }       // digita a definição até 9.7s
     ] },
-  { id: "dialogo2", titulo: "Ligações: como as peças se unem",     src: "", duracaoTeste: 15, eventos: [] },
+  { id: "dialogo2", titulo: "Ligações covalentes", src: "audio/audio_moleculas_2.mp3",
+    inicio: () => Cena1.montarFinal(),                     // parte da tela final da narração 1
+    eventos: [
+      // A molécula 3D segue o tempo do áudio quadro a quadro (ver Cena2.quadro):
+      //  6s entra girando · 10s três pulsos · 12s H maiores · 14s O maior · 16s ligações em destaque
+      //  23s bastões transparentes com dois elétrons indo e voltando
+      { tempo: 6,    acao: () => Cena2.entrar() },
+      { tempo: 19,   acao: () => Cena2.legenda() }         // “Ligações covalentes” (1s)
+    ] },
   { id: "dialogo3", titulo: "Montando a primeira molécula",        src: "", duracaoTeste: 15, eventos: [] }
 ];
 
@@ -663,13 +681,169 @@ const Cena1 = {
       .then(() => Palco.el.querySelectorAll(".c0-corpo, .c0-autor").forEach(e => e.remove()), () => {});
   },
   // "Moléculas são estruturas discretas..." — o título funciona como sujeito da frase
+  textoDefinicao: [
+    { texto: "“são estruturas discretas formadas por átomos ligados por " },
+    { classe: "destaque", texto: "compartilhamento de elétrons" },
+    { classe: "fecha", texto: "”.", junto: true }
+  ],
   definicao() {
     Palco.adicionar(`<p class="c1-definicao"></p>`);
-    Palco.digitar(this.$(".c1-definicao"), [
-      { texto: "“são estruturas discretas formadas por átomos ligados por " },
-      { classe: "destaque", texto: "compartilhamento de elétrons" },
-      { classe: "fecha", texto: "”.", junto: true }
-    ], 5.7);
+    Palco.digitar(this.$(".c1-definicao"), this.textoDefinicao, 5.7);
+  },
+  // Tela final da narração 1: título + definição
+  montarFinal() {
+    if (this.$(".c1-definicao")) return;
+    Cena0.montarFinal();
+    Palco.el.querySelectorAll(".c0-corpo, .c0-autor").forEach(e => e.remove());
+    Palco.adicionar(`<p class="c1-definicao"></p>`);
+    Palco.letras(this.$(".c1-definicao"), this.textoDefinicao);
+  }
+};
+
+/* ---------- Cenas da narração 2: a molécula de água (3D) ---------- */
+// Tudo na molécula é função do tempo do áudio: pausar o áudio congela a cena no mesmo quadro.
+const Cena2 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  CORES: { O: 0xFF0D0D, H: 0xFFFFFF, ligacao: 0xC8C8C8, destaque: 0xFFC24B, eletron: 0xA3DBF7 },   // CPK/Jmol
+
+  entrar() {
+    // a definição sobe e encolhe para dar lugar à molécula
+    const def = this.$(".c1-definicao");
+    if (def) Palco.animar(def, [
+      { top: "calc(54% - 3px)", transform: "translate(-50%, -50%) scale(1)" },
+      { top: "23%", transform: "translate(-50%, -50%) scale(.62)" }
+    ], { duracao: .8, easing: "cubic-bezier(.6,0,.35,1)" });
+    Palco.adicionar(`<div class="c2-cena" aria-label="Molécula de água: um oxigênio ligado a dois hidrogênios"></div><p class="c2-legenda"></p>`);
+    this.montar3D(this.$(".c2-cena"));
+  },
+
+  legenda() {
+    Palco.digitar(this.$(".c2-legenda"), [
+      { texto: "“" }, { classe: "destaque", texto: "Ligações covalentes", junto: true }, { classe: "fecha", texto: "”", junto: true }
+    ], 1);
+  },
+
+  montar3D(caixa) {
+    if (!window.THREE || !caixa) return;
+    // cores em hex são sRGB (as cores CPK saem fiéis, sem desbotar)
+    if ("legacyMode" in THREE.ColorManagement) THREE.ColorManagement.legacyMode = false; else THREE.ColorManagement.enabled = true;
+    let renderer;
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { console.warn("sem WebGL", e); return; }
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    caixa.appendChild(renderer.domElement);
+
+    const cena = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(28, 1, .1, 100);
+    cena.add(new THREE.HemisphereLight(0xdfefff, 0x1b2a40, .75));
+    const chave = new THREE.DirectionalLight(0xffffff, 1.25); chave.position.set(3, 4, 6); cena.add(chave);
+    const recorte = new THREE.DirectionalLight(0xA3DBF7, .55); recorte.position.set(-5, -2, -4); cena.add(recorte);
+
+    // geometria da água: ângulo H–O–H de 104,5°
+    const L = 1.7, meio = (104.5 / 2) * Math.PI / 180;
+    const pos = { O: new THREE.Vector3(0, 0, 0),
+                  H1: new THREE.Vector3(-L * Math.sin(meio), -L * Math.cos(meio), 0),
+                  H2: new THREE.Vector3( L * Math.sin(meio), -L * Math.cos(meio), 0) };
+    const centro = pos.O.clone().add(pos.H1).add(pos.H2).divideScalar(3);
+    Object.values(pos).forEach(v => v.sub(centro));
+
+    const molecula = new THREE.Group(); cena.add(molecula);
+    const material = cor => new THREE.MeshPhysicalMaterial({ color: cor, roughness: .3, metalness: 0, clearcoat: .7, clearcoatRoughness: .18, transparent: true, opacity: 0 });
+    const esfera = new THREE.SphereGeometry(1, 64, 48);
+
+    // halo (brilho) de cada átomo: sprite com gradiente radial, mistura aditiva
+    const tela = document.createElement("canvas"); tela.width = tela.height = 128;
+    const g = tela.getContext("2d"), grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grad.addColorStop(0, "rgba(255,255,255,1)"); grad.addColorStop(.35, "rgba(255,255,255,.45)"); grad.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+    const texHalo = new THREE.CanvasTexture(tela);
+    const halo = (cor, escala) => {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: texHalo, color: cor, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+      s.scale.setScalar(escala); return s;
+    };
+
+    const atomo = (nome, raio, cor) => {
+      const m = new THREE.Mesh(esfera, material(cor)); m.position.copy(pos[nome]); m.userData.raio = raio; m.scale.setScalar(raio);
+      const h = halo(nome === "O" ? 0xff8a7a : 0xdff3ff, raio * 4.2); h.position.copy(pos[nome]);
+      molecula.add(m, h); return { m, h };
+    };
+    const O = atomo("O", .62, this.CORES.O), H1 = atomo("H1", .4, this.CORES.H), H2 = atomo("H2", .4, this.CORES.H);
+
+    // bastões (cilindros) do O até cada H
+    const bastao = (de, para, raioDe, raioPara) => {
+      const dir = para.clone().sub(de), comp = dir.length();
+      // trecho visível do bastão (fora das esferas): os elétrons andam nele
+      const ini = raioDe / comp + .04, fim = 1 - raioPara / comp - .04;
+      const mat = new THREE.MeshPhysicalMaterial({ color: this.CORES.ligacao, roughness: .35, clearcoat: .5, transparent: true, opacity: 0, emissive: this.CORES.destaque, emissiveIntensity: 0 });
+      const c = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, comp, 32, 1, true), mat);
+      c.position.copy(de.clone().add(para).multiplyScalar(.5));
+      c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+      molecula.add(c);
+      // dois elétrons por ligação, que vão das pontas ao centro e voltam
+      const eletrons = [0, 1].map(() => {
+        const e = new THREE.Mesh(new THREE.SphereGeometry(.075, 24, 16), new THREE.MeshBasicMaterial({ color: this.CORES.eletron, transparent: true, opacity: 0 }));
+        const eh = halo(this.CORES.eletron, .55);
+        molecula.add(e, eh); return { e, eh };
+      });
+      return { c, de, para, eletrons, ini, fim, meio: (ini + fim) / 2 };
+    };
+    const ligacoes = [bastao(pos.O, pos.H1, .62, .4), bastao(pos.O, pos.H2, .62, .4)];
+
+    // enquadramento: a molécula inteira cabe com folga, em qualquer proporção
+    const ajustar = () => {
+      const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      camera.position.set(0, 0, Math.max(2.9 / 2 / t, 4 / 2 / (t * camera.aspect)));
+      camera.updateProjectionMatrix();
+    };
+    const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
+
+    // relógio da cena: segue o áudio da narração 2; depois do fim continua (elétrons em movimento), e congela na pausa
+    let t = 6, antes = performance.now();
+    const cor = new THREE.Color(), cinza = new THREE.Color(this.CORES.ligacao), ambar = new THREE.Color(this.CORES.destaque);
+    const suave = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+    const rampa = (t0, d) => suave((t - t0) / d);
+
+    const quadro = () => {
+      if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      const agora = performance.now(), dt = (agora - antes) / 1000; antes = agora;
+      if (Player.indice === 2 && Player.fonte && !Player.terminou) t = Player.fonte.currentTime;
+      else if (!Palco.pausado) t += dt;
+
+      // entrada: fade in terminando um giro e parando de frente
+      const vis = rampa(6, .8);
+      molecula.rotation.y = -(1 - (1 - Math.pow(1 - Math.min(Math.max((t - 6) / 1.6, 0), 1), 3))) * Math.PI * 2.5;
+      // 3 pulsos com brilho (10s → 11,8s)
+      const p = t >= 10 && t < 11.8 ? Math.pow(Math.sin(Math.PI * ((t - 10) / .6)), 2) : 0;
+      molecula.scale.setScalar(1 + .08 * p);
+      // H maiores (12→14), O maior (14→16)
+      const sH = 1 + .35 * (rampa(12, .4) - rampa(14, .4));
+      const sO = 1 + .3 * (rampa(14, .4) - rampa(16, .4));
+      O.m.scale.setScalar(O.m.userData.raio * sO);
+      [H1, H2].forEach(a => a.m.scale.setScalar(a.m.userData.raio * sH));
+      [O, H1, H2].forEach(a => { a.m.material.opacity = vis; a.h.material.opacity = .85 * p; });
+      // ligações em destaque (16s) e transparentes com elétrons (23s)
+      const dest = rampa(16, .5), transp = rampa(23, .6), ele = rampa(23.3, .4);
+      cor.copy(cinza).lerp(ambar, dest);
+      const fase = (1 - Math.cos(2 * Math.PI * Math.max(t - 23.3, 0) / 1.4)) / 2;   // 0 → 1 → 0
+      ligacoes.forEach(l => {
+        l.c.material.color.copy(cor);
+        l.c.material.emissiveIntensity = .45 * dest * (1 - .6 * transp);
+        l.c.material.opacity = vis * (1 - .78 * transp);
+        l.c.material.depthWrite = transp < .5;
+        l.eletrons.forEach((el, i) => {
+          const ponta = i === 0 ? l.ini : l.fim;
+          const u = ponta + (l.meio - ponta) * fase;                         // cada um sai de uma ponta até o centro e volta
+          el.e.position.copy(l.de).lerp(l.para, u); el.eh.position.copy(el.e.position);
+          el.e.material.opacity = ele; el.eh.material.opacity = .9 * ele;
+        });
+      });
+      renderer.render(cena, camera);
+      requestAnimationFrame(quadro);
+    };
+    requestAnimationFrame(quadro);
   }
 };
 
