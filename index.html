@@ -183,7 +183,7 @@
 
   .palco {
     flex: 1; position: relative;
-    margin: 0 clamp(12px, 3vw, 28px);
+    margin: 0 clamp(12px, 3vw, 28px) 8px;
     border-radius: 24px;
     border: 2px solid var(--grafite);
     background-color: var(--preto);
@@ -196,8 +196,8 @@
   #conteudoPalco { position: absolute; inset: 0; }
 
   .faixa-player {
-    display: flex; align-items: center; justify-content: flex-end;
-    padding: 14px clamp(16px, 4vw, 32px) 6px;
+    position: absolute; z-index: 2;
+    right: clamp(18px, 2.5vw, 28px); bottom: clamp(18px, 2.5vw, 28px);
   }
 
   .btn-play {
@@ -250,15 +250,15 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: clamp(10px, 2.4vh, 22px); text-align: center;
   }
-  .c0-frase { margin: 0; font-family: var(--display); font-weight: 800; color: #fff; line-height: 1.1; font-size: clamp(1.5rem, 3.6vmin + .8rem, 2.8rem); letter-spacing: -.02em; }
-  .c0-octeto { margin: 0; font-weight: 700; color: var(--ambar); font-size: clamp(1.05rem, 2vmin + .6rem, 1.7rem); letter-spacing: .02em; }
+  .c0-frase { margin: 0; font-family: var(--display); font-weight: 800; color: #fff; line-height: 1.1; font-size: calc(clamp(1.5rem, 3.6vmin + .8rem, 2.8rem) + 3px); letter-spacing: -.02em; }
+  .c0-octeto { margin: 0; font-weight: 700; color: var(--ambar); font-size: calc(clamp(1.05rem, 2vmin + .6rem, 1.7rem) + 2px); letter-spacing: .02em; }
   .c0-lewis { margin: 0; opacity: 0; display: flex; flex-direction: column; align-items: center; }
   .c0-lewis img {
-    display: block; width: clamp(110px, 24vmin, 230px); aspect-ratio: 278 / 270; object-fit: cover;
+    display: block; width: clamp(143px, 31.2vmin, 299px); aspect-ratio: 278 / 270; object-fit: cover;
     border-radius: 18px; filter: grayscale(1) contrast(1.05);
     box-shadow: 0 0 0 3px var(--grafite), 0 18px 50px rgba(0,0,0,.5);
   }
-  .c0-lewis figcaption { margin-top: .7rem; font-size: clamp(.85rem, 1vmin + .6rem, 1.05rem); color: var(--celeste-claro); }
+  .c0-lewis figcaption { margin-top: .7rem; font-size: calc(clamp(.85rem, 1vmin + .6rem, 1.05rem) + 2px); color: var(--celeste-claro); }
   .c0-lewis figcaption b { font-family: var(--display); font-weight: 800; color: #fff; }
 
   /* navegação rápida: aba discreta colada na base */
@@ -380,7 +380,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v7 · 29/09/2026</span>
+    <span class="versao" id="versao">v8 · 29/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -407,18 +407,19 @@
   <main class="palco" id="palco">
     <!-- Os eventos das narrações são desenhados aqui -->
     <div id="conteudoPalco"></div>
-  </main>
 
-  <div class="faixa-player">
-    <button class="btn-play" id="btnPlay" aria-label="Tocar narração">
-      <!-- anel do tempo: se fecha conforme o áudio avança -->
-      <svg class="anel" viewBox="0 0 100 100" aria-hidden="true">
-        <circle class="anel-fundo" cx="50" cy="50" r="46"/>
-        <circle class="anel-tempo" id="anelTempo" cx="50" cy="50" r="46" pathLength="100"/>
-      </svg>
-      <svg id="iconePlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
-    </button>
-  </div>
+    <!-- play no canto do palco, por cima da cena -->
+    <div class="faixa-player">
+      <button class="btn-play" id="btnPlay" aria-label="Tocar narração">
+        <!-- anel do tempo: se fecha conforme o áudio avança -->
+        <svg class="anel" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="anel-fundo" cx="50" cy="50" r="46"/>
+          <circle class="anel-tempo" id="anelTempo" cx="50" cy="50" r="46" pathLength="100"/>
+        </svg>
+        <svg id="iconePlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
+      </button>
+    </div>
+  </main>
 
   <nav class="nav-rapida-barra">
     <button class="btn-nav-rapida" id="btnNavRapida" aria-haspopup="dialog" aria-controls="gaveta">
@@ -463,6 +464,7 @@ const NARRACOES = [
       { tempo: 3.4,  acao: () => Cena0.foto() },           // foto do autor
       { tempo: 4,    acao: () => Cena0.credito() },        // "Desenvolvido por / Amauri Junior" (até 5s)
       { tempo: 8,    acao: () => Cena0.titulo() },         // "Moléculas" (1s)
+      { tempo: 10,   acao: () => Cena0.pulsar() },         // "Moléculas" pulsa com brilho
       { tempo: 12,   acao: () => Cena0.subir() },          // tudo sobe e sai; o título fica no topo (até 13s)
       { tempo: 13.8, acao: () => Cena0.frase() },          // "Vamos construir moléculas"
       { tempo: 17.9, acao: () => Cena0.octeto() },         // "Teoria do octeto" (1s)
@@ -567,6 +569,14 @@ const Cena0 = {
     Palco.digitar(this.$(".c0-credito"), [{ classe: "l1", texto: "Desenvolvido por" }, { classe: "l2", texto: "Amauri Junior" }], 1);
   },
   titulo() { Palco.digitar(this.$(".c0-titulo"), "Moléculas", 1); },
+  pulsar() {
+    const apagado = "0 0 0 rgba(163,219,247,0)";
+    Palco.animar(this.$(".c0-titulo"), [
+      { transform: "scale(1)", textShadow: apagado, color: "#A3DBF7" },
+      { transform: "scale(1.14)", textShadow: "0 0 18px rgba(163,219,247,.95), 0 0 46px rgba(124,156,255,.7)", color: "#FFFFFF", offset: .35 },
+      { transform: "scale(1)", textShadow: apagado, color: "#A3DBF7" }
+    ], { duracao: .9, easing: "ease-in-out", fill: "none" });
+  },
   subir() {
     const easing = "cubic-bezier(.6,0,.35,1)";
     Palco.animar(this.$(".c0-autor"), [{ transform: "translateY(0)", opacity: 1 }, { transform: "translateY(-115%)", opacity: 0 }], { duracao: 1, easing });
