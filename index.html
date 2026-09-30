@@ -487,7 +487,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v20 · 30/09/2026</span>
+    <span class="versao" id="versao">v21 · 30/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -608,8 +608,9 @@ const NARRACOES = [
   { id: "dialogo4", titulo: "A fórmula da água", src: "audio/audio_moleculas_4.mp3",
     inicio: () => Cena3.montarFinal(),                     // parte do mundo quântico da narração 3
     eventos: [
-      { tempo: 2,    acao: () => Cena4.pulsarTodas() },    // pulso com brilho em todas, em sequência (até 4s)
+      { tempo: 2,    acao: () => Cena4.pulsarTodas() },    // pulso com brilho em todas, em sequência (até 4,5s)
       { tempo: 6,    acao: () => Cena4.ficarUma() },       // somem em fade; a de cima vem para a frente
+      { tempo: 16.6, acao: () => Cena4.atomosEmSequencia() }, // H, O, H crescem um de cada vez (até 18,7s)
       { tempo: 20.2, acao: () => Cena4.formula() },        // "Fórmula Química" digitada embaixo
       { tempo: 25.7, acao: () => Cena4.pulsar() },         // pulso com brilho na molécula
       { tempo: 27.6, acao: () => Cena4.hMaiores() },       // H maiores
@@ -1281,7 +1282,7 @@ const Quantico = {
     const nuvem = new THREE.Sprite(mats.nuvem.clone()); nuvem.scale.setScalar(4.2); grupo.add(nuvem);
     const alvos = [O, ...Hs, ...bastoes];
     // est: variáveis que o roteiro do áudio anima (tamanho dos átomos, opacidade, símbolos, destaque)
-    const est = { escalaO: 1, escalaH: 1, opac: 1, rotH: 0, rotO: 0, mov: 0, fixa: false, pulso: 0 };
+    const est = { escalaO: 1, escalaH: 1, h0: 1, h1: 1, opac: 1, rotH: 0, rotO: 0, mov: 0, fixa: false, pulso: 0 };   // h0/h1: escala de cada H
     grupo.userData = { O, Hs, bastoes, nuvem, alvos, rO, rH, mats: [mO, mH, mL], est, baseH: Hs.map(h => h.position.clone()) };
     this.alinharBastoes(grupo.userData);
     return grupo;
@@ -1471,7 +1472,7 @@ const Quantico = {
         u.O.scale.setScalar(u.rO * s.escalaO);
         u.nuvem.material.opacity = (.55 + .12 * Math.sin(t * 2.1 + u.fase) + .9 * s.pulso) * s.opac;   // nuvem eletrônica "respirando"
         u.mats.forEach(x => { x.opacity = s.opac; x.emissiveIntensity = .55 * s.pulso; x.depthWrite = s.opac > .95; });
-        u.Hs.forEach((h, i) => { h.position.copy(u.baseH[i]); h.scale.setScalar(u.rH * s.escalaH); });
+        u.Hs.forEach((h, i) => { h.position.copy(u.baseH[i]); h.scale.setScalar(u.rH * s.escalaH * s["h" + i]); });
         if (u.acao) {
           const A = this.ACOES[u.acao.nome], p = (t - u.acao.t0) / A.dur;
           if (p >= 1) u.acao = null;
@@ -1482,7 +1483,7 @@ const Quantico = {
           m.updateMatrixWorld();
           const esc = m.scale.x;
           posicionarRotulo(u.rotulos.O, u.O, u.rO * s.escalaO * esc, s.rotO * s.opac);
-          u.rotulos.H.forEach((r, i) => posicionarRotulo(r, u.Hs[i], u.rH * s.escalaH * esc, s.rotH * s.opac));
+          u.rotulos.H.forEach((r, i) => posicionarRotulo(r, u.Hs[i], u.rH * s.escalaH * s["h" + i] * esc, s.rotH * s.opac));
         }
       });
       poeira.material.opacity = .4 + .15 * Math.sin(t * 1.3);
@@ -1501,11 +1502,11 @@ const Quantico = {
 const Cena4 = {
   $(sel) { return Palco.el.querySelector(sel); },
   get q() { return Cena3.quantum; },
-  // 2s → 4s: cada molécula pulsa com brilho, uma depois da outra (da esquerda para a direita)
+  // 2s → 4,5s: cada molécula pulsa com brilho, uma depois da outra (da esquerda para a direita)
   pulsarTodas() {
     const q = this.q; if (!q) return;
     const lista = q.moleculas.filter(m => m.userData.est.opac > .5).sort((a, b) => q.naTela(a.position).x - q.naTela(b.position).x);
-    const passo = lista.length > 1 ? 1.5 / (lista.length - 1) : 0;
+    const passo = lista.length > 1 ? 2 / (lista.length - 1) : 0;     // último pulso (0,5s) termina em 4,5s
     lista.forEach((m, i) => q.pulsar(m, .5, i * passo));
   },
   // 6s: todas somem em fade; fica só a de cima, que vem para a frente
@@ -1528,6 +1529,15 @@ const Cena4 = {
     el.style.top = `${q.naTela(baixo).y + 10}px`;
   },
   pulsar() { if (this.m) this.q.pulsar(this.m, .9); },
+  // 16,6 → 18,7s: os 3 átomos crescem em sequência (H esquerdo, O, H direito); quando um cresce, o anterior volta
+  atomosEmSequencia() {
+    if (!this.m) return;
+    const s = this.m.userData.est, q = this.q, d = .35;
+    q.animar(s, "h0", 1.35, d, 0);
+    q.animar(s, "h0", 1, d, .7);  q.animar(s, "escalaO", 1.3, d, .7);
+    q.animar(s, "escalaO", 1, d, 1.4); q.animar(s, "h1", 1.35, d, 1.4);
+    q.animar(s, "h1", 1, d, 1.75);                                   // termina em 18,7s
+  },
   hMaiores() { if (this.m) this.q.animar(this.m.userData.est, "escalaH", 1.35, .4); },
   simboloH() { if (!this.m) return; this.q.rotular(this.m); this.q.animar(this.m.userData.est, "rotH", 1, .8); },
   oMaior() {
