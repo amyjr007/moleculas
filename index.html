@@ -228,6 +228,7 @@
   .palavra { display: inline-block; white-space: nowrap; }
   .palavra .ch { display: inline-block; }
   .destaque { color: var(--ambar); font-weight: 800; text-shadow: 0 0 22px rgba(255,194,75,.45); }
+  .fecha { color: #fff; font-weight: 500; text-shadow: none; }   /* aspas/ponto colados ao destaque, sem herdar a cor */
 
   /* narração 1 — definição */
   .c1-definicao {
@@ -392,7 +393,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v10 · 29/09/2026</span>
+    <span class="versao" id="versao">v11 · 29/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -515,19 +516,25 @@ const Palco = {
   },
 
   // Escreve o texto em letras soltas (span.ch), agrupadas por palavra para quebrar linha só entre palavras.
-  // partes: "texto" ou [{ classe, texto }, ...] (cada parte com classe vira um span: linha, destaque...)
+  // partes: "texto" ou [{ classe, texto, junto }, ...] (cada parte com classe vira um span: linha, destaque...)
+  // junto: true gruda o começo da parte na palavra anterior (pontuação, aspas) para não quebrar linha ali
   letras(el, partes) {
     if (typeof partes === "string") partes = [{ texto: partes }];
     const novo = (tag, className, textContent = "") => Object.assign(document.createElement(tag), { className, textContent });
     el.textContent = "";
     const letras = [];
-    partes.forEach(({ classe, texto }) => {
-      const bloco = classe ? el.appendChild(novo("span", classe)) : el;
+    let palavra = null;
+    partes.forEach(({ classe, texto, junto }) => {
+      let bloco = null;
+      const noBloco = () => bloco ??= (classe ? el.appendChild(novo("span", classe)) : el);
+      if (!junto) palavra = null;
       for (const trecho of texto.split(/(\s+)/)) {
         if (!trecho) continue;
-        if (/^\s+$/.test(trecho)) { letras.push(bloco.appendChild(novo("span", "ch esp", " "))); continue; }
-        const palavra = bloco.appendChild(novo("span", "palavra"));
-        for (const c of trecho) letras.push(palavra.appendChild(novo("span", "ch", c)));
+        if (/^\s+$/.test(trecho)) { palavra = null; letras.push(noBloco().appendChild(novo("span", "ch esp", " "))); continue; }
+        let destino;
+        if (palavra) destino = classe ? palavra.appendChild(novo("span", classe)) : palavra;
+        else destino = palavra = noBloco().appendChild(novo("span", "palavra"));
+        for (const c of trecho) letras.push(destino.appendChild(novo("span", "ch", c)));
       }
     });
     return letras;
@@ -659,8 +666,9 @@ const Cena1 = {
   definicao() {
     Palco.adicionar(`<p class="c1-definicao"></p>`);
     Palco.digitar(this.$(".c1-definicao"), [
-      { texto: "são estruturas discretas formadas por átomos ligados por " },
-      { classe: "destaque", texto: "compartilhamento de elétrons" }
+      { texto: "“são estruturas discretas formadas por átomos ligados por " },
+      { classe: "destaque", texto: "compartilhamento de elétrons" },
+      { classe: "fecha", texto: "”.", junto: true }
     ], 5.7);
   }
 };
