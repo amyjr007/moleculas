@@ -224,6 +224,18 @@
 
   /* texto "digitado": cada letra já ocupa seu lugar e aparece na hora certa */
   .digita .ch { opacity: 0; }
+  /* letras soltas (para digitar e desmoronar), agrupadas por palavra */
+  .palavra { display: inline-block; white-space: nowrap; }
+  .palavra .ch { display: inline-block; }
+  .destaque { color: var(--ambar); font-weight: 800; text-shadow: 0 0 22px rgba(255,194,75,.45); }
+
+  /* narração 1 — definição */
+  .c1-definicao {
+    position: absolute; left: 50%; top: 54%; transform: translate(-50%, -50%);
+    width: min(92%, 26ch); margin: 0; text-align: center;
+    font-family: var(--display); font-weight: 500; line-height: 1.3; color: #fff;
+    font-size: clamp(1.35rem, 3.4vmin + .7rem, 2.6rem); letter-spacing: -.01em;
+  }
 
   /* narração 0 — boas-vindas */
   .c0-autor {
@@ -380,7 +392,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v9 · 29/09/2026</span>
+    <span class="versao" id="versao">v10 · 29/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -470,7 +482,12 @@ const NARRACOES = [
       { tempo: 17.9, acao: () => Cena0.octeto() },         // "Teoria do octeto" (1s)
       { tempo: 20,   acao: () => Cena0.lewis() }           // G. N. Lewis, 1916 (fade in)
     ] },
-  { id: "dialogo1", titulo: "Átomos: as peças da fábrica",         src: "", duracaoTeste: 15, eventos: [] },
+  { id: "dialogo1", titulo: "O que é uma molécula", src: "audio/audio_moleculas_1.mp3",
+    inicio: () => Cena0.montarFinal(),                     // parte da tela final da narração 0
+    eventos: [
+      { tempo: 2.6,  acao: () => Cena1.desmoronar() },     // tudo cai; fica só "Moléculas"
+      { tempo: 4,    acao: () => Cena1.definicao() }       // digita a definição até 9.7s
+    ] },
   { id: "dialogo2", titulo: "Ligações: como as peças se unem",     src: "", duracaoTeste: 15, eventos: [] },
   { id: "dialogo3", titulo: "Montando a primeira molécula",        src: "", duracaoTeste: 15, eventos: [] }
 ];
@@ -497,19 +514,46 @@ const Palco = {
     return a;
   },
 
-  // Digita um texto letra a letra em "duracao" segundos.
-  // partes: "texto" ou [{ classe, texto }, ...] (cada parte vira um bloco, ex.: duas linhas)
-  digitar(el, partes, duracao = 1) {
+  // Escreve o texto em letras soltas (span.ch), agrupadas por palavra para quebrar linha só entre palavras.
+  // partes: "texto" ou [{ classe, texto }, ...] (cada parte com classe vira um span: linha, destaque...)
+  letras(el, partes) {
     if (typeof partes === "string") partes = [{ texto: partes }];
-    el.classList.add("digita");
+    const novo = (tag, className, textContent = "") => Object.assign(document.createElement(tag), { className, textContent });
     el.textContent = "";
     const letras = [];
     partes.forEach(({ classe, texto }) => {
-      const bloco = classe ? el.appendChild(Object.assign(document.createElement("span"), { className: classe })) : el;
-      for (const c of texto) letras.push(bloco.appendChild(Object.assign(document.createElement("span"), { className: "ch", textContent: c })));
+      const bloco = classe ? el.appendChild(novo("span", classe)) : el;
+      for (const trecho of texto.split(/(\s+)/)) {
+        if (!trecho) continue;
+        if (/^\s+$/.test(trecho)) { letras.push(bloco.appendChild(novo("span", "ch esp", " "))); continue; }
+        const palavra = bloco.appendChild(novo("span", "palavra"));
+        for (const c of trecho) letras.push(palavra.appendChild(novo("span", "ch", c)));
+      }
     });
+    return letras;
+  },
+
+  // Digita letra a letra em "duracao" segundos
+  digitar(el, partes, duracao = 1) {
+    el.classList.add("digita");
+    const letras = this.letras(el, partes);
     const passo = duracao / letras.length;
     letras.forEach((s, i) => this.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: .04, atraso: i * passo, easing: "linear" }));
+  },
+
+  // Desmorona: cada peça balança, despenca girando e sai por baixo do palco
+  desmoronar(pecas, { duracao = 1.2, espalhar = .4 } = {}) {
+    const base = this.el.getBoundingClientRect();
+    return pecas.map(p => {
+      const r = p.getBoundingClientRect();
+      const queda = base.bottom - r.top + 60;
+      const giro = (Math.random() - .5) * 140, deriva = (Math.random() - .5) * 90;
+      return this.animar(p, [
+        { transform: "translate(0px, 0px) rotate(0deg)" },
+        { transform: `translate(${deriva * .05}px, -5px) rotate(${giro * .06}deg)`, offset: .15 },
+        { transform: `translate(${deriva}px, ${queda}px) rotate(${giro}deg)` }
+      ], { duracao: duracao * (.75 + Math.random() * .25), atraso: Math.random() * espalhar, easing: "cubic-bezier(.45,0,.9,.45)" });
+    });
   },
 
   // A fábrica da capa, rodando no palco
@@ -547,8 +591,7 @@ const Palco = {
 /* ---------- Cenas da narração 0: boas-vindas ---------- */
 const Cena0 = {
   $(sel) { return Palco.el.querySelector(sel); },
-  foto() {
-    Palco.adicionar(`
+  estrutura: `
       <div class="c0-autor">
         <div class="c0-foto"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></div>
         <p class="c0-credito"></p>
@@ -561,7 +604,9 @@ const Cena0 = {
           <img src="imagens/g.n.lewis.avif" alt="Gilbert N. Lewis no laboratório">
           <figcaption><b>G. N. Lewis</b> — 1916</figcaption>
         </figure>
-      </div>`);
+      </div>`,
+  foto() {
+    Palco.adicionar(this.estrutura);
     Palco.animar(this.$(".c0-foto"), [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1)" }],
       { duracao: .5, easing: "cubic-bezier(.3,1.5,.5,1)" });
   },
@@ -586,6 +631,37 @@ const Cena0 = {
   octeto() { Palco.digitar(this.$(".c0-octeto"), "Teoria do octeto", 1); },
   lewis() {
     Palco.animar(this.$(".c0-lewis"), [{ opacity: 0, transform: "translateY(14px)" }, { opacity: 1, transform: "none" }], { duracao: 1, easing: "ease-out" });
+  },
+  // Tela final da narração 0, montada de uma vez (quando se pula direto para a narração seguinte)
+  montarFinal() {
+    if (this.$(".c0-titulo")) return;
+    Palco.mostrar(this.estrutura);
+    this.$(".c0-autor").remove();
+    this.$(".c0-titulo").style.top = "5%";
+    Palco.letras(this.$(".c0-titulo"), "Moléculas");
+    Palco.letras(this.$(".c0-frase"), "Vamos construir moléculas");
+    Palco.letras(this.$(".c0-octeto"), "Teoria do octeto");
+    this.$(".c0-lewis").style.opacity = 1;
+  }
+};
+
+/* ---------- Cenas da narração 1: o que é uma molécula ---------- */
+const Cena1 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  // tudo despenca; só o título "Moléculas" fica
+  desmoronar() {
+    const pecas = [...Palco.el.querySelectorAll(".c0-frase .ch:not(.esp), .c0-octeto .ch:not(.esp), .c0-lewis img, .c0-lewis figcaption")];
+    const anims = Palco.desmoronar(pecas, { duracao: 1.2, espalhar: .45 });
+    Promise.all(anims.map(a => a.finished))
+      .then(() => Palco.el.querySelectorAll(".c0-corpo, .c0-autor").forEach(e => e.remove()), () => {});
+  },
+  // "Moléculas são estruturas discretas..." — o título funciona como sujeito da frase
+  definicao() {
+    Palco.adicionar(`<p class="c1-definicao"></p>`);
+    Palco.digitar(this.$(".c1-definicao"), [
+      { texto: "são estruturas discretas formadas por átomos ligados por " },
+      { classe: "destaque", texto: "compartilhamento de elétrons" }
+    ], 5.7);
   }
 };
 
@@ -622,13 +698,15 @@ const Player = {
   disparados: new Set(),
   loop: null,
 
-  carregar(i) {
+  // continuar = veio da narração anterior pelo play: a cena dela fica no palco.
+  // Senão (entrada na página, navegação rápida) o palco é limpo e "inicio" monta a cena de partida.
+  carregar(i, continuar = false) {
     this.parar();
     this.indice = i;
     const n = NARRACOES[i];
     this.fonte = criarFonte(n);
     this.disparados = new Set();
-    Palco.reiniciar();
+    if (continuar) Palco.pausado = false; else Palco.reiniciar();
     ui.progresso(0);
     if (n.inicio) n.inicio(Palco);      // cena de antes do play
     atualizarSumario();
@@ -658,8 +736,8 @@ const Player = {
     ui.atualizarBotao(false);
   },
 
-  irPara(i) {
-    this.carregar(i);
+  irPara(i, continuar = false) {
+    this.carregar(i, continuar);
     this.tocar();
   },
 
@@ -700,7 +778,7 @@ const Player = {
     if (this.terminou) {
       this.terminou = false;
       const prox = this.indice + 1 < NARRACOES.length ? this.indice + 1 : this.indice;
-      this.irPara(prox);
+      this.irPara(prox, prox !== this.indice);   // segue a história: a cena continua no palco
       return;
     }
     this.fonte.paused ? this.tocar() : this.pausar();
