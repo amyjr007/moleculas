@@ -433,7 +433,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v17 · 30/09/2026</span>
+    <span class="versao" id="versao">v18 · 30/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -987,6 +987,7 @@ const Cena3 = {
     if (!this.$(".c3-quantico")) this.prepararQuantico();
     const q = this.$(".c3-quantico");
     q.classList.add("ativo");
+    this.textosSubstancia();                   // troca feita sob o clarão: ao clarear, a tela já fala de substância
     if (this.quantum) this.quantum.visivel = true;
     const cubo = this.$(".c3-cubo");
     Palco.animar(q, [{ opacity: 0 }, { opacity: 1 }], { duracao: .25 }).finished.then(() => cubo && cubo.remove(), () => {});
@@ -996,9 +997,15 @@ const Cena3 = {
   montarFinal() {
     if (this.$(".c3-quantico.ativo")) return;
     Palco.mostrar(`<h2 class="c0-titulo" style="top:5%"></h2><p class="c3-frase"></p><div class="c3-quantico ativo" style="opacity:1"></div>`);
-    Palco.letras(this.$(".c0-titulo"), "Moléculas");
-    Palco.letras(this.$(".c3-frase"), "Representam a menor parte lógica de uma substância");
+    this.textosSubstancia();
     this.quantum = Quantico.montar(this.$(".c3-quantico"), { revelar: true });
+  },
+
+  // dentro da substância: novo título e nova definição, nos mesmos lugares
+  textosSubstancia() {
+    const titulo = this.$(".c0-titulo"), frase = this.$(".c3-frase");
+    if (titulo) { titulo.classList.remove("digita"); Palco.letras(titulo, "Substância"); }
+    if (frase) { frase.classList.remove("digita"); Palco.letras(frase, "É formada por aglomerados de moléculas idênticas"); }
   },
 
   // gira o cubo: a molécula sai pela esquerda e o copo entra
