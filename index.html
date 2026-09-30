@@ -233,7 +233,7 @@
   .fecha { color: #fff; font-weight: 500; text-shadow: none; }   /* aspas/ponto colados ao destaque, sem herdar a cor */
 
   /* narração 1 — definição */
-  .c1-definicao {
+  .c1-definicao, .c3-frase {
     position: absolute; left: 50%; top: 21%; transform: translate(-50%, 0); transform-origin: 50% 0;
     width: min(92%, 46ch); margin: 0; text-align: center;   /* 2 linhas em tela deitada: sobra espaço para a molécula */
     font-family: var(--display); font-weight: 500; line-height: 1.3; color: #fff;
@@ -254,8 +254,15 @@
   .quebra { display: none; }
   @media (max-aspect-ratio: 5/6), (max-width: 700px) {
     .quebra { display: block; }
-    .c1-definicao { width: 96%; font-size: clamp(1.1rem, 4.6vw, 1.6rem); }
+    .c1-definicao, .c3-frase { width: 96%; font-size: clamp(1.1rem, 4.6vw, 1.6rem); }
   }
+
+  /* narração 3 — cubo: a face 1 é a molécula + legenda; a face 2, o copo d'água */
+  .c3-cubo { position: absolute; perspective: 1600px; z-index: 1; }
+  .c3-giro { position: absolute; inset: 0; transform-style: preserve-3d; }
+  .c3-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 20px; border: 1px solid transparent; overflow: hidden; }
+  .c3-f2 { background: #0a1322; border-color: rgba(163,219,247,.2); }
+  .c3-f2 canvas { display: block; width: 100%; height: 100%; }
 
   /* narração 0 — boas-vindas */
   .c0-autor {
@@ -412,7 +419,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v15 · 29/09/2026</span>
+    <span class="versao" id="versao">v16 · 30/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -519,7 +526,14 @@ const NARRACOES = [
       { tempo: 19,   acao: () => Cena2.legenda() },        // “Ligações covalentes” (1s), em âmbar
       { tempo: 26.5, acao: () => Cena2.legendaCeleste() }  // a legenda passa à cor dos elétrons (fade)
     ] },
-  { id: "dialogo3", titulo: "Montando a primeira molécula",        src: "", duracaoTeste: 15, eventos: [] }
+  { id: "dialogo3", titulo: "A menor parte de uma substância", src: "audio/audio_moleculas_3.mp3",
+    inicio: () => Cena2.montarFinal(),                     // parte da tela final da narração 2
+    eventos: [
+      { tempo: 1,    acao: () => Cena3.desmoronar() },     // a definição desmorona
+      { tempo: 4,    acao: () => Cena3.frase() },          // "Representam a menor parte lógica..." (até 6,7s)
+      { tempo: 7,    acao: () => Cena3.preparar() },       // monta o cubo e o copo com a tela parada (nada muda à vista)
+      { tempo: 9.5,  acao: () => Cena3.cubo() }            // molécula + legenda viram a face de um cubo que gira: copo d'água
+    ] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -738,7 +752,18 @@ const Cena2 = {
     ], { duracao: .6, easing: "ease-in-out" });
   },
 
-  montar3D(caixa) {
+  // Tela final da narração 2 (para quem pula direto para a narração seguinte)
+  montarFinal() {
+    if (this.$(".c2-cena")) return;
+    Cena1.montarFinal();
+    Palco.adicionar(`<div class="c2-cena" aria-label="Molécula de água: um oxigênio ligado a dois hidrogênios"></div><p class="c2-legenda"></p>`);
+    const leg = this.$(".c2-legenda");
+    Palco.letras(leg, "“Ligações covalentes”");
+    Object.assign(leg.style, { color: "#A3DBF7", textShadow: "0 0 22px rgba(163,219,247,.55)" });
+    this.montar3D(this.$(".c2-cena"), 28);
+  },
+
+  montar3D(caixa, tInicial = 6) {
     if (!window.THREE || !caixa) return;
     // cores em hex são sRGB (as cores CPK saem fiéis, sem desbotar)
     if ("legacyMode" in THREE.ColorManagement) THREE.ColorManagement.legacyMode = false; else THREE.ColorManagement.enabled = true;
@@ -810,7 +835,7 @@ const Cena2 = {
     const def = Palco.el.querySelector(".c1-definicao"), legenda = Palco.el.querySelector(".c2-legenda");
     const baixo = new THREE.Vector3(0, pos.H1.y - rH, 0);
     const ajustar = () => {
-      if (def) caixa.style.top = `${def.offsetTop + def.offsetHeight + 10}px`;
+      if (def && !caixa.dataset.fixo) caixa.style.top = `${def.offsetTop + def.offsetHeight + 10}px`;   // "fixo": já está na face do cubo
       const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1;
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
@@ -822,8 +847,8 @@ const Cena2 = {
     const obs = new ResizeObserver(ajustar); [caixa, def, Palco.el].forEach(e => e && obs.observe(e)); ajustar();
 
     // relógio da cena: segue o áudio da narração 2; depois do fim continua (elétrons em movimento), e congela na pausa
-    let t = 6, antes = performance.now();
-    const cor = new THREE.Color(), cinza = new THREE.Color(this.CORES.ligacao), ambar = new THREE.Color(this.CORES.destaque);
+    let t = tInicial, antes = performance.now();
+    const cor = new THREE.Color(), cinza = new THREE.Color(this.CORES.ligacao), preto = new THREE.Color(0x000000);
     const suave = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
     const rampa = (t0, d) => suave((t - t0) / d);
 
@@ -847,11 +872,13 @@ const Cena2 = {
       [O, H1, H2].forEach(a => { a.m.material.opacity = vis; a.h.material.opacity = .85 * p; });
       // ligações em destaque (16s) e transparentes com elétrons (23s)
       const dest = rampa(16, .5), transp = rampa(26.5, .6), ele = rampa(26.8, .4);
-      cor.copy(cinza).lerp(ambar, dest);
+      // em destaque, o corpo do bastão apaga e a cor vem só do emissivo: sai exatamente o âmbar do texto (#FFC24B)
+      cor.copy(cinza).lerp(preto, dest);
       const fase = (1 - Math.cos(2 * Math.PI * Math.max(t - 26.8, 0) / 1.4)) / 2;   // 0 → 1 → 0
       ligacoes.forEach(l => {
         l.c.material.color.copy(cor);
-        l.c.material.emissiveIntensity = .45 * dest * (1 - .6 * transp);
+        l.c.material.emissiveIntensity = dest;
+        l.c.material.specularIntensity = 1 - .9 * dest;
         l.c.material.opacity = vis * (1 - .78 * transp);
         l.c.material.depthWrite = transp < .5;
         l.eletrons.forEach((el, i) => {
@@ -865,6 +892,171 @@ const Cena2 = {
       requestAnimationFrame(quadro);
     };
     requestAnimationFrame(quadro);
+  }
+};
+
+/* ---------- Cenas da narração 3: a menor parte de uma substância ---------- */
+const Cena3 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  // a definição desmorona (o elemento fica, vazio, para a molécula não sair do lugar)
+  desmoronar() {
+    Palco.desmoronar([...Palco.el.querySelectorAll(".c1-definicao .ch:not(.esp)")], { duracao: 1.2, espalhar: .45 });
+  },
+  frase() {
+    Palco.adicionar(`<p class="c3-frase"></p>`);
+    Palco.digitar(this.$(".c3-frase"), "Representam a menor parte lógica de uma substância", 2.7);
+  },
+
+  // Molécula + legenda viram a face da frente de um cubo; o copo d'água fica pronto na face seguinte.
+  // Montado antes do giro (tela parada): criar o vidro 3D pesa um instante e não pode atrasar o giro.
+  preparar() {
+    const caixa = this.$(".c2-cena"), leg = this.$(".c2-legenda");
+    if (!caixa || !leg || this.$(".c3-cubo")) return;
+    const P = Palco.el, topo = caixa.offsetTop, H = caixa.offsetHeight;
+    const faixa = document.createRange(); faixa.selectNodeContents(leg);
+    const larguraTexto = faixa.getBoundingClientRect().width;
+    // largura ≥ 1,45 × altura: o enquadramento 3D continua limitado pela altura e a molécula não muda de tamanho
+    const W = Math.round(Math.min(P.clientWidth, Math.max(H * 1.45, larguraTexto + 40)));
+    Palco.adicionar(`
+      <div class="c3-cubo"><div class="c3-giro">
+        <div class="c3-face c3-f1"></div>
+        <div class="c3-face c3-f2" aria-label="Um copo com água"></div>
+      </div></div>`);
+    const cubo = this.$(".c3-cubo"), giro = this.$(".c3-giro"), f1 = this.$(".c3-f1"), f2 = this.$(".c3-f2");
+    Object.assign(cubo.style, { left: `${(P.clientWidth - W) / 2}px`, top: `${topo}px`, width: `${W}px`, height: `${H}px` });
+    f1.style.transform = `translateZ(${W / 2}px)`;
+    f2.style.transform = `rotateY(90deg) translateZ(${W / 2}px)`;
+
+    // leva molécula e legenda para a face 1 sem mudar nada do que está na tela
+    const legTopo = leg.offsetTop - topo;
+    caixa.dataset.fixo = "1";
+    f1.append(caixa, leg);
+    Object.assign(caixa.style, { top: "0px", bottom: "auto", height: `${H}px` });
+    leg.style.top = `${legTopo}px`;
+
+    giro.style.transform = `translateZ(${-W / 2}px)`;
+    this.W = W;
+    Copo.montar(f2);
+  },
+
+  // gira o cubo: a molécula sai pela esquerda e o copo entra
+  cubo() {
+    if (!this.$(".c3-cubo")) this.preparar();
+    const giro = this.$(".c3-giro"), f1 = this.$(".c3-f1"), f2 = this.$(".c3-f2");
+    if (!giro) return;
+    const z = `translateZ(${-this.W / 2}px)`, easing = "cubic-bezier(.65,0,.35,1)";
+    Palco.animar(f1, [{ backgroundColor: "rgba(20,33,52,0)", borderColor: "rgba(163,219,247,0)" },
+                      { backgroundColor: "rgba(20,33,52,.92)", borderColor: "rgba(163,219,247,.2)" }], { duracao: .3 });
+    Palco.animar(giro, [{ transform: `${z} rotateY(0deg)` }, { transform: `${z} rotateY(-90deg)` }], { duracao: 1.2, atraso: .3, easing });
+    Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, atraso: .3, easing });
+    Palco.animar(f2, [{ filter: "brightness(.35)" }, { filter: "brightness(1)" }], { duracao: 1.2, atraso: .3, easing });
+  }
+};
+
+/* ---------- Copo d'água 3D (vidro e água com refração real, luz de estúdio) ---------- */
+const Copo = {
+  // ambiente de estúdio: sala escura com softboxes; gera os reflexos e o que o vidro refrata
+  estudio(renderer) {
+    const env = new THREE.Scene();
+    env.add(new THREE.Mesh(new THREE.BoxGeometry(14, 9, 14), new THREE.MeshBasicMaterial({ color: 0x101a2a, side: THREE.BackSide })));
+    const painel = (w, h, cor, forca, x, y, z) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(cor).multiplyScalar(forca), side: THREE.DoubleSide }));
+      m.position.set(x, y, z); m.lookAt(0, 1, 0); env.add(m);
+    };
+    painel(7, 1.4, 0xffffff, 7, 0, 4.4, 0);       // teto
+    painel(1.6, 6, 0xffffff, 5, -6.8, 1, 2);      // lateral esquerda
+    painel(1.6, 6, 0xdff2ff, 4, 6.8, 1, -1.5);    // lateral direita
+    painel(5, 2.2, 0xA3DBF7, 1.6, 0, 1.2, -6.8);  // fundo, celeste
+    const pm = new THREE.PMREMGenerator(renderer), tex = pm.fromScene(env, .02).texture;
+    pm.dispose(); return tex;
+  },
+
+  // fundo de estúdio: degradê marinho com duas faixas verticais de luz suave
+  fundoEstudio() {
+    const c = document.createElement("canvas"); c.width = 1024; c.height = 704;
+    const g = c.getContext("2d");
+    const base = g.createRadialGradient(512, 300, 40, 512, 360, 620);
+    base.addColorStop(0, "#2d4a70"); base.addColorStop(1, "#0a1322");
+    g.fillStyle = base; g.fillRect(0, 0, 1024, 704);
+    [[330, 60, .22], [700, 40, .16]].forEach(([x, w, a]) => {
+      const f = g.createLinearGradient(x - w, 0, x + w, 0);
+      f.addColorStop(0, "rgba(210,236,255,0)"); f.addColorStop(.5, `rgba(210,236,255,${a})`); f.addColorStop(1, "rgba(210,236,255,0)");
+      g.fillStyle = f; g.fillRect(x - w, 0, 2 * w, 704);
+    });
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
+  },
+
+  // textura de gradiente radial (fundo e sombra)
+  gradiente(interna, externa) {
+    const c = document.createElement("canvas"); c.width = c.height = 256;
+    const g = c.getContext("2d"), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gr.addColorStop(0, interna); gr.addColorStop(1, externa);
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+    const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
+  },
+
+  montar(caixa) {
+    if (!window.THREE || !caixa) return;
+    let renderer;
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { console.warn("sem WebGL", e); return; }
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    caixa.appendChild(renderer.domElement);
+
+    const cena = new THREE.Scene();
+    cena.environment = this.estudio(renderer);
+    const alvo = new THREE.Vector3(0, 1.25, 0);
+    const camera = new THREE.PerspectiveCamera(28, 1, .1, 100);
+    const luz = new THREE.DirectionalLight(0xffffff, 1.4); luz.position.set(-3, 6, 4); cena.add(luz);
+
+    // fundo de estúdio atrás do copo, com faixas de luz: é ele que a água desvia (refração visível)
+    const fundo = new THREE.Mesh(new THREE.PlaneGeometry(16, 11), new THREE.MeshBasicMaterial({ map: this.fundoEstudio() }));
+    fundo.position.set(0, 2.2, -3.2); cena.add(fundo);
+    // piso escuro e sombra de contato
+    const piso = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: 0x0c1524, roughness: .55, metalness: 0 }));
+    piso.rotation.x = -Math.PI / 2; cena.add(piso);
+    const sombra = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: this.gradiente("rgba(0,0,0,.75)", "rgba(0,0,0,0)"), transparent: true, depthWrite: false }));
+    sombra.rotation.x = -Math.PI / 2; sombra.position.y = .003; cena.add(sombra);
+
+    // perfil do copo (raio, altura): fundo grosso, parede fina, borda arredondada, levemente cônico
+    const v = (x, y) => new THREE.Vector2(x, y);
+    const parede = y => .885 + (y - .24) * (.15 / 2.46);      // raio interno da parede na altura y
+    const perfilVidro = [v(0, 0), v(.86, 0), v(.905, .012), v(.925, .05), v(1.08, 2.69), v(1.078, 2.712), v(1.062, 2.722),
+                         v(1.046, 2.714), v(1.035, 2.695), v(.885, .24), v(.86, .222), v(0, .21)];
+    // Vidro: parede fina quase não refrata; o que se vê é reflexo (forte nas bordas, efeito Fresnel).
+    // Por isso ele só SOMA luz por cima da cena (preto + reflexos, mistura aditiva). Assim a água,
+    // que é a parte refrativa, continua visível — no three.js um objeto refrativo não enxerga outro.
+    const vidro = new THREE.Mesh(new THREE.LatheGeometry(perfilVidro, 160), new THREE.MeshPhysicalMaterial({
+      color: 0x000000, metalness: 0, roughness: .015, clearcoat: 1, clearcoatRoughness: .02,
+      specularIntensity: 1, envMapIntensity: 2.2, transparent: true, depthWrite: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+    }));
+    vidro.renderOrder = 2;
+    cena.add(vidro);
+
+    // água: acompanha a parede interna, com menisco na borda; refrata o fundo (índice 1,333)
+    const nivel = 1.95, rN = parede(nivel) - .004;
+    const perfilAgua = [v(0, .214), v(.855, .226), v(parede(.3) - .004, .3), v(rN, nivel - .02), v(rN - .012, nivel - .004), v(rN - .05, nivel - .012), v(0, nivel - .012)];
+    const agua = new THREE.Mesh(new THREE.LatheGeometry(perfilAgua, 160), new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, metalness: 0, roughness: 0, transmission: 1, thickness: 2, ior: 1.333,
+      attenuationColor: new THREE.Color(0xd2ecfb), attenuationDistance: 7, specularIntensity: .8, envMapIntensity: .9
+    }));
+    cena.add(agua);
+
+    const desenhar = () => renderer.render(cena, camera);
+    const ajustar = () => {
+      const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      const dist = Math.max(3.6 / 2 / t, 3.4 / 2 / (t * camera.aspect));
+      camera.position.set(0, alvo.y + dist * .3, dist);        // levemente de cima: aparece a superfície da água
+      camera.lookAt(alvo); camera.updateProjectionMatrix();
+      desenhar();
+    };
+    const obs = new ResizeObserver(() => { if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; } ajustar(); });
+    obs.observe(caixa); ajustar();
   }
 };
 
