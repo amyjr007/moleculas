@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Moléculas</title>
 <meta name="description" content="Audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -51,6 +51,8 @@
     font-family: var(--texto);
     overflow: hidden;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;          /* sem zoom por duplo toque */
+    -webkit-text-size-adjust: 100%;
   }
   button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
   button:focus-visible { outline: 3px solid var(--celeste); outline-offset: 3px; }
@@ -232,19 +234,20 @@
 
   /* narração 1 — definição */
   .c1-definicao {
-    position: absolute; left: 50%; top: calc(54% - 3px); transform: translate(-50%, -50%);
+    position: absolute; left: 50%; top: 21%; transform: translate(-50%, 0); transform-origin: 50% 0;
     width: min(92%, 26ch); margin: 0; text-align: center;
     font-family: var(--display); font-weight: 500; line-height: 1.3; color: #fff;
     font-size: clamp(1.35rem, 3.4vmin + .7rem, 2.6rem); letter-spacing: -.01em;
   }
 
   /* narração 2 — molécula de água em 3D */
-  .c2-cena { position: absolute; left: 0; right: 0; top: 33%; bottom: 15%; }
+  .c2-cena { position: absolute; left: 0; right: 0; top: 33%; bottom: 19%; }
   .c2-cena canvas { display: block; width: 100%; height: 100%; }
   .c2-legenda {
-    position: absolute; left: 0; right: 0; top: 86%; margin: 0; text-align: center;
-    font-family: var(--display); font-weight: 800; color: #fff; line-height: 1.1;
+    position: absolute; left: 0; right: 0; top: 77%; margin: 0; text-align: center;
+    font-family: var(--display); font-weight: 800; color: var(--celeste); line-height: 1.1;
     font-size: clamp(1.3rem, 3vmin + .6rem, 2.3rem); letter-spacing: -.01em;
+    text-shadow: 0 0 22px rgba(163,219,247,.55);
   }
 
   /* narração 0 — boas-vindas */
@@ -402,7 +405,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v12 · 29/09/2026</span>
+    <span class="versao" id="versao">v13 · 29/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -710,8 +713,8 @@ const Cena2 = {
     // a definição sobe e encolhe para dar lugar à molécula
     const def = this.$(".c1-definicao");
     if (def) Palco.animar(def, [
-      { top: "calc(54% - 3px)", transform: "translate(-50%, -50%) scale(1)" },
-      { top: "23%", transform: "translate(-50%, -50%) scale(.62)" }
+      { top: "21%", transform: "translate(-50%, 0) scale(1)" },
+      { top: "19.5%", transform: "translate(-50%, 0) scale(.62)" }
     ], { duracao: .8, easing: "cubic-bezier(.6,0,.35,1)" });
     Palco.adicionar(`<div class="c2-cena" aria-label="Molécula de água: um oxigênio ligado a dois hidrogênios"></div><p class="c2-legenda"></p>`);
     this.montar3D(this.$(".c2-cena"));
@@ -719,7 +722,7 @@ const Cena2 = {
 
   legenda() {
     Palco.digitar(this.$(".c2-legenda"), [
-      { texto: "“" }, { classe: "destaque", texto: "Ligações covalentes", junto: true }, { classe: "fecha", texto: "”", junto: true }
+      { texto: "“Ligações covalentes”" }                  // na cor dos elétrons (celeste)
     ], 1);
   },
 
@@ -740,7 +743,8 @@ const Cena2 = {
     const recorte = new THREE.DirectionalLight(0xA3DBF7, .55); recorte.position.set(-5, -2, -4); cena.add(recorte);
 
     // geometria da água: ângulo H–O–H de 104,5°
-    const L = 1.7, meio = (104.5 / 2) * Math.PI / 180;
+    const rO = .62, rH = .34;
+    const L = rO + rH + .68 * .8, meio = (104.5 / 2) * Math.PI / 180;
     const pos = { O: new THREE.Vector3(0, 0, 0),
                   H1: new THREE.Vector3(-L * Math.sin(meio), -L * Math.cos(meio), 0),
                   H2: new THREE.Vector3( L * Math.sin(meio), -L * Math.cos(meio), 0) };
@@ -767,7 +771,7 @@ const Cena2 = {
       const h = halo(nome === "O" ? 0xff8a7a : 0xdff3ff, raio * 4.2); h.position.copy(pos[nome]);
       molecula.add(m, h); return { m, h };
     };
-    const O = atomo("O", .62, this.CORES.O), H1 = atomo("H1", .4, this.CORES.H), H2 = atomo("H2", .4, this.CORES.H);
+    const O = atomo("O", rO, this.CORES.O), H1 = atomo("H1", rH, this.CORES.H), H2 = atomo("H2", rH, this.CORES.H);
 
     // bastões (cilindros) do O até cada H
     const bastao = (de, para, raioDe, raioPara) => {
@@ -787,7 +791,7 @@ const Cena2 = {
       });
       return { c, de, para, eletrons, ini, fim, meio: (ini + fim) / 2 };
     };
-    const ligacoes = [bastao(pos.O, pos.H1, .62, .4), bastao(pos.O, pos.H2, .62, .4)];
+    const ligacoes = [bastao(pos.O, pos.H1, rO, rH), bastao(pos.O, pos.H2, rO, rH)];
 
     // enquadramento: a molécula inteira cabe com folga, em qualquer proporção
     const ajustar = () => {
@@ -1091,6 +1095,16 @@ document.addEventListener("keydown", e => {
 
 montarSumario();
 mostrarTela(capa);
+
+/* ---------- Sem zoom na tela ---------- */
+// iOS ignora user-scalable=no: bloqueia a pinça (gesture*) e o arraste com dois dedos
+["gesturestart", "gesturechange", "gestureend"].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+// computador: Ctrl + roda do mouse / pinça do touchpad e Ctrl + / − / 0
+document.addEventListener("wheel", e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && ["+", "=", "-", "_", "0"].includes(e.key)) e.preventDefault();
+});
 
 /* ---------- PWA: instala o service worker (só quando servido por http/https) ---------- */
 if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
