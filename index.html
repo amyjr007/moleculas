@@ -276,6 +276,32 @@
   .c3-quantico { position: absolute; inset: 0; z-index: 2; opacity: 0; pointer-events: none;
     background: radial-gradient(ellipse 85% 75% at 50% 58%, #15315a 0%, #0c1a30 55%, #0a1322 100%); }
   .c3-quantico.ativo { pointer-events: auto; }
+
+  /* narração 4 — fórmula química e quiz */
+  .c4-formula {
+    position: absolute; left: 0; right: 0; margin: 0; text-align: center; z-index: 3; pointer-events: none;
+    font-family: var(--display); font-weight: 800; color: var(--celeste); line-height: 1.1;
+    font-size: clamp(1.3rem, 3vmin + .6rem, 2.3rem); letter-spacing: -.01em; text-shadow: 0 0 22px rgba(163,219,247,.55);
+  }
+  .c4-opcoes {
+    position: absolute; left: 50%; bottom: calc(clamp(18px, 2.5vw, 28px) + 58px); translate: -50% 0; z-index: 3;
+    display: flex; gap: clamp(10px, 2.4vw, 18px);
+  }
+  .c4-op {
+    min-width: clamp(84px, 20vw, 118px); padding: .5em 1em; border-radius: 16px;
+    font: 800 clamp(1.35rem, 2.6vmin + .7rem, 2rem)/1 var(--display); color: #fff; letter-spacing: .01em;
+    background: rgba(20,33,52,.88); border: 2px solid rgba(163,219,247,.35);
+    box-shadow: 0 10px 28px rgba(0,0,0,.35); transition: border-color .2s, background-color .2s, transform .15s, opacity .4s;
+  }
+  .c4-op sub { font-size: .6em; vertical-align: -.25em; }
+  .c4-op:hover { border-color: var(--celeste); transform: translateY(-2px); }
+  .c4-op.errada { border-color: var(--coral); background: rgba(255,122,102,.22); }
+  .c4-op.certa { border-color: #6EE7A0; background: rgba(110,231,160,.25); box-shadow: 0 0 0 4px rgba(110,231,160,.25), 0 0 30px rgba(110,231,160,.5); }
+  .c4-opcoes.respondido .c4-op:not(.certa) { opacity: .25; pointer-events: none; }
+  .c4-verde { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; border-radius: inherit;
+    background: radial-gradient(circle at 50% 55%, rgba(110,231,160,.5) 0%, rgba(110,231,160,.16) 55%, rgba(110,231,160,0) 80%);
+    box-shadow: inset 0 0 90px rgba(110,231,160,.75); }
+  .c4-confete { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
   .c3-quantico canvas { display: block; width: 100%; height: 100%; }
 
   /* narração 0 — boas-vindas */
@@ -433,7 +459,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v18 · 30/09/2026</span>
+    <span class="versao" id="versao">v19 · 30/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -551,9 +577,21 @@ const NARRACOES = [
       { tempo: 16,   acao: () => Cena3.dash() },           // "dash": entrando na substância
       { tempo: 16.7, acao: () => Cena3.quantico() }        // moléculas de água no mundo quântico (tocáveis)
     ] },
-  { id: "dialogo4", titulo: "O mundo quântico da água", src: "audio/audio_moleculas_4.mp3",
+  { id: "dialogo4", titulo: "A fórmula da água", src: "audio/audio_moleculas_4.mp3",
     inicio: () => Cena3.montarFinal(),                     // parte do mundo quântico da narração 3
-    eventos: [] }
+    eventos: [
+      { tempo: 2,    acao: () => Cena4.pulsarTodas() },    // pulso com brilho em todas, em sequência (até 4s)
+      { tempo: 6,    acao: () => Cena4.ficarUma() },       // somem em fade; a de cima vem para a frente
+      { tempo: 20.2, acao: () => Cena4.formula() },        // "Fórmula Química" digitada embaixo
+      { tempo: 25.7, acao: () => Cena4.pulsar() },         // pulso com brilho na molécula
+      { tempo: 27.6, acao: () => Cena4.hMaiores() },       // H maiores
+      { tempo: 29,   acao: () => Cena4.simboloH() },       // símbolo H nas esferas (fade in)
+      { tempo: 31,   acao: () => Cena4.oMaior() }          // H voltam; O maior, com símbolo
+    ],
+    aoFim: () => Cena4.opcoes() },                         // quiz: HO, H₂O ou HO₂
+  // resposta do quiz: toca só depois do acerto (não aparece na navegação rápida)
+  { id: "dialogo4R", titulo: "Resposta: H₂O", src: "audio/audio_moleculas_4R.mp3", oculta: true,
+    inicio: () => Cena4.montarFinal(), eventos: [] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -1164,15 +1202,20 @@ const Quantico = {
     const grupo = new THREE.Group(), rO = .62, rH = .34, L = rO + rH + .68 * .8, meio = (104.5 / 2) * Math.PI / 180;
     const pH = [new THREE.Vector3(-L * Math.sin(meio), -L * Math.cos(meio), 0), new THREE.Vector3(L * Math.sin(meio), -L * Math.cos(meio), 0)];
     const centro = pH[0].clone().add(pH[1]).divideScalar(3);
-    const O = new THREE.Mesh(geo.esfera, mats.O); O.scale.setScalar(rO); O.position.copy(centro).negate();
+    // materiais próprios de cada molécula: permitem apagar, fazer brilhar etc. uma só
+    const mO = mats.O.clone(), mH = mats.H.clone(), mL = mats.ligacao.clone();
+    [mO, mH, mL].forEach(x => { x.transparent = true; x.emissive = x.color.clone(); x.emissiveIntensity = 0; });
+    const O = new THREE.Mesh(geo.esfera, mO); O.scale.setScalar(rO); O.position.copy(centro).negate();
     grupo.add(O);
-    const Hs = pH.map(p => { const h = new THREE.Mesh(geo.esfera, mats.H); h.scale.setScalar(rH); h.position.copy(p).sub(centro); grupo.add(h); return h; });
+    const Hs = pH.map(p => { const h = new THREE.Mesh(geo.esfera, mH); h.scale.setScalar(rH); h.position.copy(p).sub(centro); grupo.add(h); return h; });
     const bastoes = Hs.map(h => {
-      const b = new THREE.Mesh(geo.bastao, mats.ligacao); grupo.add(b); return b;
+      const b = new THREE.Mesh(geo.bastao, mL); grupo.add(b); return b;
     });
     const nuvem = new THREE.Sprite(mats.nuvem.clone()); nuvem.scale.setScalar(4.2); grupo.add(nuvem);
     const alvos = [O, ...Hs, ...bastoes];
-    grupo.userData = { O, Hs, bastoes, nuvem, alvos, baseH: Hs.map(h => h.position.clone()) };
+    // est: variáveis que o roteiro do áudio anima (tamanho dos átomos, opacidade, símbolos, destaque)
+    const est = { escalaO: 1, escalaH: 1, opac: 1, rotH: 0, rotO: 0, mov: 0, fixa: false, pulso: 0 };
+    grupo.userData = { O, Hs, bastoes, nuvem, alvos, rO, rH, mats: [mO, mH, mL], est, baseH: Hs.map(h => h.position.clone()) };
     this.alinharBastoes(grupo.userData);
     return grupo;
   },
@@ -1260,7 +1303,7 @@ const Quantico = {
       const r = renderer.domElement.getBoundingClientRect();
       ponto.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
       raio.setFromCamera(ponto, camera);
-      const hit = raio.intersectObjects(alvos, false)[0];
+      const hit = raio.intersectObjects(alvos, false).find(h => h.object.userData.dono.userData.est.opac > .1);   // apagadas não respondem
       return hit ? hit.object.userData.dono : null;
     };
     const nomes = Object.keys(this.ACOES);
@@ -1281,26 +1324,99 @@ const Quantico = {
     const estado = { t: 0, visivel: false, moleculas, camera };
     let antes = performance.now();
     const saida = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+    const suave = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+
+    // ---- roteiro: animações no relógio da cena (congelam junto com o áudio) ----
+    const tweens = [], pulsos = [];
+    // anima obj[chave] até "para" em "dur" segundos (com atraso opcional)
+    estado.animar = (obj, chave, para, dur, atraso = 0) => tweens.push({ obj, chave, para, dur, t0: estado.t + atraso, de: null });
+    // pulso com brilho numa molécula
+    estado.pulsar = (m, dur = .6, atraso = 0) => pulsos.push({ m, dur, t0: estado.t + atraso });
+    // posição da molécula na tela (px, relativo à cena)
+    estado.naTela = v => { const p = v.clone().project(camera); return { x: (p.x + 1) / 2 * caixa.clientWidth, y: (1 - p.y) / 2 * caixa.clientHeight }; };
+    // a molécula visível mais alta da tela
+    estado.topo = () => moleculas.filter(m => m.userData.est.opac > .5)
+      .reduce((a, b) => estado.naTela(b.position).y < estado.naTela(a.position).y ? b : a);
+    // leva a molécula ao centro, mais perto, e a vira de frente (O em cima)
+    estado.destacar = (m, dur = 1.6) => {
+      const s = m.userData.est;
+      // centro da molécula a 54% (tela deitada) ou 44% (em pé) da altura: sobra espaço embaixo para a legenda e as opções
+      const D = camera.position.z * .7, meiaAltura = Math.tan(THREE.MathUtils.degToRad(20)) * D, f = camera.aspect >= 1 ? .54 : .44;
+      Object.assign(s, { de: m.position.clone(), qDe: m.quaternion.clone(), qPara: new THREE.Quaternion(),
+        para: new THREE.Vector3(0, (1 - 2 * f) * meiaAltura, camera.position.z - D), fixa: true, mov: dur ? 0 : 1 });
+      if (dur) estado.animar(s, "mov", 1, dur);
+    };
+    // símbolos (H, O) desenhados sobre as esferas
+    const rotulo = (letra, cor) => {
+      const c = document.createElement("canvas"); c.width = c.height = 128;
+      const g = c.getContext("2d"); g.fillStyle = cor; g.font = "800 92px 'Bricolage Grotesque', 'Segoe UI', sans-serif";
+      g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(letra, 64, 70);
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 0, depthTest: false, depthWrite: false }));
+      s.renderOrder = 10; cena.add(s); return s;
+    };
+    estado.rotular = m => {
+      const u = m.userData;
+      if (!u.rotulos) u.rotulos = { O: rotulo("O", "#FFFFFF"), H: u.Hs.map(() => rotulo("H", "#0A1322")) };
+    };
+    const pAtomo = new THREE.Vector3(), paraCam = new THREE.Vector3();
+    const posicionarRotulo = (sprite, atomo, raio, opac) => {
+      atomo.getWorldPosition(pAtomo);
+      paraCam.copy(camera.position).sub(pAtomo).normalize();
+      sprite.position.copy(pAtomo).addScaledVector(paraCam, raio * 1.02);
+      sprite.scale.setScalar(raio * 1.5);
+      sprite.material.opacity = opac;
+    };
     const quadro = () => {
       if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
       const agora = performance.now(), dt = Math.min((agora - antes) / 1000, .1); antes = agora;
       if (!estado.visivel) { requestAnimationFrame(quadro); return; }   // montado e invisível: não gasta GPU
       if (!Palco.pausado) estado.t += dt;
       const t = estado.t;
+      // roteiro: avança as animações de variáveis e os pulsos
+      for (let i = tweens.length - 1; i >= 0; i--) {
+        const w = tweens[i]; if (t < w.t0) continue;
+        if (w.de === null) w.de = w.obj[w.chave];
+        const p = Math.min((t - w.t0) / w.dur, 1);
+        w.obj[w.chave] = w.de + (w.para - w.de) * suave(p);
+        if (p >= 1) tweens.splice(i, 1);
+      }
+      moleculas.forEach(m => { m.userData.est.pulso = 0; });
+      for (let i = pulsos.length - 1; i >= 0; i--) {
+        const pu = pulsos[i], p = (t - pu.t0) / pu.dur;
+        if (p >= 1) { pulsos.splice(i, 1); continue; }
+        if (p >= 0) pu.m.userData.est.pulso = Math.max(pu.m.userData.est.pulso, Math.sin(p * Math.PI));
+      }
       moleculas.forEach(m => {
-        const u = m.userData, e = Math.min(Math.max((t - u.entrada) / .7, 0), 1);
-        // deriva lenta (agitação térmica) e giro próprio
-        m.position.set(u.base.x + Math.sin(t * .31 + u.fase) * .5, u.base.y + Math.sin(t * .27 + u.fase * 1.7) * .4, u.base.z + Math.sin(t * .23 + u.fase * .6) * .5);
-        m.quaternion.copy(u.q0).multiply(new THREE.Quaternion().setFromAxisAngle(u.giro, t * u.vel));
-        m.scale.setScalar(e > 0 ? saida(e) : 0);
-        u.nuvem.material.opacity = .55 + .12 * Math.sin(t * 2.1 + u.fase);   // nuvem eletrônica "respirando"
-        u.Hs.forEach((h, i) => h.position.copy(u.baseH[i]));
+        const u = m.userData, s = u.est, e = Math.min(Math.max((t - u.entrada) / .7, 0), 1);
+        m.visible = s.opac > .01;
+        if (!m.visible) return;
+        if (s.fixa) {
+          // em destaque: vai até a frente da tela e fica parada, de frente
+          const k = suave(s.mov);
+          m.position.lerpVectors(s.de, s.para, k);
+          m.quaternion.slerpQuaternions(s.qDe, s.qPara, k);
+        } else {
+          // deriva lenta (agitação térmica) e giro próprio
+          m.position.set(u.base.x + Math.sin(t * .31 + u.fase) * .5, u.base.y + Math.sin(t * .27 + u.fase * 1.7) * .4, u.base.z + Math.sin(t * .23 + u.fase * .6) * .5);
+          m.quaternion.copy(u.q0).multiply(new THREE.Quaternion().setFromAxisAngle(u.giro, t * u.vel));
+        }
+        m.scale.setScalar((e > 0 ? saida(e) : 0) * (1 + .22 * s.pulso));
+        u.O.scale.setScalar(u.rO * s.escalaO);
+        u.nuvem.material.opacity = (.55 + .12 * Math.sin(t * 2.1 + u.fase) + .9 * s.pulso) * s.opac;   // nuvem eletrônica "respirando"
+        u.mats.forEach(x => { x.opacity = s.opac; x.emissiveIntensity = .55 * s.pulso; x.depthWrite = s.opac > .95; });
+        u.Hs.forEach((h, i) => { h.position.copy(u.baseH[i]); h.scale.setScalar(u.rH * s.escalaH); });
         if (u.acao) {
           const A = this.ACOES[u.acao.nome], p = (t - u.acao.t0) / A.dur;
           if (p >= 1) u.acao = null;
           else A.f(m, Math.max(p, 0), u.acao);
         }
         this.alinharBastoes(u);
+        if (u.rotulos) {
+          m.updateMatrixWorld();
+          const esc = m.scale.x;
+          posicionarRotulo(u.rotulos.O, u.O, u.rO * s.escalaO * esc, s.rotO * s.opac);
+          u.rotulos.H.forEach((r, i) => posicionarRotulo(r, u.Hs[i], u.rH * s.escalaH * esc, s.rotH * s.opac));
+        }
       });
       poeira.material.opacity = .4 + .15 * Math.sin(t * 1.3);
       poeira.rotation.y = t * .01;
@@ -1311,6 +1427,142 @@ const Quantico = {
     requestAnimationFrame(quadro);
     if (revelar) estado.visivel = true;
     return estado;
+  }
+};
+
+/* ---------- Cenas da narração 4: a fórmula da água ---------- */
+const Cena4 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  get q() { return Cena3.quantum; },
+  // 2s → 4s: cada molécula pulsa com brilho, uma depois da outra (da esquerda para a direita)
+  pulsarTodas() {
+    const q = this.q; if (!q) return;
+    const lista = q.moleculas.filter(m => m.userData.est.opac > .5).sort((a, b) => q.naTela(a.position).x - q.naTela(b.position).x);
+    const passo = lista.length > 1 ? 1.5 / (lista.length - 1) : 0;
+    lista.forEach((m, i) => q.pulsar(m, .5, i * passo));
+  },
+  // 6s: todas somem em fade; fica só a de cima, que vem para a frente
+  ficarUma() {
+    const q = this.q; if (!q) return;
+    const m = this.m = q.topo();
+    q.moleculas.forEach(o => { if (o !== m) q.animar(o.userData.est, "opac", 0, 1); });
+    q.destacar(m);
+  },
+  // 20,2s: "Fórmula Química" digitada logo abaixo da molécula
+  formula() {
+    if (!this.m || this.$(".c4-formula")) return;
+    Palco.adicionar(`<p class="c4-formula"></p>`);
+    this.posicionarFormula();
+    Palco.digitar(this.$(".c4-formula"), "Fórmula Química", 1);
+  },
+  posicionarFormula() {
+    const el = this.$(".c4-formula"), q = this.q; if (!el || !q) return;
+    const s = this.m.userData.est, baixo = s.para.clone().add(new THREE.Vector3(0, -1.55, 0));
+    el.style.top = `${q.naTela(baixo).y + 10}px`;
+  },
+  pulsar() { if (this.m) this.q.pulsar(this.m, .9); },
+  hMaiores() { if (this.m) this.q.animar(this.m.userData.est, "escalaH", 1.35, .4); },
+  simboloH() { if (!this.m) return; this.q.rotular(this.m); this.q.animar(this.m.userData.est, "rotH", 1, .8); },
+  oMaior() {
+    if (!this.m) return;
+    const s = this.m.userData.est, q = this.q;
+    q.rotular(this.m);
+    q.animar(s, "escalaH", 1, .4); q.animar(s, "escalaO", 1.3, .4); q.animar(s, "rotO", 1, .8);
+  },
+
+  // Fim do áudio 4: três opções de fórmula
+  opcoes() {
+    if (this.$(".c4-opcoes")) return;
+    Palco.adicionar(`
+      <div class="c4-opcoes" role="group" aria-label="Qual é a fórmula da água?">
+        <button class="c4-op" data-certa="0">HO</button>
+        <button class="c4-op" data-certa="1">H<sub>2</sub>O</button>
+        <button class="c4-op" data-certa="0">HO<sub>2</sub></button>
+      </div>`);
+    const caixa = this.$(".c4-opcoes"), f = this.$(".c4-formula");
+    if (f) Object.assign(caixa.style, { top: `${f.offsetTop + f.offsetHeight + 16}px`, bottom: "auto" });   // logo abaixo de "Fórmula Química"
+    [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
+      { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
+    caixa.addEventListener("click", e => {
+      const b = e.target.closest(".c4-op"); if (!b || caixa.classList.contains("respondido")) return;
+      b.dataset.certa === "1" ? this.acertou(b) : this.errou(b);
+    });
+  },
+  errou(b) {
+    b.classList.add("errada");
+    b.animate([{ transform: "translateX(0)" }, { transform: "translateX(-9px)" }, { transform: "translateX(8px)" }, { transform: "translateX(-5px)" }, { transform: "translateX(0)" }],
+      { duration: 420, easing: "ease-in-out" });
+    setTimeout(() => b.classList.remove("errada"), 900);
+  },
+  // Acerto: confetes, tela brilha em verde, aplausos + fanfarra; depois a narração da resposta (4R)
+  acertou(b) {
+    const caixa = this.$(".c4-opcoes");
+    caixa.classList.add("respondido"); b.classList.add("certa");
+    Palco.adicionar(`<div class="c4-verde"></div>`);
+    this.$(".c4-verde").animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" })
+      .finished.then(() => { const v = this.$(".c4-verde"); v && v.remove(); });
+    Confete.soltar({ de: "cantos" });
+    Confete.soltar({ de: "topo" });
+    if (this.m) this.q.pulsar(this.m, .9);
+    const sons = ["audio/vfx/applause.mp3", "audio/funfare.mp3"].map(src => { const a = new Audio(src); a.play().catch(() => {}); return a; });
+    const fim = a => new Promise(r => { a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 15000); });
+    const palco = Palco.el.firstElementChild;
+    Promise.all(sons.map(fim)).then(() => {
+      if (Player.indice !== 4 || Palco.el.firstElementChild !== palco) return;   // saiu da cena no meio da festa
+      const r = NARRACOES.findIndex(n => n.id === "dialogo4R");
+      Player.terminou = false; Player.irPara(r, true);
+    });
+  },
+
+  // tela final da narração 4 (para quem pula direto para a narração da resposta)
+  montarFinal() {
+    if (this.$(".c4-formula")) return;
+    Cena3.montarFinal();
+    const q = this.q; if (!q) return;
+    const m = this.m = q.topo();
+    q.moleculas.forEach(o => { if (o !== m) o.userData.est.opac = 0; });
+    q.destacar(m, 0);
+    Object.assign(m.userData.est, { escalaO: 1.3, rotH: 1, rotO: 1 });
+    q.rotular(m);
+    Palco.adicionar(`<p class="c4-formula"></p>`);
+    this.posicionarFormula();
+    Palco.letras(this.$(".c4-formula"), "Fórmula Química");
+  }
+};
+
+/* ---------- Confetes (canvas leve, sem biblioteca) ---------- */
+const Confete = {
+  CORES: ["#FFC24B", "#FF7A66", "#A3DBF7", "#7C9CFF", "#FFFFFF", "#6EE7A0"],
+  soltar({ de = "cantos", qtd = 140 } = {}) {
+    const P = Palco.el, dpr = Math.min(devicePixelRatio || 1, 2);
+    const c = document.createElement("canvas"); c.className = "c4-confete"; P.appendChild(c);
+    const W = P.clientWidth, H = P.clientHeight;
+    c.width = W * dpr; c.height = H * dpr;
+    const g = c.getContext("2d"); g.scale(dpr, dpr);
+    const aleat = (a, b) => a + Math.random() * (b - a);
+    const ps = Array.from({ length: qtd }, (_, i) => {
+      let x, y, vx, vy;
+      if (de === "topo") { x = aleat(0, W); y = aleat(-H * .3, -10); vx = aleat(-60, 60); vy = aleat(40, 160); }
+      else { const esq = i % 2 === 0; x = esq ? 0 : W; y = H; vx = (esq ? 1 : -1) * aleat(180, 520); vy = -aleat(H * 1.1, H * 1.9); }
+      return { x, y, vx, vy, w: aleat(6, 11), h: aleat(8, 15), rot: aleat(0, 6.3), vr: aleat(-9, 9), cor: this.CORES[i % this.CORES.length], giro: aleat(0, 6.3), redondo: Math.random() < .25 };
+    });
+    let antes = performance.now(), vida = 0;
+    const passo = agora => {
+      const dt = Math.min((agora - antes) / 1000, .05); antes = agora; vida += dt;
+      g.clearRect(0, 0, W, H);
+      let vivos = 0;
+      ps.forEach(p => {
+        p.vy += 900 * dt; p.vx *= .985; p.vy *= .99;
+        p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt; p.giro += 6 * dt;
+        if (p.y < H + 30) vivos++;
+        g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.scale(1, Math.cos(p.giro));   // "virando" no ar
+        g.fillStyle = p.cor;
+        if (p.redondo) { g.beginPath(); g.arc(0, 0, p.w / 2, 0, Math.PI * 2); g.fill(); } else g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        g.restore();
+      });
+      if (vivos && vida < 6) requestAnimationFrame(passo); else c.remove();
+    };
+    requestAnimationFrame(passo);
   }
 };
 
@@ -1418,6 +1670,8 @@ const Player = {
     if (this.fonte && !this.fonte.src) { this.fonte.paused = true; this.fonte.ended = true; }
     ui.atualizarBotao(false);
     this.terminou = true;
+    const n = NARRACOES[this.indice];
+    if (n.aoFim) try { n.aoFim(Palco); } catch (e) { console.error(e); }   // ex.: quiz no fim da narração
   },
 
   // Botão play: 1º clique = dialogo0; depois alterna pausa;
@@ -1426,7 +1680,9 @@ const Player = {
     if (this.indice === -1) { this.irPara(0); return; }
     if (this.terminou) {
       this.terminou = false;
-      const prox = this.indice + 1 < NARRACOES.length ? this.indice + 1 : this.indice;
+      // próxima narração da sequência (as "ocultas", como a resposta do quiz, só tocam por gatilho próprio)
+      const seguinte = NARRACOES.findIndex((n, i) => i > this.indice && !n.oculta);
+      const prox = seguinte >= 0 ? seguinte : this.indice;
       this.irPara(prox, prox !== this.indice);   // segue a história: a cena continua no palco
       return;
     }
@@ -1512,7 +1768,7 @@ const veu = document.getElementById("veu");
 const sumario = document.getElementById("sumario");
 
 function montarSumario() {
-  sumario.innerHTML = NARRACOES.map((n, i) => `
+  sumario.innerHTML = NARRACOES.map((n, i) => n.oculta ? "" : `
     <li>
       <button class="item-sumario" data-indice="${i}">
         <span class="num">${i + 1}</span>
