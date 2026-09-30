@@ -309,12 +309,14 @@
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14%); mask-image: linear-gradient(to bottom, transparent 0, #000 14%); }   /* sem borda reta no alto */
   .c5-copo canvas { display: block; width: 100%; height: 100%; }
   .c5-lupa {
-    position: absolute; border-radius: 50%; overflow: visible; pointer-events: none;
+    position: absolute; border-radius: 50%; overflow: visible; cursor: grab; touch-action: none; z-index: 3;
     border: 3px solid rgba(225,238,250,.85);
     box-shadow: 0 0 0 1px rgba(10,19,34,.5), 0 8px 26px rgba(0,0,0,.45), inset 0 0 18px rgba(163,219,247,.35);
     background: radial-gradient(circle at 50% 50%, rgba(24,52,90,.92) 0%, rgba(14,34,62,.94) 70%, rgba(10,22,40,.96) 100%);
   }
-  .c5-lupa canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; }
+  .c5-lupa canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; pointer-events: none; }
+  .c5-lupa.arrastando { cursor: grabbing; }
+  .c5-lupa::before, .c5-lupa::after { pointer-events: none; }
   .c5-lupa::before {        /* reflexo no vidro da lente */
     content: ""; position: absolute; inset: 6%; border-radius: 50%; z-index: 1;
     background: radial-gradient(ellipse 60% 38% at 32% 22%, rgba(255,255,255,.28), rgba(255,255,255,0) 70%);
@@ -487,7 +489,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v21 · 30/09/2026</span>
+    <span class="versao" id="versao">v22 · 30/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -1230,7 +1232,7 @@ const Copo = {
 
   // Laço genérico: a cada quadro, o roteiro posiciona câmera e extras no tempo do áudio da sua narração
   comRoteiro(caixa, renderer, ctx, roteiro) {
-    Object.assign(ctx, { caixa, THREE });
+    Object.assign(ctx, { caixa, THREE, renderer, tAcao: 0 });   // tAcao: relógio das reações ao toque (para na pausa)
     ctx.naTela = v => { const p = v.clone().project(ctx.camera); return { x: (p.x + 1) / 2 * caixa.clientWidth, y: (1 - p.y) / 2 * caixa.clientHeight }; };
     let ultimoT = -1, mudou = true;
     const ajustar = () => {
@@ -1241,10 +1243,14 @@ const Copo = {
     };
     if (roteiro.montar) roteiro.montar(ctx);
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
-    const quadro = () => {
+    let antes = performance.now();
+    const quadro = agora => {
       if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      const dt = Math.min((agora - antes) / 1000, .1); antes = agora;
+      if (!Palco.pausado) ctx.tAcao += dt;
       const t = Player.indice === roteiro.indice && Player.fonte ? Player.fonte.currentTime : Math.max(ultimoT, 0);
-      if (t !== ultimoT || mudou) { roteiro.posicionar(t, ctx); renderer.render(ctx.cena, ctx.camera); ultimoT = t; mudou = false; }
+      // redesenha quando o áudio anda, a tela muda de tamanho ou há uma reação ao toque em curso
+      if (t !== ultimoT || mudou || (roteiro.ativo && roteiro.ativo(ctx))) { roteiro.posicionar(t, ctx); renderer.render(ctx.cena, ctx.camera); ultimoT = t; mudou = false; }
       requestAnimationFrame(quadro);
     };
     roteiro.posicionar(0, ctx); renderer.render(ctx.cena, ctx.camera);   // compila na montagem
@@ -1637,13 +1643,33 @@ const Cena4R = {
     indice: 5,
     montar(ctx) {
       const T = ctx.THREE, mat = cor => new T.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
-      const mats = { O: mat(Quantico.CORES.O), H: mat(Quantico.CORES.H), ligacao: mat(Quantico.CORES.ligacao), nuvem: new T.SpriteMaterial({ transparent: true, opacity: 0 }) };
+      const halo = new T.SpriteMaterial({ map: Quantico.textura([[0, "rgba(163,219,247,.55)"], [.45, "rgba(163,219,247,.14)"], [1, "rgba(163,219,247,0)"]]),
+                                          transparent: true, depthWrite: false, blending: T.AdditiveBlending, opacity: 0 });
+      const mats = { O: mat(Quantico.CORES.O), H: mat(Quantico.CORES.H), ligacao: mat(Quantico.CORES.ligacao), nuvem: halo };
       const geo = { esfera: new T.SphereGeometry(1, 48, 32), bastao: new T.CylinderGeometry(.13, .13, 1, 24, 1, true) };
       ctx.mol = Quantico.agua(mats, geo);
-      ctx.mol.userData.nuvem.visible = false;
       ctx.mol.visible = false;
       ctx.cena.add(ctx.mol);
+
+      // toque na molécula (depois que ela para): reações "divertidas", as mesmas do mundo quântico
+      const cv = ctx.renderer.domElement, raio = new T.Raycaster(), ponto = new T.Vector2(), u = ctx.mol.userData;
+      const acertou = e => {
+        if (!ctx.molPronta) return false;
+        const r = cv.getBoundingClientRect();
+        ponto.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+        raio.setFromCamera(ponto, ctx.camera);
+        return raio.intersectObjects(u.alvos, false).length > 0;
+      };
+      const nomes = Object.keys(Quantico.ACOES);
+      cv.addEventListener("pointerdown", e => {
+        if (Palco.pausado || !acertou(e)) return;
+        const ant = u.acao && u.acao.nome, nome = nomes.filter(n => n !== ant)[Math.floor(Math.random() * (nomes.length - 1))];
+        u.acao = { nome, t0: ctx.tAcao, dir: new T.Vector3(Math.random() - .5, Math.random() - .5, (Math.random() - .5) * .4).normalize(),
+                   eixo: new T.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize() };
+      });
+      cv.addEventListener("pointermove", e => { if (e.pointerType === "mouse") cv.style.cursor = acertou(e) ? "pointer" : ""; });
     },
+    ativo(ctx) { return !!ctx.mol.userData.acao; },
     ajustar(ctx) {
       const T = ctx.THREE, deitada = ctx.camera.aspect >= 1.1;
       // tela deitada: copo à esquerda, molécula à direita · em pé: molécula acima do copo
@@ -1675,6 +1701,17 @@ const Cena4R = {
         m.quaternion.setFromEuler(new T.Euler((1 - k) * Math.PI * .8, (1 - k) * Math.PI * 4, (1 - k) * Math.PI * .5));
         m.scale.setScalar(.85 * (.12 + .88 * k));
       }
+      // reações ao toque (só depois que a molécula parou)
+      const u = m.userData;
+      ctx.molPronta = p >= 1;
+      u.Hs.forEach((h, i) => h.position.copy(u.baseH[i]));
+      u.nuvem.material.opacity = 0;
+      if (u.acao) {
+        const A = Quantico.ACOES[u.acao.nome], q = (ctx.tAcao - u.acao.t0) / A.dur;
+        if (q >= 1 || !ctx.molPronta) u.acao = null;
+        else A.f(m, Math.max(q, 0), u.acao);
+      }
+      Quantico.alinharBastoes(u);
     }
   },
 
@@ -1699,13 +1736,34 @@ const Cena4R = {
   lupa() {
     const ctx = this.ctx, caixa = this.$(".c5-copo");
     if (!ctx || !caixa || this.$(".c5-lupa")) return;
-    const c = ctx.naTela(new ctx.THREE.Vector3(ctx.gx, 1.05, .9)), borda = ctx.naTela(new ctx.THREE.Vector3(ctx.gx + .95, 1.05, .9));
+    const V = (x, y) => new ctx.THREE.Vector3(x, y, .9);
+    const c = ctx.naTela(V(ctx.gx, 1.05)), borda = ctx.naTela(V(ctx.gx + .95, 1.05));
     const d = Math.max(64, Math.round((borda.x - c.x) * 1.7));
-    caixa.insertAdjacentHTML("beforeend", `<div class="c5-lupa" aria-label="Lupa mostrando as moléculas de água dentro do copo"><canvas></canvas></div>`);
+    // área da água na tela: é por ela que a lupa pode passear
+    const a = ctx.naTela(V(ctx.gx - .9, 1.88)), b = ctx.naTela(V(ctx.gx + .9, .3));
+    const agua = { x0: a.x, y0: a.y, x1: b.x, y1: b.y };
+    caixa.insertAdjacentHTML("beforeend", `<div class="c5-lupa" role="img" aria-label="Lupa mostrando as moléculas de água dentro do copo; arraste para ver outras"><canvas></canvas></div>`);
     const lupa = this.$(".c5-lupa");
-    Object.assign(lupa.style, { width: `${d}px`, height: `${d}px`, left: `${c.x - d / 2}px`, top: `${c.y - d / 2}px` });
+    const pos = { x: c.x, y: c.y };                       // centro da lente (px na cena)
+    const colocar = () => Object.assign(lupa.style, { left: `${pos.x - d / 2}px`, top: `${pos.y - d / 2}px` });
+    Object.assign(lupa.style, { width: `${d}px`, height: `${d}px` }); colocar();
     Palco.animar(lupa, [{ opacity: 0, transform: "scale(.6) rotate(-12deg)" }, { opacity: 1, transform: "scale(1) rotate(0deg)" }], { duracao: .7, easing: "cubic-bezier(.3,1.4,.5,1)" });
-    Lupa.animar(lupa.querySelector("canvas"), d);
+
+    // arrastar a lupa pela água (o centro da lente não sai da água)
+    let arrasto = null;
+    lupa.addEventListener("pointerdown", e => { arrasto = { dx: e.clientX - pos.x, dy: e.clientY - pos.y }; lupa.setPointerCapture(e.pointerId); lupa.classList.add("arrastando"); });
+    lupa.addEventListener("pointermove", e => {
+      if (!arrasto) return;
+      pos.x = Math.min(Math.max(e.clientX - arrasto.dx, agua.x0), agua.x1);
+      pos.y = Math.min(Math.max(e.clientY - arrasto.dy, agua.y0), agua.y1);
+      colocar();
+    });
+    const soltar = () => { arrasto = null; lupa.classList.remove("arrastando"); };
+    lupa.addEventListener("pointerup", soltar); lupa.addEventListener("pointercancel", soltar);
+
+    // a lente mostra o pedaço do "campo" de moléculas (do tamanho da água) que está embaixo dela
+    Lupa.animar(lupa.querySelector("canvas"), d, { w: agua.x1 - agua.x0 + d, h: agua.y1 - agua.y0 + d },
+      () => ({ x: pos.x - d / 2 - agua.x0 + d / 2, y: pos.y - d / 2 - agua.y0 + d / 2 }));
   },
 
   // 16s: a fórmula embaixo da molécula
@@ -1720,18 +1778,19 @@ const Cena4R = {
   }
 };
 
-/* ---------- Lupa: moléculas de água em miniatura, se agitando (canvas 2D) ---------- */
+/* ---------- Lupa: moléculas de água em miniatura, se agitando (canvas 2D) ----------
+   campo: tamanho (px) da região de água onde as moléculas vivem; desloc(): canto da lente dentro do campo */
 const Lupa = {
-  animar(canvas, d) {
+  animar(canvas, d, campo = { w: d, h: d }, desloc = () => ({ x: 0, y: 0 })) {
     const dpr = Math.min(devicePixelRatio || 1, 2);
     canvas.width = canvas.height = d * dpr;
     const g = canvas.getContext("2d"); g.scale(dpr, dpr);
     const R = d / 2, s = d * .055, ang = 52.25 * Math.PI / 180;
-    const ms = Array.from({ length: 13 }, () => {
-      const r = Math.sqrt(Math.random()) * (R - s * 2.2), a = Math.random() * Math.PI * 2;
-      return { x: R + Math.cos(a) * r, y: R + Math.sin(a) * r, vx: (Math.random() - .5) * d * .12, vy: (Math.random() - .5) * d * .12,
-               rot: Math.random() * 6.3, vr: (Math.random() - .5) * 2.4, esc: .8 + Math.random() * .35 };
-    });
+    const qtd = Math.max(13, Math.round(13 * (campo.w * campo.h) / (Math.PI * R * R)));   // mesma densidade em todo o copo
+    const ms = Array.from({ length: qtd }, () => ({
+      x: s * 2 + Math.random() * (campo.w - s * 4), y: s * 2 + Math.random() * (campo.h - s * 4),
+      vx: (Math.random() - .5) * d * .12, vy: (Math.random() - .5) * d * .12,
+      rot: Math.random() * 6.3, vr: (Math.random() - .5) * 2.4, esc: .8 + Math.random() * .35 }));
     const esfera = (x, y, r, claro, escuro) => {
       const gr = g.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r);
       gr.addColorStop(0, claro); gr.addColorStop(1, escuro);
@@ -1742,16 +1801,22 @@ const Lupa = {
       if (!canvas.isConnected) return;
       const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora;
       g.clearRect(0, 0, d, d);
+      const off = desloc();
       ms.forEach(m => {
         m.x += m.vx * dt; m.y += m.vy * dt; m.rot += m.vr * dt;
-        const dx = m.x - R, dy = m.y - R, lim = R - s * 2;
-        if (Math.hypot(dx, dy) > lim) { const n = Math.hypot(dx, dy); m.vx -= 2 * (m.vx * dx + m.vy * dy) / (n * n) * dx; m.vy -= 2 * (m.vx * dx + m.vy * dy) / (n * n) * dy; m.x = R + dx / n * lim; m.y = R + dy / n * lim; }
+        // quicam nas bordas do campo (a água do copo)
+        const b = s * 2;
+        if (m.x < b || m.x > campo.w - b) { m.vx = -m.vx; m.x = Math.min(Math.max(m.x, b), campo.w - b); }
+        if (m.y < b || m.y > campo.h - b) { m.vy = -m.vy; m.y = Math.min(Math.max(m.y, b), campo.h - b); }
+        // posição dentro da lente; só desenha as que estão sob ela
+        const x = m.x - off.x, y = m.y - off.y;
+        if (Math.hypot(x - R, y - R) > R + s * 2) return;
         const e = s * m.esc, L = e * 1.55;
-        const h1 = [m.x + Math.sin(m.rot - ang) * L, m.y + Math.cos(m.rot - ang) * L], h2 = [m.x + Math.sin(m.rot + ang) * L, m.y + Math.cos(m.rot + ang) * L];
+        const h1 = [x + Math.sin(m.rot - ang) * L, y + Math.cos(m.rot - ang) * L], h2 = [x + Math.sin(m.rot + ang) * L, y + Math.cos(m.rot + ang) * L];
         g.strokeStyle = "rgba(200,200,200,.9)"; g.lineWidth = e * .32;
-        [h1, h2].forEach(h => { g.beginPath(); g.moveTo(m.x, m.y); g.lineTo(h[0], h[1]); g.stroke(); });
+        [h1, h2].forEach(h => { g.beginPath(); g.moveTo(x, y); g.lineTo(h[0], h[1]); g.stroke(); });
         [h1, h2].forEach(h => esfera(h[0], h[1], e * .58, "#ffffff", "#b9c7d6"));
-        esfera(m.x, m.y, e, "#ff6b5e", "#b3000a");
+        esfera(x, y, e, "#ff6b5e", "#b3000a");
       });
       requestAnimationFrame(quadro);
     };
