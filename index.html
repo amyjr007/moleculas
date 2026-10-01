@@ -390,7 +390,7 @@
   }
   .c7-lewis { margin: 0; opacity: 0; flex: none; }
   .c7-lewis img {
-    display: block; height: clamp(130px, 30vh, 320px); aspect-ratio: 600 / 840; object-fit: cover;
+    display: block; height: clamp(120px, 26vh, 300px); aspect-ratio: 600 / 840; object-fit: cover;
     border-radius: 18px; filter: grayscale(1) contrast(1.05);
     box-shadow: 0 0 0 3px var(--grafite), 0 18px 50px rgba(0,0,0,.5);
   }
@@ -866,7 +866,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v37 · 01/10/2026</span>
+    <span class="versao" id="versao">v38 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3455,7 +3455,12 @@ const Cena6 = {
 /* ---------- Cenas da narração 7: a Regra do Octeto ---------- */
 const Cena7 = {
   $(sel) { return Palco.el.querySelector(sel); },
-  REGRA: "“Os átomos tendem a reagir quimicamente a fim de completarem 8 elétrons na camada de valência, garantindo estabilidade”",
+  // "estabilidade" em âmbar (a mesma classe "destaque" da definição de molécula)
+  REGRA: [
+    { texto: "“Os átomos tendem a reagir quimicamente a fim de completarem 8 elétrons na camada de valência, o que garante a " },
+    { classe: "destaque", texto: "estabilidade" },
+    { texto: " dos gases nobres”" }
+  ],
 
   // 1 → 7s: o título novo vem de baixo, colado no que está na tela, e empurra tudo para cima
   // até parar onde ficava "Moléculas" (o que sobe junto anda exatamente a mesma distância)
