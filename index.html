@@ -337,6 +337,7 @@
     font-size: clamp(2rem, 5vmin + .8rem, 3.6rem); letter-spacing: .01em; text-shadow: 0 0 26px rgba(163,219,247,.6);
   }
   .c5-formula sub { font-size: .55em; vertical-align: -.2em; }
+  .c5-formula span, .c5-formula sub { display: inline-block; transform-origin: 50% 70%; }   /* cada parte pode crescer sozinha */
   .c3-quantico canvas { display: block; width: 100%; height: 100%; }
 
   /* narração 0 — boas-vindas */
@@ -494,7 +495,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v30 · 30/09/2026</span>
+    <span class="versao" id="versao">v31 · 30/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -633,9 +634,15 @@ const NARRACOES = [
       { tempo: 3,    acao: () => Cena4R.preparar() },      // monta o copo escondido (sem travar o clarão)
       { tempo: 5,    acao: () => Cena4R.voltar() },        // dash ao contrário + clarão
       { tempo: 5.5,  acao: () => Cena4R.trocar() },        // sob o clarão: volta o copo (zoom out até 7s, preso ao áudio)
-      // 9 → 11s: uma molécula sai girando de dentro da água e para (preso ao áudio)
-      { tempo: 13,   acao: () => Cena4R.lupa() },          // lupa mágica mostrando as moléculas dentro do copo
-      { tempo: 16,   acao: () => Cena4R.formula() }        // H₂O embaixo da molécula
+      { tempo: 8,    acao: () => Cena4R.formula() },       // H₂O do lado do copo
+      // 10 → 12s: uma molécula sai girando de dentro da água e para (preso ao áudio)
+      // 14,6 → 15,9s: os H da molécula crescem com brilho · 15,9 → 17s: o O (presos ao áudio, ver TEMPOS)
+      { tempo: 14.6, acao: () => Cena4R.realcar(".f-2") },                                   // o "2" da fórmula
+      { tempo: 15.9, acao: () => { Cena4R.realcar(".f-2", false); Cena4R.realcar(".f-o"); } }, // agora o "O"
+      { tempo: 17,   acao: () => Cena4R.realcar(".f-o", false) },                            // volta ao normal
+      { tempo: 19.3, acao: () => Cena4R.lupa() },          // lupa mágica mostrando as moléculas dentro do copo
+      { tempo: 23,   acao: () => Cena4R.realcar(".f-h .f-2") },                              // "H₂" da fórmula
+      { tempo: 24,   acao: () => { Cena4R.realcar(".f-h .f-2", false); Cena4R.pulsarParte(".f-o"); } } // volta; pulsa o "O"
     ] },
   // correção do quiz: toca só depois de um erro (não aparece na navegação rápida)
   { id: "dialogo4W", titulo: "Correção: H₂O", src: "audio/audio_moleculas_4W.mp3", oculta: true,
@@ -1660,8 +1667,9 @@ const Cena4R = {
   },
 
   // tempos de cada narração que volta ao copo: zoom out [início, fim] e saída da molécula (2s de duração)
+  // realceH / realceO: janelas em que os átomos da molécula crescem com brilho
   TEMPOS: {
-    dialogo4R: { zoom: [5.5, 7], mol: 9 },
+    dialogo4R: { zoom: [5.5, 7], mol: 10, realceH: [14.6, 15.9], realceO: [15.9, 17] },
     dialogo4W: { zoom: [11.5, 13.5], mol: 14.2 }
   },
 
@@ -1740,8 +1748,14 @@ const Cena4R = {
         m.quaternion.setFromEuler(new T.Euler((1 - k) * Math.PI * .8, (1 - k) * Math.PI * 4, (1 - k) * Math.PI * .5));
         m.scale.setScalar(.85 * (.12 + .88 * k));
       }
-      // reações ao toque (só depois que a molécula parou)
+      // realces presos ao áudio: os H e depois o O crescem com brilho
       const u = m.userData;
+      const janela = j => j ? suave((t - j[0]) / .3) * (1 - suave((t - j[1] + .3) / .3)) : 0;
+      const kH = janela(tempo.realceH), kO = janela(tempo.realceO);
+      u.Hs.forEach(h => h.scale.setScalar(u.rH * (1 + .35 * kH)));
+      u.O.scale.setScalar(u.rO * (1 + .3 * kO));
+      u.mats[1].emissiveIntensity = .55 * kH; u.mats[0].emissiveIntensity = .6 * kO;
+      // reações ao toque (só depois que a molécula parou)
       ctx.molPronta = p >= 1;
       u.Hs.forEach((h, i) => h.position.copy(u.baseH[i]));
       u.nuvem.material.opacity = 0;
@@ -1806,12 +1820,26 @@ const Cena4R = {
       () => ({ x: pos.x - d / 2 - agua.x0 + d / 2, y: pos.y - d / 2 - agua.y0 + d / 2 }));
   },
 
-  // 16s: a fórmula embaixo da molécula
+  // realce de partes da fórmula (".f-h", ".f-2", ".f-o"): cresce com brilho e fica até ser desligado
+  REALCE: { transform: "scale(1.5)", textShadow: "0 0 16px rgba(255,255,255,.95), 0 0 44px rgba(163,219,247,1)" },
+  NORMAL: { transform: "scale(1)", textShadow: "0 0 0 rgba(255,255,255,0)" },
+  realcar(partes, ligar = true) {
+    partes.split(" ").forEach(p => {
+      const el = this.$(".c5-formula " + p); if (!el) return;
+      Palco.animar(el, ligar ? [this.NORMAL, this.REALCE] : [this.REALCE, this.NORMAL], { duracao: .35, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-in-out" });
+    });
+  },
+  pulsarParte(p) {
+    const el = this.$(".c5-formula " + p); if (!el) return;
+    Palco.animar(el, [this.NORMAL, { ...this.REALCE, offset: .45 }, this.NORMAL], { duracao: .8, easing: "ease-in-out" });
+  },
+
+  // a fórmula do lado do copo (embaixo do lugar onde a molécula vai parar)
   formula() {
     const ctx = this.ctx, caixa = this.$(".c5-copo");
     if (!ctx || !caixa || this.$(".c5-formula")) return;
     const p = ctx.naTela(ctx.alvoMol.clone().add(new ctx.THREE.Vector3(0, -1.2, 0)));
-    caixa.insertAdjacentHTML("beforeend", `<p class="c5-formula">H<sub>2</sub>O</p>`);
+    caixa.insertAdjacentHTML("beforeend", `<p class="c5-formula"><span class="f-h">H</span><sub class="f-2">2</sub><span class="f-o">O</span></p>`);
     const f = this.$(".c5-formula");
     Object.assign(f.style, { left: `${p.x}px`, top: `${p.y}px` });
     Palco.animar(f, [{ opacity: 0, transform: "translate(-50%, 12px)" }, { opacity: 1, transform: "translate(-50%, 0)" }], { duracao: .7, easing: "ease-out" });
