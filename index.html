@@ -583,6 +583,9 @@
   .q2-face.f4 { transform: rotateY(240deg) translateZ(var(--ap)); }
   .q2-face.f5 { transform: rotateY(300deg) translateZ(var(--ap)); }
   .q2-face.frente { pointer-events: auto; }
+  /* com perspectiva, a borda das faces vizinhas entra um pouco na janela (e o cabo da lupa
+     aparecia ali); parado o prisma, só a face da frente fica à vista. "saindo" é a que gira para fora. */
+  .q2-face:not(.frente):not(.saindo) { visibility: hidden; }
   /* a altura é a que sobra da janela (o 240px é o topo, o enunciado e as margens) */
   .q2-cubo-ex  { --ca: clamp(200px, min(62vh, 92vh - 240px), 520px); --cl: calc(var(--ca) * .74); }
   .q2-cubo-alt { --ca: clamp(200px, min(62vh, 92vh - 240px), 520px); --cl: clamp(250px,40vw,520px); }
@@ -598,6 +601,10 @@
   .q2-frasco img, .q2-frasco svg { display: block; height: 100%; width: auto; max-width: 100%;
     object-fit: contain; -webkit-user-drag: none; user-select: none; pointer-events: none; }
   .q2-frasco svg { aspect-ratio: var(--prop, 152 / 400); }
+  /* um <svg> esticado em altura não diz a sua largura à caixa (como uma foto diz), e a caixa
+     ficava estreita: o botijão do metano saía minúsculo e o cilindro, apertado. A proporção
+     vai na própria caixa, e o desenho ocupa a altura toda — o botijão fica da altura do cilindro. */
+  .q2-frasco:has(> svg) { aspect-ratio: var(--prop, 152 / 400); }
   .q2-rot-cil { font-family: var(--ff-mono); letter-spacing: .1em; text-anchor: middle; fill: #e6ecf6; }
   .q2-rot-esc { font-family: var(--ff-display); font-weight: 700; text-anchor: middle; fill: #1b2330; }
   .s7-cil-tarja { font-family: var(--ff-mono); letter-spacing: .16em; text-anchor: middle; fill: #e6ecf6; }
@@ -829,7 +836,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v34 · 01/10/2026</span>
+    <span class="versao" id="versao">v35 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -1786,8 +1793,16 @@ const Quiz = (() => {
     function poe(n) {
       f = n;
       cubos.forEach(c => [1, 2, 3, 4, 5].forEach(k => c.classList.toggle("face-" + k, f === k)));
-      // só a face da frente pega o toque
-      giros.forEach(g => [...g.children].forEach((el, k) => el.classList.toggle("frente", k === f)));
+      // só a face da frente pega o toque (e fica à vista); a que sai continua visível durante o giro
+      giros.forEach(g => [...g.children].forEach((el, k) => {
+        const era = el.classList.contains("frente");
+        el.classList.toggle("frente", k === f);
+        if (era && k !== f) {
+          el.classList.add("saindo");
+          clearTimeout(el._saindo);
+          el._saindo = setTimeout(() => el.classList.remove("saindo"), 1000);   // o giro dura 0,95s
+        }
+      }));
     }
     function zera() {
       caso.querySelectorAll(".q2-alt").forEach(b => { b.classList.remove("correct", "wrong"); b.disabled = false; });
@@ -2024,8 +2039,14 @@ const NARRACOES = [
     aoFim: () => ui.modoQuiz(true) },                      // o play vira o botão "Quiz"
   // depois do quiz: o botão "Continuar" do cartão da nota traz esta narração, com o título "Moléculas"
   { id: "dialogo6", titulo: "O que falta aprender", src: "audio/audio_moleculas_6.mp3",
-    inicio: () => Cena6.titulo(),
-    eventos: [] }
+    inicio: () => { Cena6.titulo(); Cena6.preparar(); },   // a cena 3D já nasce montada (invisível) para não travar em 2s
+    // a molécula, os átomos em sequência, os elétrons, o copo e o mergulho seguem o tempo do áudio quadro a quadro (ver Cena6.TEMPOS):
+    //  2s molécula · 3 → 4s H, O, H crescem um de cada vez · 4,1s ligações transparentes com elétrons
+    //  6,2s copo em fade in · 7s a molécula mergulha na água
+    eventos: [
+      { tempo: 9,    acao: () => Cena6.lupa() },           // lupa mostrando as várias moléculas
+      { tempo: 13.6, acao: () => Cena6.formula() }         // H₂O em cima do copo
+    ] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -3153,8 +3174,8 @@ const Cena4R = {
   },
 
   // 13s: lupa mágica discreta sobre a água, mostrando as moléculas lá dentro
-  lupa() {
-    const ctx = this.ctx, caixa = this.$(".c5-copo");
+  // ctx e caixa: a cena do copo onde a lupa entra (a da 4R por padrão; a narração 6 passa a sua)
+  lupa(ctx = this.ctx, caixa = this.$(".c5-copo")) {
     if (!ctx || !caixa || this.$(".c5-lupa")) return;
     const V = (x, y) => new ctx.THREE.Vector3(x, y, .9);
     const c = ctx.naTela(V(ctx.gx, 1.05)), borda = ctx.naTela(V(ctx.gx + .95, 1.05));
@@ -3243,12 +3264,138 @@ const Cena4W = {
   }
 };
 
-/* ---------- Cena da narração 6: volta do quiz, só o título "Moléculas" no alto ---------- */
+/* ---------- Cenas da narração 6: a molécula de água, o copo e a fórmula ----------
+   Uma cena 3D só (a do copo da narração 4R), presa ao tempo do áudio: a molécula
+   entra sozinha no meio da tela, mostra os átomos e os elétrons, e quando o copo
+   aparece ela vai para o lado dele e mergulha na água. */
 const Cena6 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  TEMPOS: { entra: 2, atomos: [3, 4], eletrons: 4.1, copo: 6.2, mergulho: 7 },
+
+  // volta do quiz: só o título "Moléculas" no alto
   titulo() {
-    if (Palco.el.querySelector(".c0-titulo")) return;
+    if (this.$(".c0-titulo")) return;
     Palco.mostrar(`<h2 class="c0-titulo" style="top:5%"></h2>`);
-    Palco.letras(Palco.el.querySelector(".c0-titulo"), "Moléculas");
+    Palco.letras(this.$(".c0-titulo"), "Moléculas");
+  },
+
+  preparar() {
+    if (this.$(".c6-copo")) return;
+    const titulo = this.$(".c0-titulo");
+    Palco.adicionar(`<div class="c5-copo c6-copo" aria-label="Molécula de água e um copo com água"></div>`);
+    const caixa = this.$(".c6-copo");
+    caixa.style.top = titulo ? `${titulo.offsetTop + titulo.offsetHeight + 6}px` : "18%";
+    caixa.style.opacity = 1;                       // o que aparece aos poucos é o que está dentro da cena
+    this.ctx = Copo.montar(caixa, this.roteiro());
+  },
+
+  roteiro() {
+    const T = this.TEMPOS;
+    return {
+      indice: NARRACOES.findIndex(n => n.id === "dialogo6"),
+      montar(ctx) {
+        const T3 = ctx.THREE;
+        // tudo o que já está na cena (fundo, piso, sombra, vidro, água) aparece junto com o copo
+        ctx.somem = [];
+        ctx.cena.traverse(o => { if (o.isMesh) { o.material.transparent = true; ctx.somem.push([o.material, o.material.opacity]); } });
+        // a molécula: a mesma da narração 4R
+        const mat = cor => new T3.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
+        const halo = new T3.SpriteMaterial({ map: Quantico.textura([[0, "rgba(163,219,247,.55)"], [.45, "rgba(163,219,247,.14)"], [1, "rgba(163,219,247,0)"]]),
+                                             transparent: true, depthWrite: false, blending: T3.AdditiveBlending, opacity: 0 });
+        const geo = { esfera: new T3.SphereGeometry(1, 48, 32), bastao: new T3.CylinderGeometry(.13, .13, 1, 24, 1, true) };
+        const m = ctx.mol = Quantico.agua({ O: mat(Quantico.CORES.O), H: mat(Quantico.CORES.H), ligacao: mat(Quantico.CORES.ligacao), nuvem: halo }, geo);
+        ctx.cena.add(m);
+        // os elétrons: dois por ligação, como na narração 2
+        const texE = Quantico.textura([[0, "rgba(163,219,247,1)"], [.35, "rgba(163,219,247,.45)"], [1, "rgba(163,219,247,0)"]]);
+        const geoE = new T3.SphereGeometry(.075, 24, 16);
+        ctx.eletrons = m.userData.Hs.map(() => [0, 1].map(() => {
+          const e = new T3.Mesh(geoE, new T3.MeshBasicMaterial({ color: 0xA3DBF7, transparent: true, opacity: 0 }));
+          const h = new T3.Sprite(new T3.SpriteMaterial({ map: texE, transparent: true, depthWrite: false, blending: T3.AdditiveBlending, opacity: 0 }));
+          h.scale.setScalar(.55); m.add(e, h); return { e, h };
+        }));
+      },
+      // os elétrons andam no relógio da tela (não param quando o áudio acaba)
+      ativo(ctx) { return ctx.comEletrons; },
+      ajustar(ctx) {
+        const T3 = ctx.THREE, deitada = ctx.camera.aspect >= 1.1;
+        // como na 4R — tela deitada: copo à esquerda, molécula à direita · em pé: molécula acima do copo
+        ctx.gx = deitada ? -1.75 : 0;
+        ctx.copo.position.x = ctx.gx;
+        ctx.alvoMol = deitada ? new T3.Vector3(1.95, 1.8, .3) : new T3.Vector3(0, 4.8, .3);
+        // deitada, o quadro sobe até 4,3 (e não 3,35 como na 4R): é ali, em cima do copo, que entra a fórmula em 13,6s
+        const c = deitada ? { x0: -3.1, x1: 3.3, y0: -.25, y1: 4.3 } : { x0: -1.6, x1: 1.6, y0: -.25, y1: 6.15 };
+        const tg = Math.tan(T3.MathUtils.degToRad(14));
+        const f = { cx: (c.x0 + c.x1) / 2, cy: (c.y0 + c.y1) / 2, dist: 1.04 * Math.max((c.y1 - c.y0) / 2 / tg, (c.x1 - c.x0) / 2 / (tg * ctx.camera.aspect)) };
+        ctx.centro = new T3.Vector3(f.cx, f.cy, .3);          // antes do copo, a molécula fica no meio da tela
+        const cam = ctx.camera;
+        cam.fov = 28; cam.position.set(f.cx, f.cy + f.dist * .12, f.dist);
+        cam.lookAt(f.cx, f.cy, 0); cam.updateProjectionMatrix();
+      },
+      posicionar(t, ctx) {
+        const T3 = ctx.THREE, m = ctx.mol, u = m.userData;
+        const suave = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+        // o copo (com o fundo de estúdio) aparece em fade
+        const kCopo = suave((t - T.copo) / .8);
+        ctx.somem.forEach(([mat, op]) => { mat.opacity = op * kCopo; });
+        ctx.copo.visible = kCopo > 0;
+        ctx.cena.children.forEach(o => { if (o !== m && o.isMesh) o.visible = kCopo > 0; });
+        // 2s: a molécula entra girando e para de frente
+        const kE = suave((t - T.entra) / .6), giro = Math.min(Math.max((t - T.entra) / 1.6, 0), 1);
+        // 6,2s: vai para o lado do copo · 7s: mergulha na água, girando e encolhendo
+        const kLado = suave((t - T.copo) / .8), kM = Math.min(Math.max((t - T.mergulho) / 1.5, 0), 1);
+        const pos = ctx.centro.clone().lerp(ctx.alvoMol, kLado);
+        let esc = 1.15 + (.85 - 1.15) * kLado, op = kE;
+        const rot = new T3.Euler(0, -(1 - (1 - Math.pow(1 - giro, 3))) * Math.PI * 2.5, 0);
+        if (kM > 0) {
+          const k = kM * kM;                                   // acelera ao cair
+          pos.lerp(new T3.Vector3(ctx.gx, 1.3, 0), k);
+          pos.y += Math.sin(kM * Math.PI) * .7;                // em arco, como a saída da 4R ao contrário
+          rot.set(k * Math.PI * .8, k * Math.PI * 4, k * Math.PI * .5);
+          esc *= 1 - .88 * k;
+          op *= 1 - suave((kM - .7) / .3);                     // some já dentro da água
+        }
+        m.visible = op > .001;
+        m.position.copy(pos); m.quaternion.setFromEuler(rot); m.scale.setScalar(esc);
+        // 3 → 4s: H, O, H crescem um de cada vez; quando um cresce, o anterior volta
+        const [a0, a1] = T.atomos, passo = (a1 - a0) / 3;
+        const janela = i => { const ini = a0 + i * passo; return suave((t - ini) / .12) * (1 - suave((t - ini - passo) / .12)); };
+        const kH0 = janela(0), kO = janela(1), kH1 = janela(2);
+        u.Hs[0].scale.setScalar(u.rH * (1 + .45 * kH0)); u.Hs[1].scale.setScalar(u.rH * (1 + .45 * kH1));
+        u.O.scale.setScalar(u.rO * (1 + .32 * kO));
+        u.mats[0].emissiveIntensity = .6 * kO; u.mats[1].emissiveIntensity = .55 * Math.max(kH0, kH1);
+        // 4,1s: as ligações ficam transparentes e os elétrons vão e voltam nelas
+        const kT = suave((t - T.eletrons) / .6), kEl = suave((t - T.eletrons - .2) / .4);
+        u.mats[0].opacity = u.mats[1].opacity = op;
+        u.mats[2].opacity = op * (1 - .78 * kT); u.mats[2].depthWrite = kT < .5;
+        Quantico.alinharBastoes(u);
+        ctx.comEletrons = kEl > 0 && m.visible;
+        const fase = (1 - Math.cos(2 * Math.PI * ctx.tAcao / 1.4)) / 2;   // 0 → 1 → 0
+        u.Hs.forEach((h, i) => {
+          const de = u.O.position, para = h.position, comp = para.distanceTo(de);
+          const ini = u.rO / comp + .04, fim = 1 - u.rH / comp - .04, meio = (ini + fim) / 2;
+          ctx.eletrons[i].forEach(({ e, h: brilho }, j) => {
+            const ponta = j === 0 ? ini : fim;
+            e.position.copy(de).lerp(para, ponta + (meio - ponta) * fase); brilho.position.copy(e.position);
+            e.material.opacity = kEl * op; brilho.material.opacity = .9 * kEl * op;
+          });
+        });
+      }
+    };
+  },
+
+  // 9s: a lupa da narração 4R, sobre a água (arrastável)
+  lupa() { Cena4R.lupa(this.ctx, this.$(".c6-copo")); },
+
+  // 13,6s: a fórmula em cima do copo
+  formula() {
+    const ctx = this.ctx, caixa = this.$(".c6-copo");
+    if (!ctx || !caixa || this.$(".c6-formula")) return;
+    const p = ctx.naTela(new ctx.THREE.Vector3(ctx.gx, 2.95, 0));     // logo acima da borda do copo
+    // vai no palco, e não dentro da cena: o alto da cena é esmaecido (máscara) e apagaria a fórmula
+    Palco.adicionar(`<p class="c5-formula c6-formula"><span class="f-h">H</span><sub class="f-2">2</sub><span class="f-o">O</span></p>`);
+    const f = this.$(".c6-formula");
+    Object.assign(f.style, { left: `${caixa.offsetLeft + p.x}px`, top: `${caixa.offsetTop + p.y}px` });
+    Palco.animar(f, [{ opacity: 0, transform: "translate(-50%, calc(-100% + 12px))" }, { opacity: 1, transform: "translate(-50%, -100%)" }], { duracao: .7, easing: "ease-out" });
   }
 };
 
