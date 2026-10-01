@@ -494,7 +494,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v29 · 30/09/2026</span>
+    <span class="versao" id="versao">v30 · 30/09/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -615,14 +615,14 @@ const NARRACOES = [
   { id: "dialogo4", titulo: "A fórmula da água", src: "audio/audio_moleculas_4.mp3",
     inicio: () => Cena3.montarFinal(),                     // parte do mundo quântico da narração 3
     eventos: [
-      { tempo: 2,    acao: () => Cena4.pulsarTodas() },    // pulso com brilho em todas, em sequência (até 4,5s)
-      { tempo: 6,    acao: () => Cena4.ficarUma() },       // somem em fade; a de cima vem para a frente
-      { tempo: 16.6, acao: () => Cena4.atomosEmSequencia() }, // H, O, H crescem um de cada vez (até 18,7s)
-      { tempo: 20.2, acao: () => Cena4.formula() },        // "Fórmula Química" digitada embaixo
-      { tempo: 25.7, acao: () => Cena4.pulsar() },         // pulso com brilho na molécula
-      { tempo: 27.6, acao: () => Cena4.hMaiores() },       // H maiores
-      { tempo: 29,   acao: () => Cena4.simboloH() },       // símbolo H nas esferas (fade in)
-      { tempo: 31,   acao: () => Cena4.oMaior() }          // H voltam; O maior, com símbolo
+      { tempo: 3.8,  acao: () => Cena4.pulsarTodas(6) },   // pulso com brilho em todas, em sequência (até 6s)
+      { tempo: 9.8,  acao: () => Cena4.ficarUma() },       // somem em fade; a de cima vem para a frente
+      { tempo: 23.7, acao: () => Cena4.atomosEmSequencia(1.3) }, // H, O, H crescem um de cada vez (até 25s)
+      { tempo: 26.8, acao: () => Cena4.formula() },        // "Fórmula Molecular" digitada embaixo
+      { tempo: 33.7, acao: () => Cena4.pulsar() },         // pulso com brilho na molécula
+      { tempo: 35,   acao: () => Cena4.hMaiores() },       // H maiores
+      { tempo: 36,   acao: () => Cena4.simboloH() },       // símbolo H nas esferas (fade in)
+      { tempo: 37,   acao: () => Cena4.oMaior() }          // H voltam; O maior, com símbolo
     ],
     aoFim: () => Cena4.opcoes() },                         // quiz: HO, H₂O ou HO₂
   // resposta do quiz: toca só depois do acerto (não aparece na navegação rápida)
@@ -1529,11 +1529,12 @@ const Quantico = {
 const Cena4 = {
   $(sel) { return Palco.el.querySelector(sel); },
   get q() { return Cena3.quantum; },
-  // 2s → 4,5s: cada molécula pulsa com brilho, uma depois da outra (da esquerda para a direita)
-  pulsarTodas() {
+  // cada molécula pulsa com brilho, uma depois da outra (da esquerda para a direita), terminando no tempo "ate" do áudio
+  pulsarTodas(ate) {
     const q = this.q; if (!q) return;
     const lista = q.moleculas.filter(m => m.userData.est.opac > .5).sort((a, b) => q.naTela(a.position).x - q.naTela(b.position).x);
-    const passo = lista.length > 1 ? 2 / (lista.length - 1) : 0;     // último pulso (0,5s) termina em 4,5s
+    const agora = Player.fonte ? Player.fonte.currentTime : 0, total = Math.max(ate - agora - .5, 0);   // último pulso dura 0,5s
+    const passo = lista.length > 1 ? total / (lista.length - 1) : 0;
     lista.forEach((m, i) => q.pulsar(m, .5, i * passo));
   },
   // 6s: todas somem em fade; fica só a de cima, que vem para a frente
@@ -1543,12 +1544,12 @@ const Cena4 = {
     q.moleculas.forEach(o => { if (o !== m) q.animar(o.userData.est, "opac", 0, 1); });
     q.destacar(m);
   },
-  // 20,2s: "Fórmula Química" digitada logo abaixo da molécula
+  // "Fórmula Molecular" digitada logo abaixo da molécula
   formula() {
     if (!this.m || this.$(".c4-formula")) return;
     Palco.adicionar(`<p class="c4-formula"></p>`);
     this.posicionarFormula();
-    Palco.digitar(this.$(".c4-formula"), "Fórmula Química", 1);
+    Palco.digitar(this.$(".c4-formula"), "Fórmula Molecular", 1);
   },
   posicionarFormula() {
     const el = this.$(".c4-formula"), q = this.q; if (!el || !q) return;
@@ -1556,14 +1557,14 @@ const Cena4 = {
     el.style.top = `${q.naTela(baixo).y + 10}px`;
   },
   pulsar() { if (this.m) this.q.pulsar(this.m, .9); },
-  // 16,6 → 18,7s: os 3 átomos crescem em sequência (H esquerdo, O, H direito); quando um cresce, o anterior volta
-  atomosEmSequencia() {
+  // os 3 átomos crescem em sequência (H esquerdo, O, H direito); quando um cresce, o anterior volta. Dura "total" segundos
+  atomosEmSequencia(total = 2.1) {
     if (!this.m) return;
-    const s = this.m.userData.est, q = this.q, d = .35;
+    const s = this.m.userData.est, q = this.q, passo = total / 3, d = Math.min(.35, passo * .6);
     q.animar(s, "h0", 1.35, d, 0);
-    q.animar(s, "h0", 1, d, .7);  q.animar(s, "escalaO", 1.3, d, .7);
-    q.animar(s, "escalaO", 1, d, 1.4); q.animar(s, "h1", 1.35, d, 1.4);
-    q.animar(s, "h1", 1, d, 1.75);                                   // termina em 18,7s
+    q.animar(s, "h0", 1, d, passo);      q.animar(s, "escalaO", 1.3, d, passo);
+    q.animar(s, "escalaO", 1, d, 2 * passo); q.animar(s, "h1", 1.35, d, 2 * passo);
+    q.animar(s, "h1", 1, d, total - d);                              // tudo no tamanho normal ao fim
   },
   hMaiores() { if (this.m) this.q.animar(this.m.userData.est, "escalaH", 1.35, .4); },
   simboloH() { if (!this.m) return; this.q.rotular(this.m); this.q.animar(this.m.userData.est, "rotH", 1, .8); },
@@ -1584,7 +1585,7 @@ const Cena4 = {
         <button class="c4-op" data-certa="0">HO<sub>2</sub></button>
       </div>`);
     const caixa = this.$(".c4-opcoes"), f = this.$(".c4-formula");
-    if (f) Object.assign(caixa.style, { top: `${f.offsetTop + f.offsetHeight + 16}px`, bottom: "auto" });   // logo abaixo de "Fórmula Química"
+    if (f) Object.assign(caixa.style, { top: `${f.offsetTop + f.offsetHeight + 16}px`, bottom: "auto" });   // logo abaixo de "Fórmula Molecular"
     [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
       { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
     caixa.addEventListener("click", e => {
@@ -1639,7 +1640,7 @@ const Cena4 = {
     q.rotular(m);
     Palco.adicionar(`<p class="c4-formula"></p>`);
     this.posicionarFormula();
-    Palco.letras(this.$(".c4-formula"), "Fórmula Química");
+    Palco.letras(this.$(".c4-formula"), "Fórmula Molecular");
   }
 };
 
