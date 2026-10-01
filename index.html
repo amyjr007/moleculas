@@ -397,6 +397,38 @@
   }
   .c7-lewis figcaption { margin-top: .6rem; font-size: calc(clamp(.85rem, 1vmin + .6rem, 1.05rem) + 2px); color: var(--celeste-claro); white-space: nowrap; }
   .c7-lewis figcaption b { font-family: var(--display); font-weight: 800; color: #fff; }
+  /* trechos da regra que crescem no áudio 7.1 (inline-block: só assim o "scale" pega num texto) */
+  .r-realce { display: inline-block; transform-origin: 50% 60%; }
+
+  /* narração 7.1 — o gás cloro: a tela vira um cubo e a face nova traz o cilindro */
+  .c71-cubo { position: absolute; inset: 0; perspective: 1800px; z-index: 6; }
+  .c71-giro { position: absolute; inset: 0; transform-style: preserve-3d; }
+  /* cada face tem o fundo pontilhado do palco: quando o cubo sai, a tela não muda */
+  .c71-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    background-color: var(--preto); background-image: radial-gradient(circle, rgba(163,219,247,.16) 1.6px, transparent 1.8px); background-size: 28px 28px; }
+  .c71-titulo { font-size: clamp(1.9rem, 5.2vmin + .9rem, 3.8rem); white-space: nowrap; }
+  .c71-titulo .fam { color: var(--ambar); }
+  /* a área do cilindro (e depois do mundo quântico): do título até 30% da base, que fica livre */
+  .c71-area { position: absolute; left: 0; right: 0; top: 17%; bottom: 30%; }
+  .c71-cilindro {
+    position: absolute; left: 50%; top: 0; bottom: 0; translate: -50% 0; aspect-ratio: 152 / 400; padding: 0; border: 0; background: none;
+    cursor: pointer; filter: drop-shadow(0 16px 22px rgba(0,0,0,.6)); transform-origin: 50% 62%; -webkit-tap-highlight-color: transparent;
+  }
+  .c71-cilindro svg { display: block; width: 100%; height: 100%; max-width: none; overflow: visible; }
+  /* convite ao toque: um halo que pulsa em volta do cilindro até ele ser tocado */
+  .c71-cilindro::before {
+    content: ""; position: absolute; inset: 8% -26%; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(170,240,90,.32), rgba(170,240,90,0)); animation: c71Chama 1.8s ease-in-out infinite;
+  }
+  .c71-cilindro.tocado::before { display: none; }
+  @keyframes c71Chama { 50% { opacity: .25; transform: scale(.88); } }
+  .c71-cil-nome { font-family: var(--display); font-weight: 800; text-anchor: middle; fill: #1b2330; }
+  .c71-area .c3-dash { z-index: 3; }
+  .c71-quantico { position: absolute; inset: 0; opacity: 0; pointer-events: none; z-index: 2;
+    background: radial-gradient(ellipse 70% 62% at 50% 50%, #183d1a 0%, rgba(14,34,26,.75) 48%, rgba(10,19,34,0) 78%); }
+  .c71-quantico.ativo { pointer-events: auto; }
+  .c71-quantico canvas { display: block; width: 100%; height: 100%; }
+  @media (prefers-reduced-motion: reduce) { .c71-cilindro::before { animation: none; } }
   .c7-regra {
     margin: 0; width: min(94%, 30ch); text-align: center;
     font-family: var(--display); font-weight: 500; line-height: 1.3; color: #fff;
@@ -876,7 +908,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v39 · 01/10/2026</span>
+    <span class="versao" id="versao">v40 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2094,10 +2126,15 @@ const NARRACOES = [
       { tempo: 10,   acao: () => Cena7.lewis() },          // foto de Lewis (fade in)
       { tempo: 11,   acao: () => Cena7.regra() }           // a regra, digitada com o tracinho
     ] },
-  // o exemplo do gás cloro (Cl₂): por enquanto só o áudio, sobre a tela da Regra do Octeto
+  // o exemplo do gás cloro (Cl₂)
   { id: "dialogo7_1", titulo: "Exemplo: o gás cloro", src: "audio/audio_moleculas_7.1.mp3",
     inicio: () => Cena7.montarFinal(),                     // pela navegação rápida: a tela final da narração 7
-    eventos: [] }
+    eventos: [
+      { tempo: 5.9,  acao: () => Cena71.realcar(".r-oito") },    // "8 elétrons" cresce 10% e muda de cor
+      { tempo: 8.6,  acao: () => Cena71.realcar(".r-gases") },   // "gases nobres" também
+      { tempo: 13.5, acao: () => Cena71.preparar() },            // monta a face nova (tela parada: nada muda à vista)
+      { tempo: 15,   acao: () => Cena71.girar() }                // a tela vira um cubo: entra o cilindro de gás cloro
+    ] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -2743,7 +2780,7 @@ const Copo = {
 
 /* ---------- Mundo quântico: moléculas de água flutuando, que respondem ao toque ---------- */
 const Quantico = {
-  CORES: { O: 0xFF0D0D, H: 0xFFFFFF, ligacao: 0xC8C8C8, nuvem: 0xA3DBF7 },
+  CORES: { O: 0xFF0D0D, H: 0xFFFFFF, Cl: 0x1FF01F, ligacao: 0xC8C8C8, nuvem: 0xA3DBF7 },   // Cl: verde do padrão CPK
 
   textura(paradas) {
     const c = document.createElement("canvas"); c.width = c.height = 128;
@@ -2796,7 +2833,24 @@ const Quantico = {
     vibracao:  { dur: 1.2, f: (m, p) => { const u = m.userData, k = 1 + .28 * Math.sin(p * Math.PI * 8) * (1 - p); u.Hs.forEach((h, i) => h.position.copy(u.baseH[i]).sub(u.O.position).multiplyScalar(k).add(u.O.position)); } }
   },
 
-  montar(caixa, { revelar = false } = {}) {
+  // uma molécula de gás cloro (Cl₂): dois átomos iguais e uma ligação. Tem o mesmo formato da água
+  // (O = o 1º átomo, Hs = [o 2º]), para o laço do mundo quântico e as reações ao toque servirem às duas.
+  cloro(mats, geo) {
+    const grupo = new THREE.Group(), r = .66, d = 1.8;
+    const m1 = mats.O.clone(), m2 = mats.O.clone(), mL = mats.ligacao.clone();
+    [m1, m2, mL].forEach(x => { x.transparent = true; x.emissive = x.color.clone(); x.emissiveIntensity = 0; });
+    const A = new THREE.Mesh(geo.esfera, m1); A.scale.setScalar(r); A.position.set(-d / 2, 0, 0); grupo.add(A);
+    const B = new THREE.Mesh(geo.esfera, m2); B.scale.setScalar(r); B.position.set(d / 2, 0, 0); grupo.add(B);
+    const b = new THREE.Mesh(geo.bastao, mL); grupo.add(b);
+    const nuvem = new THREE.Sprite(mats.nuvem.clone()); nuvem.scale.setScalar(4.4); grupo.add(nuvem);
+    const est = { escalaO: 1, escalaH: 1, h0: 1, h1: 1, opac: 1, rotH: 0, rotO: 0, mov: 0, fixa: false, pulso: 0 };
+    grupo.userData = { O: A, Hs: [B], bastoes: [b], nuvem, alvos: [A, B, b], rO: r, rH: r, mats: [m1, m2, mL], est, baseH: [B.position.clone()] };
+    this.alinharBastoes(grupo.userData);
+    return grupo;
+  },
+
+  // molecula: "agua" (padrão) ou "cloro" · cheia: as moléculas ocupam a caixa toda (sem reservar o alto para textos)
+  montar(caixa, { revelar = false, molecula = "agua", cheia = false } = {}) {
     if (!window.THREE || !caixa) return null;
     let renderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { console.warn("sem WebGL", e); return null; }
@@ -2813,7 +2867,7 @@ const Quantico = {
 
     const mat = cor => new THREE.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
     const mats = {
-      O: mat(this.CORES.O), H: mat(this.CORES.H), ligacao: mat(this.CORES.ligacao),
+      O: mat(molecula === "cloro" ? this.CORES.Cl : this.CORES.O), H: mat(this.CORES.H), ligacao: mat(this.CORES.ligacao),
       nuvem: new THREE.SpriteMaterial({ map: this.textura([[0, "rgba(163,219,247,.55)"], [.45, "rgba(163,219,247,.14)"], [1, "rgba(163,219,247,0)"]]),
                                          transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .35 })
     };
@@ -2835,13 +2889,15 @@ const Quantico = {
       renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
       // tela em pé: câmera mais longe, para as moléculas não ficarem grandes e amontoadas
       camera.position.z = camera.aspect < 1 ? 14 * Math.min(1.9, .82 / Math.max(camera.aspect, .4)) : 14;
+      if (cheia && camera.aspect < 1.6) camera.position.z *= 1.35;    // caixa pequena (celular): moléculas menores
       // faixa útil: abaixo do título e da frase (topo ~28% do palco) e acima da base
-      const hy = Math.tan(THREE.MathUtils.degToRad(20)) * camera.position.z; area = { x: hy * camera.aspect * .82, yMin: -hy * .78, yMax: hy * .3 };
+      const hy = Math.tan(THREE.MathUtils.degToRad(20)) * camera.position.z;
+      area = cheia ? { x: hy * camera.aspect * .8, yMin: -hy * .72, yMax: hy * .72 } : { x: hy * camera.aspect * .82, yMin: -hy * .78, yMax: hy * .3 };
     };
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
-    const N = camera.aspect < .9 ? 8 : 11;
+    const N = camera.aspect < .9 || (cheia && camera.aspect < 1.6) ? 8 : 11;
     for (let i = 0; i < N; i++) {
-      const m = this.agua(mats, geo);
+      const m = molecula === "cloro" ? this.cloro(mats, geo) : this.agua(mats, geo);
       let p, tent = 0;
       do { p = new THREE.Vector3((Math.random() * 2 - 1) * area.x, area.yMin + Math.random() * (area.yMax - area.yMin), -3 + Math.random() * 4.5); tent++; }
       while (tent < 80 && moleculas.some(o => o.userData.base.distanceTo(p) < 3));
@@ -3485,10 +3541,15 @@ const Cena6 = {
 const Cena7 = {
   $(sel) { return Palco.el.querySelector(sel); },
   // "estabilidade" em âmbar (a mesma classe "destaque" da definição de molécula)
+  // "8 elétrons" e "gases nobres" vão em trechos próprios: crescem e mudam de cor no áudio 7.1
   REGRA: [
-    { texto: "“Os átomos tendem a reagir quimicamente a fim de completarem 8 elétrons na camada de valência, o que garante a " },
+    { texto: "“Os átomos tendem a reagir quimicamente a fim de completarem " },
+    { classe: "r-realce r-oito", texto: "8 elétrons" },
+    { texto: " na camada de valência, o que garante a " },
     { classe: "destaque", texto: "estabilidade" },
-    { texto: " dos gases nobres”" }
+    { texto: " dos " },
+    { classe: "r-realce r-gases", texto: "gases nobres" },
+    { classe: "fecha", texto: "”", junto: true }           // colada em "nobres" (não quebra linha), mas sem herdar a cor
   ],
 
   // 1 → 7s: o título novo vem de baixo, colado no que está na tela, e empurra tudo para cima
@@ -3534,6 +3595,147 @@ const Cena7 = {
     this.lewis();
     this.$(".c7-regra").classList.remove("digita");
     this.$(".c7-lewis").getAnimations().forEach(a => a.finish());
+  }
+};
+
+/* ---------- Cenas da narração 7.1: o gás cloro ----------
+   A tela inteira vira um cubo (da direita para a esquerda) e a face nova traz o título
+   "Cloro – Família 7A" e um cilindro de gás. Tocar no cilindro faz o zoom para dentro dele,
+   como o da água na narração 3 (zoom, dash e clarão), e surgem as moléculas de Cl₂.
+   A parte de baixo da tela (30%) fica livre: é ali que a molécula vai ser mostrada depois. */
+const Cena71 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+
+  // "8 elétrons" / "gases nobres": crescem 10% e passam a âmbar com brilho (e ficam assim)
+  realcar(sel) {
+    const el = this.$(".c7-regra " + sel); if (!el) return;
+    // (a margem abre espaço dos lados: o "scale" sozinho faria a palavra encostar nas vizinhas)
+    Palco.animar(el, [{ transform: "scale(1)", marginInline: "0em", color: "#ffffff", textShadow: "0 0 0 rgba(255,194,75,0)" },
+                      { transform: "scale(1.1)", marginInline: ".32em", color: "#FFC24B", textShadow: "0 0 22px rgba(255,194,75,.55)" }],
+      { duracao: .45, easing: "cubic-bezier(.3,1.4,.5,1)" });
+  },
+
+  // o cilindro: o mesmo desenho do cilindro de gás do quiz, pintado de verde-cloro, e com o nome
+  // por extenso na etiqueta (sem a fórmula — ela é o que se vai descobrir)
+  CILINDRO: `
+    <svg viewBox="0 0 152 400" role="img" aria-label="cilindro de gás cloro">
+      <defs>
+        <linearGradient id="c71Corpo" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#0d2205"/><stop offset=".06" stop-color="#23500c"/>
+          <stop offset=".20" stop-color="#4f8f1c"/><stop offset=".34" stop-color="#8cc63f"/>
+          <stop offset=".43" stop-color="#c3ec84"/><stop offset=".53" stop-color="#6aa82a"/>
+          <stop offset=".72" stop-color="#3b7014"/><stop offset=".88" stop-color="#1c3d08"/>
+          <stop offset="1" stop-color="#0b1d04"/></linearGradient>
+        <linearGradient id="c71Pe" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#081603"/><stop offset=".2" stop-color="#2c5a10"/>
+          <stop offset=".43" stop-color="#6c9a44"/><stop offset=".72" stop-color="#244a0c"/>
+          <stop offset="1" stop-color="#071302"/></linearGradient>
+        <linearGradient id="c71Aco" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#0a101c"/><stop offset=".07" stop-color="#26334a"/>
+          <stop offset=".26" stop-color="#8296b5"/><stop offset=".40" stop-color="#d6e1f0"/>
+          <stop offset=".52" stop-color="#7d90ad"/><stop offset=".74" stop-color="#3a4760"/>
+          <stop offset="1" stop-color="#080d16"/></linearGradient>
+        <linearGradient id="c71Latao" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#3a2c05"/><stop offset=".18" stop-color="#8b6914"/>
+          <stop offset=".40" stop-color="#e8cd7d"/><stop offset=".56" stop-color="#c9a24a"/>
+          <stop offset=".82" stop-color="#6b5210"/><stop offset="1" stop-color="#2f2404"/></linearGradient>
+      </defs>
+      <ellipse cx="76" cy="386" rx="60" ry="9" fill="#000" opacity=".5"/>
+      <ellipse cx="76" cy="12" rx="32" ry="8" fill="url(#c71Latao)"/>
+      <ellipse cx="76" cy="11" rx="15" ry="3.4" fill="#2f2404" opacity=".75"/>
+      <rect x="69" y="12" width="14" height="12" fill="url(#c71Aco)"/>
+      <rect x="60" y="20" width="32" height="26" rx="4" fill="url(#c71Aco)"/>
+      <rect x="90" y="26" width="15" height="13" rx="3" fill="url(#c71Latao)"/>
+      <rect x="103" y="23" width="7" height="19" rx="2.5" fill="url(#c71Latao)"/>
+      <rect x="57" y="44" width="38" height="15" rx="3" fill="url(#c71Aco)"/>
+      <path d="M16 126 C16 84 38 62 57 57 L95 57 C114 62 136 84 136 126 Z" fill="url(#c71Corpo)"/>
+      <path d="M16 120 v236 a8 8 0 0 0 8 8 h104 a8 8 0 0 0 8 -8 V120 z" fill="url(#c71Corpo)"/>
+      <path d="M12 342 h128 v30 a10 10 0 0 1 -10 10 h-108 a10 10 0 0 1 -10 -10 z" fill="url(#c71Pe)"/>
+      <rect x="12" y="342" width="128" height="1.6" fill="#d8f5a8" opacity=".3"/>
+      <rect x="23" y="150" width="106" height="78" rx="6" fill="#f2eee4" opacity=".95"/>
+      <rect x="23" y="150" width="106" height="14" rx="6" fill="#1b2330" opacity=".9"/>
+      <rect x="23" y="158" width="106" height="6" fill="#1b2330" opacity=".9"/>
+      <text class="c71-cil-nome" x="76" y="194" font-size="21">GÁS</text>
+      <text class="c71-cil-nome" x="76" y="218" font-size="21">CLORO</text>
+      <rect x="44" y="62" width="9" height="300" rx="4.5" fill="#fff" opacity=".18"/>
+      <rect x="58" y="70" width="3.5" height="290" rx="1.8" fill="#fff" opacity=".1"/>
+    </svg>`,
+
+  // 13,5s: o cubo já nasce montado em volta da tela, com a face nova pronta (nada muda à vista)
+  preparar() {
+    if (this.$(".c71-cubo")) return;
+    const P = Palco.el, W = P.clientWidth;
+    const atuais = [...P.children];
+    Palco.adicionar(`
+      <div class="c71-cubo"><div class="c71-giro">
+        <div class="c71-face f1"></div>
+        <div class="c71-face f2">
+          <h2 class="c0-titulo c71-titulo" style="top:5%">Cloro <span class="fam">– Família 7A</span></h2>
+          <div class="c71-area">
+            <button type="button" class="c71-cilindro" aria-label="Cilindro de gás cloro: toque para ver as moléculas">${this.CILINDRO}</button>
+          </div>
+        </div>
+      </div></div>`);
+    const giro = this.$(".c71-giro"), f1 = this.$(".c71-face.f1"), f2 = this.$(".c71-face.f2");
+    atuais.forEach(c => f1.appendChild(c));             // a tela de agora vira a face da frente, sem mudar nada de lugar
+    f1.style.transform = `translateZ(${W / 2}px)`;
+    f2.style.transform = `rotateY(90deg) translateZ(${W / 2}px)`;
+    giro.style.transform = `translateZ(${-W / 2}px)`;
+    this.W = W;
+    this.$(".c71-cilindro").addEventListener("click", () => this.entrar());
+  },
+
+  // 15s: o cubo gira da direita para a esquerda; ao parar, a face nova vira a tela (e o cubo sai)
+  girar() {
+    if (!this.$(".c71-cubo")) this.preparar();
+    const giro = this.$(".c71-giro"), f1 = this.$(".c71-face.f1"), f2 = this.$(".c71-face.f2");
+    if (!giro) return;
+    const z = `translateZ(${-this.W / 2}px)`, easing = "cubic-bezier(.65,0,.35,1)";
+    Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, easing });
+    Palco.animar(f2, [{ filter: "brightness(.35)" }, { filter: "brightness(1)" }], { duracao: 1.2, easing });
+    Palco.animar(giro, [{ transform: `${z} rotateY(0deg)` }, { transform: `${z} rotateY(-90deg)` }], { duracao: 1.2, easing })
+      .finished.then(() => {
+        const cubo = this.$(".c71-cubo"); if (!cubo) return;
+        [...f2.children].forEach(c => Palco.el.appendChild(c));   // a face nova passa a ser a própria tela
+        cubo.remove();                                             // e a tela antiga vai embora junto com o cubo
+        this.prepararQuantico();
+      }, () => {});
+  },
+
+  // o mundo quântico do cloro já nasce montado (invisível), para não travar o zoom
+  prepararQuantico() {
+    const area = this.$(".c71-area");
+    if (!area || this.$(".c71-quantico")) return;
+    area.insertAdjacentHTML("beforeend", `<div class="c71-quantico" aria-label="Moléculas de gás cloro: toque nelas"></div>`);
+    this.quantum = Quantico.montar(this.$(".c71-quantico"), { molecula: "cloro", cheia: true });
+  },
+
+  // toque no cilindro: zoom para dentro dele, dash e clarão; sob o clarão, as moléculas de Cl₂
+  entrar() {
+    const cil = this.$(".c71-cilindro"), area = this.$(".c71-area");
+    if (!cil || cil.classList.contains("tocado") || this.$(".c71-cubo")) return;
+    cil.classList.add("tocado");
+    if (!this.$(".c71-quantico")) this.prepararQuantico();
+    area.insertAdjacentHTML("beforeend", `<div class="c3-dash"></div>`);
+    Palco.adicionar(`<div class="c3-flash"></div>`);
+    Palco.animar(cil, [{ transform: "scale(1)" }, { transform: "scale(5.5)" }], { duracao: 1, easing: "cubic-bezier(.6,0,.9,.55)" });
+    Palco.animar(area.querySelector(".c3-dash"), [
+      { opacity: 0, transform: "scale(.35) rotate(0deg)" },
+      { opacity: 1, transform: "scale(1.3) rotate(8deg)", offset: .6 },
+      { opacity: 0, transform: "scale(3) rotate(14deg)" }
+    ], { duracao: .8, atraso: .45, easing: "cubic-bezier(.5,0,.9,.6)" });
+    Palco.animar(this.$(".c3-flash"), [{ opacity: 0 }, { opacity: 1, offset: .58 }, { opacity: 0 }], { duracao: 1.2, atraso: .35, easing: "ease-in-out" })
+      .finished.then(() => { const f = this.$(".c3-flash"), d = this.$(".c71-area .c3-dash"); f && f.remove(); d && d.remove(); }, () => {});
+    // no pico do clarão (1,05s): some o cilindro, aparecem as moléculas
+    // (a espera é uma animação do palco, e não um setTimeout: assim ela também para na pausa)
+    const q = this.$(".c71-quantico");
+    Palco.animar(q, [{ opacity: 0 }, { opacity: 0 }], { duracao: 1.05, fill: "none" }).finished.then(() => {
+      if (!q.isConnected) return;
+      q.classList.add("ativo");
+      if (this.quantum) this.quantum.visivel = true;
+      cil.style.visibility = "hidden";
+      Palco.animar(q, [{ opacity: 0 }, { opacity: 1 }], { duracao: .25 });
+    }, () => {});
   }
 };
 
