@@ -866,7 +866,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v36 · 01/10/2026</span>
+    <span class="versao" id="versao">v37 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2090,7 +2090,7 @@ const NARRACOES = [
 const Palco = {
   el: document.getElementById("conteudoPalco"),
   pausado: false,
-  limpar() { this.el.innerHTML = ""; },
+  limpar() { this.pararCursor(); this.el.innerHTML = ""; },
   mostrar(html) { this.el.innerHTML = html; this.sincronizar(); },
   adicionar(html) { this.el.insertAdjacentHTML("beforeend", html); this.sincronizar(); },
   reiniciar() { this.limpar(); this.pausado = false; },
@@ -2135,10 +2135,11 @@ const Palco = {
   },
 
   // Digita letra a letra em "duracao" segundos
-  // cursor: um tracinho que vai na frente do texto enquanto ele é digitado e fica piscando no fim
-  digitar(el, partes, duracao = 1, { cursor = false } = {}) {
+  // cursor: um tracinho que vai na frente do texto enquanto ele é digitado e fica piscando no fim.
+  // É um só, como quem digita: começar outro texto apaga o tracinho que piscava no anterior.
+  digitar(el, partes, duracao = 1, { cursor = true } = {}) {
     el.classList.add("digita");
-    if (cursor) el.classList.add("com-cursor");
+    if (cursor) { this.pararCursor(); el.classList.add("com-cursor"); }
     const letras = this.letras(el, partes);
     const passo = duracao / letras.length;
     letras.forEach((s, i) => {
@@ -2151,11 +2152,14 @@ const Palco = {
       const a = s.animate(ultima ? pisca : [{ opacity: 1 }, { opacity: 1 }],
         { duration: (ultima ? .9 : passo) * 1000, delay: i * passo * 1000, iterations: ultima ? Infinity : 1, fill: "none", pseudoElement: "::after" });
       if (this.pausado) a.pause();
+      if (ultima) this.cursorPisca = a;
     });
   },
+  pararCursor() { if (this.cursorPisca) { this.cursorPisca.cancel(); this.cursorPisca = null; } },
 
   // Desmorona: cada peça balança, despenca girando e sai por baixo do palco
   desmoronar(pecas, { duracao = 1.2, espalhar = .4 } = {}) {
+    this.pararCursor();                                   // o tracinho não cai junto com as letras
     const base = this.el.getBoundingClientRect();
     return pecas.map(p => {
       const r = p.getBoundingClientRect();
@@ -3485,7 +3489,7 @@ const Cena7 = {
   // 11s: a regra, digitada com o tracinho na frente
   regra() {
     if (!this.$(".c7-regra")) this.lewis();
-    Palco.digitar(this.$(".c7-regra"), this.REGRA, 6, { cursor: true });
+    Palco.digitar(this.$(".c7-regra"), this.REGRA, 6);
   },
 
   // tela final da narração 7 (para a narração seguinte começar dela)
