@@ -491,9 +491,26 @@
     --ff-display: var(--display); --ff-body: var(--texto); --ff-mono: "Consolas", "Menlo", "Roboto Mono", monospace;
     --ease: cubic-bezier(.22,1,.36,1);
   }
+  /* o fundo é opaco: o quiz é a outra face do cubo, e a página fica do lado de lá */
   .modal-q2 { position: fixed; inset: 0; z-index: 80; display: none; align-items: center; justify-content: center; padding: 20px;
-    background: rgba(3,5,12,.82); }
+    background: radial-gradient(60% 55% at 85% 15%, rgba(124,156,255,.12), transparent 70%), #05070f;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden; }
   .modal-q2.open { display: flex; animation: modalIn .3s var(--ease); }
+
+  /* ---------- CUBO VERTICAL: página ⇄ quiz ----------
+     Abrir o quiz gira a tela de baixo para cima (a página sobe, o quiz vem de baixo);
+     sair dele gira de cima para baixo. Mesmo tempo e curva do cubo capa ⇄ página. */
+  .modal-q2.open.cubo-sobe-entra  { transform-origin: 50% 0%;   animation: cuboSobeEntra  .9s cubic-bezier(.65,0,.35,1) both; }
+  .modal-q2.open.cubo-desce-sai   { transform-origin: 50% 0%;   animation: cuboDesceSai   .9s cubic-bezier(.65,0,.35,1) both; }
+  .cubo-sobe-sai                  { transform-origin: 50% 100%; animation: cuboSobeSai    .9s cubic-bezier(.65,0,.35,1) both; }
+  .cubo-desce-entra               { transform-origin: 50% 100%; animation: cuboDesceEntra .9s cubic-bezier(.65,0,.35,1) both; }
+  .modal-q2.cubo-sobe-entra .modal-card, .modal-q2.cubo-desce-sai .modal-card { animation: none; }
+  @keyframes cuboSobeSai    { to   { transform: translateY(-100%) rotateX(90deg);  filter: brightness(.35); } }
+  @keyframes cuboSobeEntra  { from { transform: translateY(100%)  rotateX(-90deg); filter: brightness(.35); } }
+  @keyframes cuboDesceSai   { to   { transform: translateY(100%)  rotateX(-90deg); filter: brightness(.35); } }
+  @keyframes cuboDesceEntra { from { transform: translateY(-100%) rotateX(90deg);  filter: brightness(.35); } }
+  /* enquanto o quiz está aberto, a página fica escondida do outro lado do cubo */
+  .tela.atras-do-quiz { visibility: hidden; }
   @keyframes modalIn { from { opacity: 0; } to { opacity: 1; } }
   .modal-q2 .modal-card { position: relative; animation: cardPop .34s var(--ease); }
   @keyframes cardPop { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -589,13 +606,30 @@
 
   /* a lupa (aro, vidro, brilho e cabo) e as moléculas dentro dela */
   .s7-lupa { position: absolute; left: 50%; top: var(--qlupay,62%); z-index: 3;
-    width: calc(var(--qlupak,1) * var(--ca,420px) * .42); aspect-ratio: 1;
+    width: calc(var(--qlupak,1) * var(--ca,420px) * var(--lupa-f, .42)); aspect-ratio: 1;
     translate: -50% -50%; padding: .9vh; border-radius: 50%;
     background: conic-gradient(from 135deg,#f4f7fb,#93a0ae 22%,#4e5a67 48%,#c4cedb 72%,#f4f7fb);
     box-shadow: 0 14px 34px rgba(0,0,0,.6), 0 0 0 .18vh rgba(18,26,38,.85);
     /* A LUPA SE ARRASTA: pega o toque e o mouse, e o dedo não rola nem dá zoom na tela */
     pointer-events: auto; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
   .s7-lupa.arrastando { cursor: grabbing; }
+
+  /* a dica do 1º exemplo: um dedo apertando o vidro e o aviso "Mova a lupa" */
+  .q2-dedo { position: absolute; left: 30%; top: 38%; width: 46%; z-index: 2; pointer-events: none;
+    opacity: 0; transition: opacity .35s ease; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
+  .q2-frasco .q2-dedo svg { display: block; width: 100%; height: auto; aspect-ratio: 1; max-width: none; fill: #fff; stroke: #1b2330; stroke-width: .6; paint-order: stroke; }
+  .com-dica .q2-dedo { opacity: 1; animation: q2Aperta 1.2s ease-in-out infinite; }
+  @keyframes q2Aperta { 50% { transform: scale(.9); } }
+  .q2-dica-txt { position: absolute; left: 50%; top: 2%; z-index: 5; translate: -50% 0; white-space: nowrap; pointer-events: none;
+    padding: 6px 14px; border-radius: 999px; background: var(--accent); color: #1b1200;
+    font-family: var(--ff-display); font-weight: 800; font-size: clamp(13px, 1.8vw, 17px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.45); opacity: 0; transition: opacity .35s ease; }
+  .com-dica .q2-dica-txt { opacity: 1; }
+  /* questão 1: espaços mais enxutos, para a altura ir para os recipientes maiores */
+  .q2-questao[data-n="1"] .q2-enunciado { margin-bottom: 6px; }
+  .q2-caso[data-caso="1"] { padding-bottom: 0; }
+  .q2-caso[data-caso="1"] .q2-amostra { gap: 4px; }
+  @media (prefers-reduced-motion: reduce) { .com-dica .q2-dedo { animation: none; } }
   /* só a lupa da face da frente responde: as das faces de trás herdariam o toque */
   .q2-face:not(.frente) .s7-lupa { pointer-events: none; }
   /* O CAMPO é quatro lupas de largura, e anda ao contrário dela (ver arrastaLupa):
@@ -795,7 +829,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v33 · 01/10/2026</span>
+    <span class="versao" id="versao">v34 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -1113,7 +1147,7 @@
               </div>
 
               <div class="q2-face f3">
-                <figure class="q2-amostra s7-gasosa" style="--mol-svg:var(--metano-svg);--molp:.28;--molgap:1.9;--qlupay:74%;--qlupak:.92;--prop:200 / 320">
+                <figure class="q2-amostra s7-gasosa" style="--mol-svg:var(--metano-svg);--mol-svg2:var(--metano-empe-svg);--molp:.28;--molgap:1.9;--qlupay:74%;--qlupak:.92;--prop:200 / 320">
                   <span class="q2-frasco">
                     <svg viewBox="0 0 200 320" role="img" aria-label="botijão de gás de cozinha">
                       <use href="#q2botijaoDes" width="200" height="320"/>
@@ -1365,6 +1399,7 @@
         <p>Você leu todas as moléculas e todas as fórmulas.</p>
         <div class="quiz-foot">
           <button type="button" class="quiz-btn ghost" id="q2Refaz">Refazer</button>
+          <button type="button" class="quiz-btn" id="q2Continua">Continuar</button>
         </div>
       </div>
     </div>
@@ -1542,6 +1577,12 @@ const Quiz = (() => {
   ["amonia", "metano", "peroxido", "etanol", "oxigenio", "nitrogenio", "monoxido", "ozonio",
    "dioxidoS", "acetileno", "metanol", "trioxidoS", "eteno", "etano"]
     .forEach(n => raiz.setProperty(`--${n}-svg`, comoFundo(desenha(n))));
+  // o metano desenhado está "de cabeça para baixo" (o carbono embaixo, os hidrogênios para cima);
+  // esta é a mesma molécula espelhada na vertical, em pé. A ordem de desenho (profundidade) não muda.
+  MOLS.metanoEmPe = MOLS.metano.map(p => p[0] === "b"
+    ? ["b", p[1], 100 - p[2], p[3], 100 - p[4], p[5], p[6]]
+    : ["a", p[1], 100 - p[2], p[3], p[4]]);
+  raiz.setProperty("--metano-empe-svg", comoFundo(desenha("metanoEmPe")));
 
   /* ── SOM, CONFETE E TREMOR ── o som nunca trava o quiz: se o navegador recusar, segue igual */
   const SONS = {};
@@ -1596,12 +1637,16 @@ const Quiz = (() => {
     const num = (n, pad) => { const v = parseFloat(cs.getPropertyValue(n)); return isNaN(v) ? pad : v; };
     const CAMPO = 4, p = num("--molp", .26), gap = num("--molgap", 1.46);   // CAMPO = largura do .s7-lupa-campo, em lupas
     const md = p / CAMPO * 100, S = p * gap / CAMPO * 100, LINHA = S * .866;
+    // --mol-svg2: um segundo desenho da mesma molécula (o metano em pé) para metade delas, sorteada
+    const outra = cs.getPropertyValue("--mol-svg2").trim() !== "";
+    const sorteio = i => { const s = Math.sin(i * 12.9898) * 43758.5453; return s - Math.floor(s); };
     const bolas = [];
     for (let r = 0, i = 0; r * LINHA - LINHA < 100 + LINHA; r++) {
       for (let c = 0; c * S - S < 100 + S; c++, i++) {
         const x = (c + (r % 2 ? .5 : 0)) * S - S * .6 - md / 2;
         const y = r * LINHA - LINHA * .6 - md / 2;
         bolas.push(`<span class="s7-mini" style="--md:${md.toFixed(2)}%;`
+          + (outra && sorteio(i) < .5 ? "background-image:var(--mol-svg2);" : "")
           + `left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;`
           + `--dx:${(md * .30 * Math.cos(i * 2.399)).toFixed(2)}%;`
           + `--dy:${(md * .30 * Math.sin(i * 1.733)).toFixed(2)}%;`
@@ -1628,20 +1673,27 @@ const Quiz = (() => {
       lupa.style.transform = `translate(${x}px, ${y}px)`;
       campo.style.transform = `translate(${-x}px, ${-y}px)`;
     };
-    lupa.addEventListener("pointerdown", e => {
-      if (e.button > 0) return;
-      e.preventDefault();
+    /* até onde a lupa pode ir, a partir do lugar em que fica parada. Medido com
+       offsets, que ignoram transformações: vale também no meio do giro do cubo. */
+    const limites = () => {
       const W = frasco.offsetWidth, H = frasco.offsetHeight, L = vidro.offsetWidth * 1.4;
       const qy = parseFloat(getComputedStyle(fig).getPropertyValue("--qlupay")) / 100 || .62;
       // a lupa inteira fica dentro da janela do prisma, que corta o que passa dela
-      const j = fig.closest(".q2-cubo").getBoundingClientRect(), r = lupa.getBoundingClientRect(), m = 4;
-      const rx0 = r.left - dx, ry0 = r.top - dy;      // onde a lupa fica parada
-      ini = { px: e.clientX, py: e.clientY, dx, dy,
-              x0: Math.max(-W / 2, -L, j.left + m - rx0), x1: Math.min(W / 2, L, j.right - m - r.width - rx0),
-              y0: Math.max(-qy * H, -L, j.top + m - ry0), y1: Math.min((1 - qy) * H, L, j.bottom - m - r.height - ry0) };
+      const prisma = fig.closest(".q2-cubo"), lw = lupa.offsetWidth, lh = lupa.offsetHeight, m = 4;
+      const x = fig.offsetLeft + frasco.offsetLeft + lupa.offsetLeft - lw / 2;   // canto da lupa parada, no prisma
+      const y = fig.offsetTop + frasco.offsetTop + lupa.offsetTop - lh / 2;
+      return { x0: Math.max(-W / 2, -L, m - x), x1: Math.min(W / 2, L, prisma.clientWidth - m - lw - x),
+               y0: Math.max(-qy * H, -L, m - y), y1: Math.min((1 - qy) * H, L, prisma.clientHeight - m - lh - y) };
+    };
+    lupa.addEventListener("pointerdown", e => {
+      if (e.button > 0) return;
+      e.preventDefault();
+      if (fig._paraDica) fig._paraDica(true);         // tocou na lupa: a dica do dedo some de vez
+      ini = { px: e.clientX, py: e.clientY, dx, dy, ...limites() };
       lupa.setPointerCapture(e.pointerId);
       lupa.classList.add("arrastando");
     });
+    fig._poe = poe; fig._limites = limites;
     lupa.addEventListener("pointermove", e => {
       if (!ini) return;
       const lim = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -1652,6 +1704,65 @@ const Quiz = (() => {
     lupa.addEventListener("pointercancel", solta);
     fig._voltaLupa = () => { solta(); poe(0, 0); };   // o quiz recomeçando põe a lupa de volta no lugar
   }
+
+  /* ── A DICA: UM DEDO MOVENDO A LUPA ──
+     No 1º exemplo (a água), um dedo passeia com a lupa pelo copo, em oito
+     deitado, e um aviso diz "Mova a lupa". Para assim que a pessoa toca na
+     lupa — e daí não volta mais. Se o exemplo mudar sem ela ter tocado, a
+     dica para e reaparece quando o quiz recomeçar. */
+  const figDica = modal.querySelector('[data-caso="1"] .q2-face.f0 .q2-amostra');
+  let dicaVista = false, dicaRaf = 0;
+  figDica.querySelector(".q2-lupa").insertAdjacentHTML("beforeend",
+    '<span class="q2-dedo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg></span>');
+  figDica.insertAdjacentHTML("beforeend", '<span class="q2-dica-txt">Mova a lupa</span>');
+  function paraDica(deVez) {
+    if (deVez) dicaVista = true;
+    cancelAnimationFrame(dicaRaf); dicaRaf = 0;
+    figDica.classList.remove("com-dica");
+  }
+  figDica._paraDica = paraDica;
+  function iniciaDica() {
+    if (dicaVista || dicaRaf) return;
+    figDica.classList.add("com-dica");
+    const face = figDica.closest(".q2-face");
+    let t0 = 0;
+    const quadro = agora => {
+      if (!face.classList.contains("frente") || !aberto()) { paraDica(false); return; }
+      t0 = t0 || agora;
+      const t = (agora - t0) / 1000, entra = Math.min(1, t / .8);        // começa parado e ganha amplitude
+      const l = figDica._limites();
+      const ax = Math.min(-l.x0, l.x1) * .75 * entra, ay = Math.min(-l.y0, l.y1) * .6 * entra;
+      figDica._poe(ax * Math.sin(t * 1.5), ay * Math.sin(t * 3));
+      dicaRaf = requestAnimationFrame(quadro);
+    };
+    dicaRaf = requestAnimationFrame(quadro);
+  }
+
+  /* ── QUESTÃO 1 MAIOR ──
+     Os recipientes crescem 25% e as lupas 30%, até onde a tela deixar: o prisma
+     do exemplo nunca passa da altura livre (nem, deitado, da largura que sobra
+     ao lado das alternativas). Recalculado sempre que o espaço muda. */
+  const caso1 = modal.querySelector('[data-caso="1"]');
+  const ex1 = caso1.querySelector(".q2-cubo-ex"), alt1 = caso1.querySelector(".q2-cubo-alt");
+  function ajustaQ1() {
+    ex1.style.removeProperty("--ca");
+    ex1.style.removeProperty("--lupa-f");
+    const base = ex1.offsetHeight;
+    if (!base) return;                                  // questão 1 fora da tela
+    const cs = getComputedStyle(caso1), px = v => parseFloat(v) || 0;
+    let livre = caso1.clientHeight - px(cs.paddingTop) - px(cs.paddingBottom);
+    if (cs.flexDirection === "column") livre -= alt1.offsetHeight + px(cs.rowGap);                     // em pé: um em cima do outro
+    else livre = Math.min(livre, (caso1.clientWidth - alt1.offsetWidth - px(cs.columnGap) - 2) / .74);  // deitado: lado a lado
+    // os 25% são do recipiente, e não da caixa toda: a legenda embaixo não cresce
+    // (a legenda ficou mais junta: 4px em vez de 1,6vh; o recipiente de antes era menor por essa diferença)
+    const junta = Math.max(0, innerHeight * .016 - 4);
+    const antes = ex1.querySelector(".q2-frasco").offsetHeight - junta;
+    const ca = Math.max(base, Math.min(base + antes * .25 - junta, livre));
+    ex1.style.setProperty("--ca", ca.toFixed(1) + "px");
+    ex1.style.setProperty("--lupa-f", (.42 * 1.3 * base / ca).toFixed(4));   // lupa 30% maior que a de antes
+  }
+  if (window.ResizeObserver) new ResizeObserver(ajustaQ1).observe(caso1);
+  else addEventListener("resize", ajustaQ1);
 
   /* ── AS QUESTÕES DE EXEMPLOS QUE GIRAM ──
      O acerto gira, o erro não: errar marca a alternativa de vermelho e a tira do
@@ -1741,31 +1852,67 @@ const Quiz = (() => {
     limpaConfete();
     reinicios.forEach(r => r());
     mostra(0);
+    if (aberto()) iniciaDica();                        // Refazer: a dica volta se a lupa ainda não foi tocada
   }
   document.getElementById("q2Refaz").addEventListener("click", recomeca);
 
+  /* ── A TELA VIRA UM CUBO ──
+     Abrir: a página sobe e o quiz vem de baixo, já na 1ª questão.
+     Sair: o quiz desce e a página volta de cima. Durante o giro nada pega o toque. */
+  const pagina = document.getElementById("pagina1");
+  const semMov = matchMedia("(prefers-reduced-motion: reduce)");
+  let girando = false;
+  function cubo(sai, entra, cSai, cEntra, depois) {
+    if (semMov.matches) { depois(); return; }
+    girando = true;
+    document.body.classList.add("girando");
+    sai.classList.add(cSai); entra.classList.add(cEntra);
+    entra.addEventListener("animationend", function fim(e) {
+      if (e.target !== entra) return;          // ignora as animações dos filhos
+      entra.removeEventListener("animationend", fim);
+      sai.classList.remove(cSai); entra.classList.remove(cEntra);
+      document.body.classList.remove("girando");
+      girando = false;
+      depois();
+    });
+  }
+
   let focoAntes = null;
   function abrir() {
+    if (girando || aberto()) return;
     if (typeof Player !== "undefined" && Player.fonte && !Player.fonte.paused) Player.pausar();
     recomeca();
     focoAntes = document.activeElement;
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
-    // o foco vai para o ✕: daí o Tab percorre o quiz, e não a página por trás
-    setTimeout(() => modal.querySelector(".modal-close").focus({ preventScroll: true }), 260);
+    ajustaQ1();
+    iniciaDica();
     vibe(18);
+    cubo(pagina, modal, "cubo-sobe-sai", "cubo-sobe-entra", () => {
+      pagina.classList.add("atras-do-quiz");
+      // o foco vai para o ✕: daí o Tab percorre o quiz, e não a página por trás
+      modal.querySelector(".modal-close").focus({ preventScroll: true });
+    });
   }
-  function fechar() {
-    modal.classList.remove("open");
-    modal.setAttribute("aria-hidden", "true");
+  // continuar = veio do botão "Continuar": a página volta com o título "Moléculas" e o áudio 6 começa
+  function fechar(continuar = false) {
+    if (girando || !aberto()) return;
     limpaConfete();
-    if (focoAntes && focoAntes.focus) focoAntes.focus({ preventScroll: true });
+    if (continuar) Player.carregar(NARRACOES.findIndex(n => n.id === "dialogo6"));   // monta o título antes do giro
+    pagina.classList.remove("atras-do-quiz");
+    cubo(modal, pagina, "cubo-desce-sai", "cubo-desce-entra", () => {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      if (continuar) Player.tocar();
+      else if (focoAntes && focoAntes.focus) focoAntes.focus({ preventScroll: true });
+    });
   }
-  modal.querySelector("[data-close]").addEventListener("click", fechar);
-  modal.addEventListener("click", e => { if (e.target === modal) fechar(); });   // toque no fundo escuro fecha
+  const aberto = () => modal.classList.contains("open");
+  modal.querySelector("[data-close]").addEventListener("click", () => fechar());
+  document.getElementById("q2Continua").addEventListener("click", () => fechar(true));
 
   mostra(0);
-  return { abrir, fechar, aberto: () => modal.classList.contains("open") };
+  return { abrir, fechar, aberto };
 })();
 </script>
 <script src="libs/three.min.js"></script>
@@ -1870,10 +2017,15 @@ const NARRACOES = [
     ],
     aoFim: () => Cena4W.formulaNormal() },                 // ao fim do áudio, volta ao normal
   { id: "dialogo5", titulo: "Hora do quiz", src: "audio/audio_moleculas_5.mp3",
+    entrada: 14.4,                                         // pela navegação rápida, entra no fim ("Clica aí no quiz...")
     // vindo do play, a cena do copo continua no palco; pela navegação rápida, parte do mundo quântico
     inicio: () => { if (!Palco.el.firstElementChild) Cena4.montarFinal(); },
     eventos: [],
-    aoFim: () => ui.modoQuiz(true) }                       // o play vira o botão "Quiz"
+    aoFim: () => ui.modoQuiz(true) },                      // o play vira o botão "Quiz"
+  // depois do quiz: o botão "Continuar" do cartão da nota traz esta narração, com o título "Moléculas"
+  { id: "dialogo6", titulo: "O que falta aprender", src: "audio/audio_moleculas_6.mp3",
+    inicio: () => Cena6.titulo(),
+    eventos: [] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -3091,6 +3243,15 @@ const Cena4W = {
   }
 };
 
+/* ---------- Cena da narração 6: volta do quiz, só o título "Moléculas" no alto ---------- */
+const Cena6 = {
+  titulo() {
+    if (Palco.el.querySelector(".c0-titulo")) return;
+    Palco.mostrar(`<h2 class="c0-titulo" style="top:5%"></h2>`);
+    Palco.letras(Palco.el.querySelector(".c0-titulo"), "Moléculas");
+  }
+};
+
 /* ---------- Lupa: moléculas de água em miniatura, se agitando (canvas 2D) ----------
    campo: tamanho (px) da região de água onde as moléculas vivem; desloc(): canto da lente dentro do campo */
 const Lupa = {
@@ -3245,8 +3406,15 @@ const Player = {
     ui.atualizarBotao(false);
   },
 
-  irPara(i, continuar = false) {
+  // desde: segundo do áudio em que a narração começa (ex.: o quiz, pela navegação rápida)
+  irPara(i, continuar = false, desde = 0) {
     this.carregar(i, continuar);
+    if (desde) {
+      const f = this.fonte;
+      f.currentTime = desde;
+      // antes dos metadados o navegador pode ignorar o salto: repete quando eles chegarem
+      if (f.addEventListener && f.readyState < 1) f.addEventListener("loadedmetadata", () => { if (f.currentTime < desde) f.currentTime = desde; }, { once: true });
+    }
     this.tocar();
   },
 
@@ -3420,7 +3588,8 @@ sumario.addEventListener("click", e => {
   if (!b) return;
   fecharGaveta();
   Player.terminou = false;
-  Player.irPara(Number(b.dataset.indice));
+  const i = Number(b.dataset.indice);
+  Player.irPara(i, false, NARRACOES[i].entrada || 0);
 });
 
 document.addEventListener("keydown", e => {
