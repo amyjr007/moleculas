@@ -226,6 +226,12 @@
 
   /* texto "digitado": cada letra já ocupa seu lugar e aparece na hora certa */
   .digita .ch { opacity: 0; }
+  /* o tracinho da digitação: mora no fim de cada letra e só aparece enquanto ela é a última digitada */
+  .com-cursor .ch { position: relative; }
+  .com-cursor .ch::after {
+    content: ""; position: absolute; left: 100%; top: .08em; bottom: .02em; width: .09em; margin-left: .04em;
+    border-radius: 1px; background: var(--ambar); box-shadow: 0 0 10px rgba(255,194,75,.6); opacity: 0; pointer-events: none;
+  }
   /* letras soltas (para digitar e desmoronar), agrupadas por palavra */
   .palavra { display: inline-block; white-space: nowrap; }
   .palavra .ch { display: inline-block; }
@@ -375,6 +381,30 @@
   }
   .c0-lewis figcaption { margin-top: .7rem; font-size: calc(clamp(.85rem, 1vmin + .6rem, 1.05rem) + 2px); color: var(--celeste-claro); }
   .c0-lewis figcaption b { font-family: var(--display); font-weight: 800; color: #fff; }
+
+  /* narração 7 — Regra do Octeto */
+  .c7-antigo { position: absolute; inset: 0; }
+  .c7-corpo {
+    position: absolute; left: 0; right: 0; top: 19%; bottom: 4%; padding: 0 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(14px, 3vh, 28px);
+  }
+  .c7-lewis { margin: 0; opacity: 0; flex: none; }
+  .c7-lewis img {
+    display: block; height: clamp(130px, 30vh, 320px); aspect-ratio: 600 / 840; object-fit: cover;
+    border-radius: 18px; filter: grayscale(1) contrast(1.05);
+    box-shadow: 0 0 0 3px var(--grafite), 0 18px 50px rgba(0,0,0,.5);
+  }
+  .c7-regra {
+    margin: 0; width: min(94%, 30ch); text-align: center;
+    font-family: var(--display); font-weight: 500; line-height: 1.3; color: #fff;
+    font-size: clamp(1.15rem, 3vmin + .6rem, 2.2rem); letter-spacing: -.01em;
+  }
+  /* tela deitada: a foto à esquerda e a regra ao lado */
+  @media (orientation: landscape) {
+    .c7-corpo { flex-direction: row; gap: clamp(20px, 4vw, 56px); }
+    .c7-lewis img { height: clamp(120px, 48vh, 380px); }
+    .c7-regra { text-align: left; width: min(46%, 26ch); }
+  }
 
   /* navegação rápida: aba discreta colada na base */
   .nav-rapida-barra {
@@ -836,7 +866,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v35 · 01/10/2026</span>
+    <span class="versao" id="versao">v36 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2046,6 +2076,13 @@ const NARRACOES = [
     eventos: [
       { tempo: 9,    acao: () => Cena6.lupa() },           // lupa mostrando as várias moléculas
       { tempo: 13.6, acao: () => Cena6.formula() }         // H₂O em cima do copo
+    ] },
+  { id: "dialogo7", titulo: "Regra do Octeto", src: "audio/audio_moleculas_7.mp3",
+    inicio: () => { if (!Palco.el.firstElementChild) Cena6.titulo(); },   // pela navegação rápida: só o título "Moléculas"
+    eventos: [
+      { tempo: 1,    acao: () => Cena7.subir() },          // 1 → 7s: "Regra do Octeto" sobe de baixo empurrando tudo e para no topo
+      { tempo: 10,   acao: () => Cena7.lewis() },          // foto de Lewis (fade in)
+      { tempo: 11,   acao: () => Cena7.regra() }           // a regra, digitada com o tracinho
     ] }
 ];
 
@@ -2098,11 +2135,23 @@ const Palco = {
   },
 
   // Digita letra a letra em "duracao" segundos
-  digitar(el, partes, duracao = 1) {
+  // cursor: um tracinho que vai na frente do texto enquanto ele é digitado e fica piscando no fim
+  digitar(el, partes, duracao = 1, { cursor = false } = {}) {
     el.classList.add("digita");
+    if (cursor) el.classList.add("com-cursor");
     const letras = this.letras(el, partes);
     const passo = duracao / letras.length;
-    letras.forEach((s, i) => this.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: .04, atraso: i * passo, easing: "linear" }));
+    letras.forEach((s, i) => {
+      if (!cursor) { this.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: .04, atraso: i * passo, easing: "linear" }); return; }
+      // a letra surge subindo de leve; o tracinho (::after da letra) aparece só enquanto ela é a última
+      // (opaca quase na hora: o tracinho mora na letra e herdaria a transparência dela)
+      this.animar(s, [{ opacity: 0, transform: "translateY(.12em)" }, { opacity: 1, offset: .12 }, { opacity: 1, transform: "none" }], { duracao: .14, atraso: i * passo, easing: "ease-out" });
+      const ultima = i === letras.length - 1;
+      const pisca = [{ opacity: 1, offset: 0 }, { opacity: 1, offset: .55 }, { opacity: 0, offset: .55 }, { opacity: 0, offset: 1 }];
+      const a = s.animate(ultima ? pisca : [{ opacity: 1 }, { opacity: 1 }],
+        { duration: (ultima ? .9 : passo) * 1000, delay: i * passo * 1000, iterations: ultima ? Infinity : 1, fill: "none", pseudoElement: "::after" });
+      if (this.pausado) a.pause();
+    });
   },
 
   // Desmorona: cada peça balança, despenca girando e sai por baixo do palco
@@ -3396,6 +3445,57 @@ const Cena6 = {
     const f = this.$(".c6-formula");
     Object.assign(f.style, { left: `${caixa.offsetLeft + p.x}px`, top: `${caixa.offsetTop + p.y}px` });
     Palco.animar(f, [{ opacity: 0, transform: "translate(-50%, calc(-100% + 12px))" }, { opacity: 1, transform: "translate(-50%, -100%)" }], { duracao: .7, easing: "ease-out" });
+  }
+};
+
+/* ---------- Cenas da narração 7: a Regra do Octeto ---------- */
+const Cena7 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  REGRA: "“Os átomos tendem a reagir quimicamente a fim de completarem 8 elétrons na camada de valência, garantindo estabilidade”",
+
+  // 1 → 7s: o título novo vem de baixo, colado no que está na tela, e empurra tudo para cima
+  // até parar onde ficava "Moléculas" (o que sobe junto anda exatamente a mesma distância)
+  subir() {
+    if (this.$(".c7-titulo")) return;
+    const P = Palco.el, antigo = document.createElement("div");
+    antigo.className = "c7-antigo";
+    [...P.children].forEach(c => antigo.appendChild(c));
+    P.appendChild(antigo);
+    Palco.adicionar(`<h2 class="c0-titulo c7-titulo" style="top:5%"></h2>`);
+    const titulo = this.$(".c7-titulo");
+    Palco.letras(titulo, "Regra do Octeto");
+    const D = P.clientHeight * .95, easing = "cubic-bezier(.45,0,.2,1)";
+    Palco.animar(antigo, [{ transform: "translateY(0)" }, { transform: `translateY(${-D}px)` }], { duracao: 6, easing });
+    Palco.animar(titulo, [{ transform: `translateY(${D}px)` }, { transform: "none" }], { duracao: 6, easing })
+      .finished.then(() => antigo.remove(), () => {});      // o que saiu por cima vai embora (e as cenas 3D param)
+  },
+
+  // 10s: a foto de Lewis; o texto da regra já ocupa o seu lugar (invisível), para nada pular quando ele for digitado
+  lewis() {
+    if (this.$(".c7-corpo")) return;
+    Palco.adicionar(`
+      <div class="c7-corpo">
+        <figure class="c7-lewis"><img src="imagens/lewis2.jpg" alt="Gilbert N. Lewis"></figure>
+        <p class="c7-regra digita com-cursor"></p>
+      </div>`);
+    Palco.letras(this.$(".c7-regra"), this.REGRA);
+    Palco.animar(this.$(".c7-lewis"), [{ opacity: 0 }, { opacity: 1 }], { duracao: 1, easing: "ease-out" });
+  },
+
+  // 11s: a regra, digitada com o tracinho na frente
+  regra() {
+    if (!this.$(".c7-regra")) this.lewis();
+    Palco.digitar(this.$(".c7-regra"), this.REGRA, 6, { cursor: true });
+  },
+
+  // tela final da narração 7 (para a narração seguinte começar dela)
+  montarFinal() {
+    if (this.$(".c7-titulo")) return;
+    Palco.mostrar(`<h2 class="c0-titulo c7-titulo" style="top:5%"></h2>`);
+    Palco.letras(this.$(".c7-titulo"), "Regra do Octeto");
+    this.lewis();
+    this.$(".c7-regra").classList.remove("digita");
+    this.$(".c7-lewis").getAnimations().forEach(a => a.finish());
   }
 };
 

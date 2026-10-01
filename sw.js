@@ -1,6 +1,6 @@
 /* Service worker do app. Guarda tudo na instalação: depois da primeira
    visita, o app abre inteiro sem internet. */
-const CACHE = 'moleculas-v35';
+const CACHE = 'moleculas-v36';
 const ARQUIVOS = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const ARQUIVOS = [
   './imagens/copo_agua_recorte.png',
   './imagens/etanol.png',
   './imagens/g.n.lewis.avif',
+  './imagens/lewis2.jpg',
   './fontes/atkinson-hyperlegible-400.woff2',
   './fontes/atkinson-hyperlegible-700.woff2',
   './fontes/bricolage-grotesque.woff2',
