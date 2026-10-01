@@ -459,6 +459,306 @@
   @keyframes cuboEntra      { from { transform: translateX(100%)  rotateY(90deg);  filter: brightness(.35); } }
   @keyframes cuboSaiVolta   { to   { transform: translateX(100%)  rotateY(90deg);  filter: brightness(.35); } }
   @keyframes cuboEntraVolta { from { transform: translateX(-100%) rotateY(-90deg); filter: brightness(.35); } }
+
+  /* ---------- BOTÃO QUIZ: toma o lugar do play no fim do áudio 5 ---------- */
+  .btn-quiz {
+    display: none; height: 46px; padding: 0 22px; border-radius: 999px;
+    background: var(--ambar); color: var(--preto);
+    font-family: var(--display); font-weight: 800; font-size: 1.05rem; letter-spacing: .3px;
+    box-shadow: 0 0 0 0 rgba(255,194,75,.55);
+    animation: quizEntra .5s cubic-bezier(.3,1.5,.5,1) both, quizChama 1.8s ease-in-out .6s infinite;
+    transition: transform .15s ease;
+  }
+  .faixa-player.modo-quiz .btn-play { display: none; }
+  .faixa-player.modo-quiz .btn-quiz { display: block; }
+  .btn-quiz:active { transform: scale(.95); }
+  @keyframes quizEntra { from { opacity: 0; transform: scale(.4); } }
+  @keyframes quizChama { 50% { box-shadow: 0 0 0 10px rgba(255,194,75,0); } 0%, 100% { box-shadow: 0 0 0 0 rgba(255,194,75,.55); } }
+  @media (max-height: 560px) { .btn-quiz { height: 40px; padding: 0 18px; } }
+  @media (prefers-reduced-motion: reduce) { .btn-quiz { animation: none; } }
+
+  /* =========================================================
+     QUIZ — trazido do app "Modelos Atômicos" (Capítulo II, 3º postulado
+     de Dalton). Mesmas questões, mesmos prismas que giram a cada acerto.
+     As variáveis abaixo traduzem as cores e fontes de lá para as daqui;
+     o resto é o estilo original, com os ajustes para celular e Chromebook
+     no fim do bloco.
+     ========================================================= */
+  .modal-q2 {
+    --bg-1: #0a0e1d; --bg-2: #111733; --ink: #eef2ff; --ink-2: #aab4d4; --ink-mute: #67708f;
+    --line: rgba(255,255,255,.10); --glass: rgba(255,255,255,.045); --glass-2: rgba(255,255,255,.08);
+    --accent: var(--ambar); --painel-fino: rgba(10,16,31,.93); --veu: rgba(6,11,22,.9);
+    --ff-display: var(--display); --ff-body: var(--texto); --ff-mono: "Consolas", "Menlo", "Roboto Mono", monospace;
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+  .modal-q2 { position: fixed; inset: 0; z-index: 80; display: none; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(3,5,12,.82); }
+  .modal-q2.open { display: flex; animation: modalIn .3s var(--ease); }
+  @keyframes modalIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal-q2 .modal-card { position: relative; animation: cardPop .34s var(--ease); }
+  @keyframes cardPop { from { transform: scale(.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-q2 .modal-close { position: absolute; top: 12px; right: 12px; z-index: 10; width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.32); color: #fff; font-size: 16px; cursor: pointer;
+    display: grid; place-items: center; }
+  .modal-q2 .modal-close:active { transform: scale(.92); }
+
+  .modal-q2 .quiz-opt { text-align: left; padding: 14px 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--glass-2);
+    color: var(--ink); font-family: var(--ff-body); font-size: clamp(14px,2.4vw,16px); cursor: pointer; transition: .15s var(--ease); }
+  @media (hover: hover) { .modal-q2 .quiz-opt:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); } }
+  .modal-q2 .quiz-opt.correct { border-color: #34d399; background: color-mix(in srgb, #34d399 20%, var(--glass-2)); color: #d1fae5; }
+  .modal-q2 .quiz-opt.wrong { border-color: #f87171; background: color-mix(in srgb, #f87171 20%, var(--glass-2)); color: #fee2e2; }
+  .modal-q2 .quiz-opt[disabled] { cursor: default; }
+  .modal-q2 .quiz-foot { margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px; }
+  .modal-q2 .quiz-btn { border: none; border-radius: 10px; padding: 11px 22px; cursor: pointer; font-family: var(--ff-display); font-weight: 600;
+    font-size: 14px; background: linear-gradient(180deg,#fff,var(--accent)); color: #06121a; }
+  .modal-q2 .quiz-btn:active { transform: scale(.97); }
+  .modal-q2 .quiz-btn.ghost { background: var(--glass-2); color: var(--ink); border: 1px solid var(--line); }
+  .modal-q2 .quiz-result { text-align: center; padding: 8px 0 4px; }
+  .modal-q2 .quiz-score { font-family: var(--ff-display); font-weight: 700; color: var(--accent); font-size: clamp(38px,9vw,60px); line-height: 1; }
+  .modal-q2 .quiz-result p { color: var(--ink-2); margin-top: 10px; font-size: 15px; }
+  .modal-q2 .quiz-result .quiz-foot { justify-content: center; margin-top: 24px; }
+
+  /* a janela das questões */
+  .modal-card.q2-card { width: min(1180px,96vw); height: min(780px,92vh); height: min(780px,92dvh);
+    border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
+    padding: clamp(20px,3vw,34px);
+    background: linear-gradient(180deg,var(--bg-2),var(--bg-1)); border: 1px solid var(--line);
+    box-shadow: 0 30px 80px rgba(0,0,0,.7); color: var(--ink); }
+  .q2-topo { display: flex; justify-content: center; align-items: center;
+    margin: 0; padding: 0 46px 9px; border-bottom: 1px solid var(--line); }
+  .q2-kicker { font-family: var(--ff-mono); font-size: clamp(9px,1.2vw,11px); letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent); text-align: center; }
+  .q2-corpo { flex: 1; min-height: 0; overflow: hidden; padding: clamp(12px,2vh,20px) 2px 0;
+    perspective: 1800px; perspective-origin: 50% 45%; }
+  .q2-questao { display: none; }
+  .q2-questao.atual { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  /* trocar de questão é virar a folha */
+  .q2-corpo.vira-sai   { animation: q2FolhaSai  .24s cubic-bezier(.45,.06,.75,.5) both; }
+  .q2-corpo.vira-entra { animation: q2FolhaEntra .42s cubic-bezier(.18,.82,.28,1) both; }
+  @keyframes q2FolhaSai   { from { transform: rotateY(0); opacity: 1; } to { transform: rotateY(-88deg); opacity: 0; } }
+  @keyframes q2FolhaEntra { from { transform: rotateY(88deg); opacity: 0; } to { transform: rotateY(0); opacity: 1; } }
+  .q2-n { margin: 0 0 6px; font-family: var(--ff-mono); font-size: clamp(10px,1.4vw,13px);
+    letter-spacing: 2px; text-transform: uppercase; color: var(--accent); text-align: center; }
+  .q2-enunciado { margin: 0 auto clamp(10px,1.8vh,20px); max-width: 64ch; text-align: center;
+    font-family: var(--ff-display); font-weight: 600; color: var(--ink); line-height: 1.34;
+    font-size: clamp(15px,2.3vw,22px); }
+  .q2-caso { position: relative; flex: 1; min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(14px,3.4vw,48px); flex-wrap: wrap; padding-bottom: clamp(6px,1.4vh,16px); }
+  /* o prisma hexagonal: seis faces, um sexto de volta por acerto */
+  .q2-cubo { --ap: calc(var(--cl) * .866);
+    position: relative; width: var(--cl); height: var(--ca); flex: none; overflow: hidden;
+    perspective: 1700px; perspective-origin: 50% 50%; }
+  .q2-giro { position: absolute; inset: 0; transform-style: preserve-3d;
+    transform: translateZ(calc(var(--ap) * -1));
+    transition: transform .95s cubic-bezier(.62,.03,.31,1); }
+  .q2-cubo.face-1 .q2-giro { transform: translateZ(calc(var(--ap) * -1)) rotateY(-60deg); }
+  .q2-cubo.face-2 .q2-giro { transform: translateZ(calc(var(--ap) * -1)) rotateY(-120deg); }
+  .q2-cubo.face-3 .q2-giro { transform: translateZ(calc(var(--ap) * -1)) rotateY(-180deg); }
+  .q2-cubo.face-4 .q2-giro { transform: translateZ(calc(var(--ap) * -1)) rotateY(-240deg); }
+  .q2-cubo.face-5 .q2-giro { transform: translateZ(calc(var(--ap) * -1)) rotateY(-300deg); }
+  .q2-face { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden; pointer-events: none; }
+  .q2-face.f0 { transform: translateZ(var(--ap)); }
+  .q2-face.f1 { transform: rotateY(60deg)  translateZ(var(--ap)); }
+  .q2-face.f2 { transform: rotateY(120deg) translateZ(var(--ap)); }
+  .q2-face.f3 { transform: rotateY(180deg) translateZ(var(--ap)); }
+  .q2-face.f4 { transform: rotateY(240deg) translateZ(var(--ap)); }
+  .q2-face.f5 { transform: rotateY(300deg) translateZ(var(--ap)); }
+  .q2-face.frente { pointer-events: auto; }
+  /* a altura é a que sobra da janela (o 240px é o topo, o enunciado e as margens) */
+  .q2-cubo-ex  { --ca: clamp(200px, min(62vh, 92vh - 240px), 520px); --cl: calc(var(--ca) * .74); }
+  .q2-cubo-alt { --ca: clamp(200px, min(62vh, 92vh - 240px), 520px); --cl: clamp(250px,40vw,520px); }
+  @supports (height: 1dvh) {
+    .q2-cubo-ex, .q2-cubo-alt { --ca: clamp(200px, min(62dvh, 92dvh - 240px), 520px); }
+  }
+
+  /* o recipiente com a lupa aberta */
+  .q2-amostra { position: relative; margin: 0; height: 100%; display: flex;
+    flex-direction: column; align-items: center; justify-content: flex-end; gap: 1.6vh; }
+  .q2-frasco { position: relative; flex: 1; min-height: 0; display: flex; align-items: flex-end; justify-content: center;
+    filter: drop-shadow(0 14px 20px rgba(0,0,0,.6)); }
+  .q2-frasco img, .q2-frasco svg { display: block; height: 100%; width: auto; max-width: 100%;
+    object-fit: contain; -webkit-user-drag: none; user-select: none; pointer-events: none; }
+  .q2-frasco svg { aspect-ratio: var(--prop, 152 / 400); }
+  .q2-rot-cil { font-family: var(--ff-mono); letter-spacing: .1em; text-anchor: middle; fill: #e6ecf6; }
+  .q2-rot-esc { font-family: var(--ff-display); font-weight: 700; text-anchor: middle; fill: #1b2330; }
+  .s7-cil-tarja { font-family: var(--ff-mono); letter-spacing: .16em; text-anchor: middle; fill: #e6ecf6; }
+  .q2-nome { font-family: var(--ff-display); font-weight: 600; letter-spacing: .2px;
+    font-size: clamp(13px,2vw,20px); color: var(--ink); text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+
+  /* a lupa (aro, vidro, brilho e cabo) e as moléculas dentro dela */
+  .s7-lupa { position: absolute; left: 50%; top: var(--qlupay,62%); z-index: 3;
+    width: calc(var(--qlupak,1) * var(--ca,420px) * .42); aspect-ratio: 1;
+    translate: -50% -50%; padding: .9vh; border-radius: 50%;
+    background: conic-gradient(from 135deg,#f4f7fb,#93a0ae 22%,#4e5a67 48%,#c4cedb 72%,#f4f7fb);
+    box-shadow: 0 14px 34px rgba(0,0,0,.6), 0 0 0 .18vh rgba(18,26,38,.85);
+    /* A LUPA SE ARRASTA: pega o toque e o mouse, e o dedo não rola nem dá zoom na tela */
+    pointer-events: auto; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .s7-lupa.arrastando { cursor: grabbing; }
+  /* só a lupa da face da frente responde: as das faces de trás herdariam o toque */
+  .q2-face:not(.frente) .s7-lupa { pointer-events: none; }
+  /* O CAMPO é quatro lupas de largura, e anda ao contrário dela (ver arrastaLupa):
+     a água fica parada no frasco e quem se move é a lente, como numa de verdade */
+  .s7-lupa-campo { position: absolute; left: 50%; top: 50%; width: 400%; height: 400%; translate: -50% -50%; }
+  .s7-lupa-vidro { position: absolute; inset: 0; border-radius: 50%; clip-path: circle(50%);
+    box-shadow: inset 0 0 0 .3vh rgba(255,255,255,.3), inset 0 6px 22px rgba(255,255,255,.22); }
+  .s7-lupa-agua { position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 34% 24%, rgba(255,255,255,.3), transparent 52%),
+      radial-gradient(circle at 62% 74%, rgba(60,150,200,.55), transparent 62%),
+      linear-gradient(170deg,#9fd4ea 0%,#5fa9cf 46%,#2f6f97 100%); }
+  .s7-frasco .s7-lupa-agua {
+    background:
+      radial-gradient(ellipse at 34% 24%, rgba(255,255,255,.22), transparent 52%),
+      radial-gradient(circle at 62% 74%, rgba(96,120,150,.45), transparent 62%),
+      linear-gradient(170deg,#8c98a8 0%,#5a6a7e 46%,#2b3746 100%); }
+  .s7-gasosa .s7-lupa-agua {
+    background:
+      radial-gradient(ellipse at 34% 24%, rgba(255,255,255,.16), transparent 52%),
+      radial-gradient(circle at 62% 74%, rgba(180,90,80,.34), transparent 62%),
+      linear-gradient(170deg,#7d4a44 0%,#4e2724 46%,#241010 100%); }
+  .s7-alcool .s7-lupa-agua {
+    background:
+      radial-gradient(ellipse at 34% 24%, rgba(255,255,255,.3), transparent 52%),
+      radial-gradient(circle at 62% 74%, rgba(120,160,190,.42), transparent 62%),
+      linear-gradient(170deg,#c6d4de 0%,#8ba1b4 46%,#4e6276 100%); }
+  .s7-lupa-brilho { position: absolute; left: 8%; top: 6%; width: 44%; height: 34%; border-radius: 50%;
+    pointer-events: none; background: linear-gradient(150deg,rgba(255,255,255,.72),rgba(255,255,255,0) 68%); filter: blur(1px); }
+  .s7-lupa-cabo { position: absolute; left: 86%; top: 86%; width: 38%; height: 9%;
+    transform-origin: 0 50%; transform: rotate(45deg); border-radius: 0 1vh 1vh 0;
+    background: linear-gradient(180deg,#c9a24a,#8b6914 52%,#4d3a07);
+    box-shadow: 0 6px 16px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.4); }
+  .s7-mini { position: absolute; width: var(--md); aspect-ratio: 1; pointer-events: none;
+    background: var(--mol-svg) center/100% 100% no-repeat;
+    animation: miniDeriva var(--t) ease-in-out infinite alternate; animation-delay: var(--dl); }
+  /* fechada a janela, as moléculas da lupa não gastam quadro nenhum */
+  .modal-q2:not(.open) .s7-mini { animation-play-state: paused; }
+  /* e as das faces que não estão à vista também não (o campo maior tem bem mais moléculas) */
+  .q2-face:not(.frente) .s7-mini, .q2-questao:not(.atual) .s7-mini { animation-play-state: paused; }
+  @keyframes miniDeriva {
+    from { translate: calc(var(--dx) * -1) calc(var(--dy) * -1); rotate: calc(var(--rot) * -1); }
+    to   { translate: var(--dx) var(--dy); rotate: var(--rot); } }
+
+  /* as quatro fórmulas */
+  .q2-alts { display: flex; flex-direction: column; justify-content: center; gap: clamp(8px,1.5vh,14px);
+    width: 100%; padding: 0 2px; }
+  .modal-q2 .quiz-opt.q2-alt { display: flex; align-items: center; gap: 14px;
+    font-family: var(--ff-display); font-weight: 600; font-size: clamp(16px,2.6vw,24px);
+    padding: clamp(10px,1.8vh,17px) clamp(14px,2vw,22px); }
+  .q2-formula { letter-spacing: .2px; }
+  .modal-q2 .quiz-opt.q2-alt sub { font-size: .6em; line-height: 0; vertical-align: -.28em; font-weight: 600; }
+  .q2-letra { display: grid; place-items: center; flex: none; width: 1.9em; height: 1.9em; border-radius: 50%;
+    background: var(--glass); border: 1px solid var(--line);
+    font-family: var(--ff-mono); font-size: .62em; color: var(--ink-2); }
+  .modal-q2 .quiz-opt.q2-alt.correct .q2-letra { border-color: #34d399; color: #d1fae5; }
+  .modal-q2 .quiz-opt.q2-alt.wrong   .q2-letra { border-color: #f87171; color: #fee2e2; }
+  .modal-q2 .quiz-opt.q2-alt.correct { animation: q2Certa .6s cubic-bezier(.3,1.4,.4,1); }
+  @keyframes q2Certa { 0% { transform: scale(1); } 38% { transform: scale(1.045); } 100% { transform: scale(1); } }
+
+  /* o acerto e o erro */
+  .q2-confete { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 9; pointer-events: none; }
+  .q2-veu { position: absolute; inset: 0; z-index: 8; pointer-events: none; opacity: 0; border-radius: inherit;
+    background: radial-gradient(120% 120% at 50% 50%,transparent 38%,rgba(210,40,40,.42) 100%);
+    box-shadow: inset 0 0 0 3px rgba(230,60,60,.6); }
+  .q2-card.errou .q2-veu { animation: q2Veu .5s ease; }
+  @keyframes q2Veu { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+  .q2-card.errou { animation: q2Tremor .45s ease; }
+  @keyframes q2Tremor { 0%,100% { transform: translate(0,0); }
+    14% { transform: translate(-9px,4px); } 28% { transform: translate(8px,-5px); }
+    42% { transform: translate(-7px,-3px); } 58% { transform: translate(6px,4px); }
+    74% { transform: translate(-5px,2px); } 88% { transform: translate(3px,-2px); } }
+
+  /* questão 2: a fórmula de um lado, as estruturas do outro */
+  .q2-ex { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4vh;
+    width: 100%; padding: 0 6px; }
+  .q2-ex-n { font-family: var(--ff-mono); font-size: clamp(10px,1.5vw,13px); letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent); }
+  .q2-ex-f { font-family: var(--ff-display); font-weight: 700; letter-spacing: .5px;
+    font-size: min(calc(var(--ca) * .21), 96px); line-height: 1; color: var(--ink);
+    text-shadow: 0 4px 22px rgba(0,0,0,.55); }
+  .q2-ex-f sub { font-size: .58em; line-height: 0; vertical-align: -.3em; }
+  /* a grade nunca é mais alta do que o prisma: com as figuras em 1,28 de proporção,
+     a largura que cabe é (altura − vão) × 1,28 + vão. Sem isto, nas telas mais
+     baixas (Chromebook) a primeira e a última fileira saíam cortadas. */
+  .q2-alts.q2-grade { display: grid; grid-template-columns: 1fr 1fr; align-content: center;
+    gap: clamp(8px,1.4vh,14px); width: min(100%, (var(--ca) - 14px) * 1.28 + 14px); margin: 0 auto; }
+  .modal-q2 .quiz-opt.q2-est { position: relative; display: block; padding: 0; aspect-ratio: 1.28;
+    background-color: var(--glass-2); overflow: hidden; }
+  .q2-est-des { display: block; width: 100%; height: 100%;
+    background: var(--est) center/86% 86% no-repeat; }
+  .modal-q2 .quiz-opt.q2-est .q2-letra { position: absolute; left: 8px; top: 8px; width: 1.9em; height: 1.9em;
+    font-size: 13px; background: var(--painel-fino); }
+  .modal-q2 .quiz-opt.q2-est.correct .q2-est-des { filter: drop-shadow(0 0 14px rgba(52,211,153,.6)); }
+  .modal-q2 .quiz-opt.q2-est.wrong   .q2-est-des { opacity: .45; }
+
+  /* o cartão do fim */
+  .q2-fim { position: absolute; inset: 0; z-index: 7; display: none; place-items: center;
+    border-radius: inherit; background: var(--veu); backdrop-filter: blur(3px); }
+  .q2-fim.on { display: grid; animation: q2Entra .4s var(--ease) both; }
+  @keyframes q2Entra { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .q2-giro { transition-duration: .01ms; }
+    .q2-corpo.vira-sai, .q2-corpo.vira-entra { animation-duration: .01ms; }
+    .q2-card.errou, .modal-q2 .quiz-opt.q2-alt.correct { animation: none; }
+  }
+
+  /* ---------- CELULAR EM PÉ ----------
+     Lá as questões nasceram para a tela deitada da sala: o recipiente de um
+     lado e as alternativas do outro. Em pé não há largura para os dois, então
+     um vai em cima do outro, a janela ocupa a tela inteira e as quatro
+     alternativas ficam em grade de dois por dois. */
+  @media (orientation: portrait) {
+    .modal-q2 { padding: 0; }
+    .modal-card.q2-card { width: 100%; height: 100%; border-radius: 0; border: 0;
+      padding: max(14px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom)); }
+    .modal-q2 .modal-close { top: max(8px, env(safe-area-inset-top)); right: 8px; }
+    .q2-topo { padding: 4px 46px 10px; }
+    .q2-kicker { font-size: 10px; letter-spacing: 1.5px; }
+    .q2-enunciado { font-size: clamp(15px, 4.3vw, 21px); margin-bottom: 1.4dvh; }
+    .q2-caso { flex-direction: column; flex-wrap: nowrap; justify-content: space-evenly; gap: 1.6vh; padding-bottom: 0; }
+    .q2-cubo-ex  { --ca: min(34vh, 80vw); }
+    .q2-cubo-alt { --cl: min(100vw - 28px, 560px); --ca: clamp(116px, 22vh, 190px); }
+    @supports (height: 1dvh) {
+      .q2-cubo-ex  { --ca: min(34dvh, 80vw); }
+      .q2-cubo-alt { --ca: clamp(116px, 22dvh, 190px); }
+    }
+    .q2-alts { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 100%; gap: 10px; }
+    .modal-q2 .quiz-opt.q2-alt { font-size: clamp(17px, 5vw, 24px); padding: 8px 12px; gap: 10px; }
+    /* questão 2: a fórmula ocupa pouco, as estruturas ocupam o resto */
+    [data-caso="2"] .q2-cubo-ex  { --ca: 18vh; --cl: min(100vw - 28px, 560px); }
+    [data-caso="2"] .q2-cubo-alt { --ca: min(84vw, 44vh); }
+    @supports (height: 1dvh) {
+      [data-caso="2"] .q2-cubo-ex  { --ca: 18dvh; }
+      [data-caso="2"] .q2-cubo-alt { --ca: min(84vw, 44dvh); }
+    }
+    .q2-ex-f { font-size: min(calc(var(--ca) * .5), 72px); }
+    .q2-alts.q2-grade { align-content: stretch; width: 100%; }
+    .modal-q2 .quiz-opt.q2-est { aspect-ratio: auto; padding: 0; }
+  }
+
+  /* ---------- CELULAR DEITADO (tela baixa) ----------
+     A janela ocupa a tela inteira e tudo o que não é a questão encolhe: a
+     altura que sobra vai para os dois prismas. */
+  @media (orientation: landscape) and (max-height: 560px) {
+    .modal-q2 { padding: 0; }
+    .modal-card.q2-card { width: 100%; height: 100%; border-radius: 0; border: 0;
+      padding: 8px max(16px, env(safe-area-inset-right)) 6px max(16px, env(safe-area-inset-left)); }
+    .modal-q2 .modal-close { top: 6px; right: max(8px, env(safe-area-inset-right)); width: 34px; height: 34px; }
+    .q2-topo { padding: 2px 46px 6px; }
+    .q2-corpo { padding-top: 6px; }
+    .q2-n { margin-bottom: 2px; font-size: 10px; }
+    .q2-enunciado { font-size: 15px; margin-bottom: 6px; }
+    .q2-caso { flex-wrap: nowrap; gap: 4vw; padding-bottom: 0; }
+    .q2-cubo-ex, .q2-cubo-alt { --ca: max(170px, 100vh - 112px); }
+    @supports (height: 1dvh) { .q2-cubo-ex, .q2-cubo-alt { --ca: max(170px, 100dvh - 112px); } }
+    .q2-cubo-alt { --cl: min(48vw, 480px); }
+    .q2-alts { gap: 8px; height: 100%; }
+    .modal-q2 .quiz-opt.q2-alt { font-size: 18px; padding: 6px 14px; flex: 1; }
+    .q2-alts.q2-grade { grid-template-rows: 1fr 1fr; align-content: stretch; width: 100%; }
+    .modal-q2 .quiz-opt.q2-est { aspect-ratio: auto; }
+    .q2-nome { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
@@ -495,7 +795,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v32 · 30/09/2026</span>
+    <span class="versao" id="versao">v33 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -533,6 +833,8 @@
         </svg>
         <svg id="iconePlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
       </button>
+      <!-- no fim do áudio 5 o play dá lugar a este botão, que abre o quiz -->
+      <button class="btn-quiz" id="btnQuiz" aria-haspopup="dialog" aria-controls="quizPost">Quiz</button>
     </div>
   </main>
 
@@ -559,6 +861,913 @@
   <ol class="sumario" id="sumario"></ol>
 </div>
 
+<!-- ================= QUIZ (abre pelo botão Quiz, no fim do áudio 5) =================
+     Trazido do app "Modelos Atômicos" — Capítulo II, 3º postulado de Dalton. -->
+<div id="quizPost" class="modal-q2" role="dialog" aria-modal="true" aria-label="Quiz" aria-hidden="true">
+  <div class="modal-card q2-card">
+    <button class="modal-close" data-close aria-label="Sair das questões">✕</button>
+
+    <!-- A BARRA É UMA LINHA SÓ, centrada: diz de que capítulo são as questões
+         e mais nada. Saiu o título "Modo questões" — quem abriu sabe onde
+         está — e saiu a contagem, que só servia para o aluno olhar quanto
+         falta em vez de olhar a molécula. O que se ganha em altura vai todo
+         para a área da questão. -->
+    <header class="q2-topo">
+      <span class="q2-kicker">Quiz · Fórmulas químicas</span>
+    </header>
+
+    <div class="q2-corpo" id="q2Corpo">
+
+      <!-- ══ QUESTÃO 1 · ler a molécula e escrever a fórmula ══
+           Seis substâncias, uma de cada vez. O recipiente vem com a lupa já
+           aberta — aqui ela não é um gesto, é o enunciado: é por ela que se
+           conta quantos átomos de cada tipo a molécula tem.
+           A DIFICULDADE SOBE NO MEIO DO CAMINHO. Nos dois primeiros exemplos
+           as esferas trazem o símbolo do elemento escrito dentro; do terceiro
+           em diante, não. Ali o aluno ainda estava a aprender a ler o
+           desenho; daqui em diante restam a cor e o tamanho, e a fórmula
+           deduz-se — que é o que se queria desde o princípio.
+           As alternativas erradas são fórmulas de VERDADE (monóxido de
+           carbono, hidrazina, metanol, ácido acético…), e não rabiscos: quem
+           não olhar a lupa e for pela memória do nome tem por onde tropeçar.
+           O recipiente e as alternativas são dois prismas de seis faces que
+           giram juntos — ver "QUESTÃO 1" no roteiro do modo questões. -->
+      <section class="q2-questao" data-n="1">
+        <h3 class="q2-n">Questão 01</h3>
+        <p class="q2-enunciado">Observe a substância a seguir. A fórmula química dessa substância é:</p>
+
+        <div class="q2-caso" data-caso="1">
+
+          <!-- ══ OS DOIS RECIPIENTES QUE SÓ EXISTEM AQUI ══
+               O copo, o frasco de amônia, o cilindro e a garrafa de álcool
+               vêm da aula. Estes dois são desta página: o botijão do gás de
+               cozinha e o frasco âmbar da água oxigenada, ambos coisas que a
+               turma tem em casa. Desenhados, e não fotografados, pelo mesmo
+               motivo do cilindro — a foto certa não existia. -->
+          <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+            <defs>
+              <!-- o cilindro de gás, trazido do cubo das substâncias do app de origem -->
+                  <linearGradient id="s7cilCorpo" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0"   stop-color="#280606"/><stop offset=".06" stop-color="#5d1010"/>
+                    <stop offset=".20" stop-color="#a62323"/><stop offset=".34" stop-color="#d6564a"/>
+                    <stop offset=".43" stop-color="#ea8b80"/><stop offset=".53" stop-color="#c33232"/>
+                    <stop offset=".72" stop-color="#871a1a"/><stop offset=".88" stop-color="#4a0d0d"/>
+                    <stop offset="1"   stop-color="#220505"/>
+                  </linearGradient>
+                  <linearGradient id="s7cilAco" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0"   stop-color="#0a101c"/><stop offset=".07" stop-color="#26334a"/>
+                    <stop offset=".26" stop-color="#8296b5"/><stop offset=".40" stop-color="#d6e1f0"/>
+                    <stop offset=".52" stop-color="#7d90ad"/><stop offset=".74" stop-color="#3a4760"/>
+                    <stop offset=".9"  stop-color="#1a2233"/><stop offset="1"   stop-color="#080d16"/>
+                  </linearGradient>
+                  <linearGradient id="s7cilLatao" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0"   stop-color="#3a2c05"/><stop offset=".18" stop-color="#8b6914"/>
+                    <stop offset=".40" stop-color="#e8cd7d"/><stop offset=".56" stop-color="#c9a24a"/>
+                    <stop offset=".82" stop-color="#6b5210"/><stop offset="1"   stop-color="#2f2404"/>
+                  </linearGradient>
+                  <!-- o pé é a mesma chapa, meio tom mais escura: ali a luz de
+                       cima já não bate de frente -->
+                  <linearGradient id="s7cilPe" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0"   stop-color="#180303"/><stop offset=".06" stop-color="#3d0a0a"/>
+                    <stop offset=".20" stop-color="#701818"/><stop offset=".34" stop-color="#963b33"/>
+                    <stop offset=".43" stop-color="#a65a52"/><stop offset=".53" stop-color="#872323"/>
+                    <stop offset=".72" stop-color="#5c1212"/><stop offset=".88" stop-color="#330909"/>
+                    <stop offset="1"   stop-color="#160303"/>
+                  </linearGradient>
+                <!-- O DESENHO VAI NUM <symbol>, e não solto no <svg>: o
+                     cilindro aparece duas vezes na aula — aqui, no cubo das
+                     substâncias, e outra vez na página de questões. Um símbolo
+                     desenha-se uma vez e instancia-se com <use>, e assim nunca
+                     há duas versões dele para manter em dia. -->
+                <symbol id="s7cilindroDes" viewBox="0 0 152 400">
+                <!-- a sombra no chão -->
+                <ellipse cx="76" cy="386" rx="60" ry="9" fill="#000" opacity=".5"/>
+                <!-- o volante da válvula, de perfil -->
+                <ellipse cx="76" cy="12" rx="32" ry="8" fill="url(#s7cilLatao)"/>
+                <ellipse cx="76" cy="11" rx="15" ry="3.4" fill="#2f2404" opacity=".75"/>
+                <!-- a haste e o corpo da válvula -->
+                <rect x="69" y="12" width="14" height="12" fill="url(#s7cilAco)"/>
+                <rect x="60" y="20" width="32" height="26" rx="4" fill="url(#s7cilAco)"/>
+                <!-- a saída lateral, de latão -->
+                <rect x="90" y="26" width="15" height="13" rx="3" fill="url(#s7cilLatao)"/>
+                <rect x="103" y="23" width="7" height="19" rx="2.5" fill="url(#s7cilLatao)"/>
+                <!-- o gargalo -->
+                <rect x="57" y="44" width="38" height="15" rx="3" fill="url(#s7cilAco)"/>
+                <!-- o ombro e o corpo -->
+                <path d="M16 126 C16 84 38 62 57 57 L95 57 C114 62 136 84 136 126 Z" fill="url(#s7cilCorpo)"/>
+                <path d="M16 120 v236 a8 8 0 0 0 8 8 h104 a8 8 0 0 0 8 -8 V120 z" fill="url(#s7cilCorpo)"/>
+                <!-- O PÉ é um anel de chapa mais grossa, um pouco mais largo do
+                     que o corpo: é nele que o cilindro se apoia, e é o que
+                     impede o desenho de acabar como o fundo de uma garrafa. -->
+                <path d="M12 342 h128 v30 a10 10 0 0 1 -10 10 h-108 a10 10 0 0 1 -10 -10 z" fill="url(#s7cilPe)"/>
+                <rect x="12" y="342" width="128" height="1.6" fill="#ff9a8e" opacity=".3"/>
+                <!-- a etiqueta fica ACIMA do meio, para a lupa (ancorada em
+                     66%) não passar a aula inteira por cima dela -->
+                <rect x="23" y="150" width="106" height="64" rx="6" fill="#f2eee4" opacity=".94"/>
+                <rect x="23" y="150" width="106" height="17" rx="6" fill="#1b2330" opacity=".9"/>
+                <rect x="23" y="161" width="106" height="6" fill="#1b2330" opacity=".9"/>
+                <!-- A ETIQUETA VAI VAZIA, e quem a escreve é cada uso. Na aula
+                     o nome ocupa a etiqueta inteira, em duas linhas; na página
+                     de questões é a tarja que traz o nome, porque ali o meio da
+                     etiqueta é o "?" que o aluno tem de responder. Escrever os
+                     dois aqui dentro punha o nome duas vezes na aula e por cima
+                     do "?" no quiz. -->
+                <!-- o brilho comprido do tubo, por cima de tudo -->
+                <rect x="44" y="62" width="9" height="300" rx="4.5" fill="#fff" opacity=".18"/>
+                <rect x="58" y="70" width="3.5" height="290" rx="1.8" fill="#fff" opacity=".1"/>
+                </symbol>
+              <linearGradient id="q2botCorpo" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0"   stop-color="#2b3340"/><stop offset=".07" stop-color="#55637a"/>
+                <stop offset=".22" stop-color="#9dabbe"/><stop offset=".36" stop-color="#e2e9f2"/>
+                <stop offset=".45" stop-color="#f7fbff"/><stop offset=".56" stop-color="#c3ccd9"/>
+                <stop offset=".75" stop-color="#7c8799"/><stop offset=".9"  stop-color="#414a5a"/>
+                <stop offset="1"   stop-color="#232a35"/>
+              </linearGradient>
+              <linearGradient id="q2botFaixa" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0"   stop-color="#5c0a16"/><stop offset=".2"  stop-color="#a5152a"/>
+                <stop offset=".42" stop-color="#e03a4f"/><stop offset=".56" stop-color="#bb1c32"/>
+                <stop offset=".8"  stop-color="#7d0f1f"/><stop offset="1"   stop-color="#4a0713"/>
+              </linearGradient>
+              <linearGradient id="q2botAco" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0"   stop-color="#0a101c"/><stop offset=".08" stop-color="#26334a"/>
+                <stop offset=".28" stop-color="#8296b5"/><stop offset=".42" stop-color="#d6e1f0"/>
+                <stop offset=".55" stop-color="#7d90ad"/><stop offset=".78" stop-color="#3a4760"/>
+                <stop offset="1"   stop-color="#0c1220"/>
+              </linearGradient>
+              <linearGradient id="q2ambar" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0"   stop-color="#2a1403"/><stop offset=".07" stop-color="#5a2f08"/>
+                <stop offset=".22" stop-color="#96560f"/><stop offset=".36" stop-color="#c8862c"/>
+                <stop offset=".45" stop-color="#e0a84e"/><stop offset=".57" stop-color="#ab6a17"/>
+                <stop offset=".78" stop-color="#6d3c09"/><stop offset=".92" stop-color="#3b1d03"/>
+                <stop offset="1"   stop-color="#241002"/>
+              </linearGradient>
+              <linearGradient id="q2tampa" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0"   stop-color="#8e949c"/><stop offset=".1"  stop-color="#c9d0d8"/>
+                <stop offset=".34" stop-color="#f4f7fa"/><stop offset=".5"  stop-color="#dfe5ec"/>
+                <stop offset=".76" stop-color="#a8b0b9"/><stop offset="1"   stop-color="#767c85"/>
+              </linearGradient>
+
+              <!-- ── o botijão do gás de cozinha ── -->
+              <symbol id="q2botijaoDes" viewBox="0 0 200 320">
+                <ellipse cx="100" cy="306" rx="76" ry="10" fill="#000" opacity=".5"/>
+                <!-- corpo com a calota em cima -->
+                <path d="M28 296 V150 C28 110 58 82 100 82 C142 82 172 110 172 150 V296
+                         a12 12 0 0 1 -12 12 H40 a12 12 0 0 1 -12 -12 Z" fill="url(#q2botCorpo)"/>
+                <!-- a cinta escura do pé, onde a chapa engrossa -->
+                <path d="M28 262 v34 a12 12 0 0 0 12 12 h120 a12 12 0 0 0 12 -12 v-34 z"
+                      fill="#000" opacity=".26"/>
+                <rect x="28" y="262" width="144" height="1.6" fill="#fff" opacity=".22"/>
+                <!-- a faixa pintada com o nome -->
+                <rect x="30" y="140" width="140" height="48" fill="url(#q2botFaixa)"/>
+                <rect x="30" y="140" width="140" height="2" fill="#fff" opacity=".28"/>
+                <!-- a alça: dois postes e a cinta de cima, como a de verdade -->
+                <rect x="62" y="52" width="14" height="52" rx="3" fill="url(#q2botAco)"/>
+                <rect x="124" y="52" width="14" height="52" rx="3" fill="url(#q2botAco)"/>
+                <path d="M56 36 h88 a10 10 0 0 1 10 10 v12 a10 10 0 0 1 -10 10 h-88
+                         a10 10 0 0 1 -10 -10 v-12 a10 10 0 0 1 10 -10 z" fill="url(#q2botAco)"/>
+                <rect x="66" y="46" width="68" height="14" rx="7" fill="#050810" opacity=".55"/>
+                <!-- a válvula, por dentro da alça -->
+                <rect x="88" y="62" width="24" height="34" rx="5" fill="url(#q2botAco)"/>
+                <circle cx="100" cy="66" r="9" fill="#c9a24a"/>
+                <!-- o brilho comprido -->
+                <rect x="52" y="96" width="11" height="196" rx="5.5" fill="#fff" opacity=".2"/>
+                <rect x="70" y="104" width="4" height="184" rx="2" fill="#fff" opacity=".11"/>
+              </symbol>
+
+              <!-- ── o frasco âmbar da água oxigenada ── -->
+              <symbol id="q2frascoDes" viewBox="0 0 160 340">
+                <ellipse cx="80" cy="328" rx="58" ry="8" fill="#000" opacity=".5"/>
+                <!-- corpo, ombro e gargalo -->
+                <path d="M24 318 V132 C24 108 44 92 58 84 L58 58 h44 v26 c14 8 34 24 34 48
+                         V318 a10 10 0 0 1 -10 10 H34 a10 10 0 0 1 -10 -10 Z" fill="url(#q2ambar)"/>
+                <!-- a tampa branca de rosca -->
+                <rect x="50" y="10" width="60" height="50" rx="6" fill="url(#q2tampa)"/>
+                <rect x="50" y="22" width="60" height="3" fill="#000" opacity=".12"/>
+                <rect x="50" y="32" width="60" height="3" fill="#000" opacity=".12"/>
+                <rect x="50" y="42" width="60" height="3" fill="#000" opacity=".12"/>
+                <!-- o rótulo -->
+                <rect x="30" y="118" width="100" height="74" rx="5" fill="#f6f2e8" opacity=".95"/>
+                <rect x="30" y="118" width="100" height="22" rx="5" fill="#1b4a6b" opacity=".92"/>
+                <rect x="30" y="133" width="100" height="7" fill="#1b4a6b" opacity=".92"/>
+                <!-- o brilho do vidro -->
+                <rect x="40" y="100" width="10" height="200" rx="5" fill="#fff" opacity=".2"/>
+                <rect x="56" y="110" width="4" height="186" rx="2" fill="#fff" opacity=".1"/>
+              </symbol>
+            </defs>
+          </svg>
+
+          <!-- ── o exemplo: o prisma que gira a cada acerto ──
+               A LUPA JÁ NASCE ABERTA: aqui ela não é um gesto, é o enunciado.
+               --molp e --molgap dizem o tamanho e o afastamento das moléculas
+               daquela substância, como no cubo da aula; --qlupay é a altura
+               em que a lupa se ancora na foto.
+               Nos DOIS PRIMEIROS a molécula vem com o símbolo dentro das
+               esferas (--*-rot-svg); nos quatro seguintes, não — daí em
+               diante restam a cor e o tamanho, e a fórmula deduz-se. -->
+          <div class="q2-cubo q2-cubo-ex" data-cubo="ex">
+            <div class="q2-giro">
+
+              <div class="q2-face f0">
+                <figure class="q2-amostra" style="--mol-svg:var(--agua-rot-svg);--molp:.34;--molgap:1.4;--qlupay:58%;--qlupak:1">
+                  <span class="q2-frasco">
+                    <img src="imagens/copo_agua_recorte.png" alt="copo com água" draggable="false">
+                    <span class="s7-lupa q2-lupa" aria-hidden="true">
+                      <span class="s7-lupa-vidro"><span class="s7-lupa-agua"></span><span class="s7-lupa-brilho"></span></span>
+                      <span class="s7-lupa-cabo"></span>
+                    </span>
+                  </span>
+                  <figcaption class="q2-nome">Água</figcaption>
+                </figure>
+              </div>
+
+              <div class="q2-face f1">
+                <figure class="q2-amostra s7-gasosa" style="--mol-svg:var(--co2-rot-svg);--molp:.44;--molgap:1.75;--qlupay:69%;--qlupak:.86">
+                  <span class="q2-frasco">
+                    <svg viewBox="0 0 152 400" role="img" aria-label="cilindro de gás carbônico">
+                      <use href="#s7cilindroDes" width="152" height="400"/>
+                      <!-- aqui o nome fica na tarja e o meio da etiqueta é a
+                           pergunta: é a fórmula que se quer -->
+                      <text class="s7-cil-tarja" x="76" y="163" font-size="8">GÁS CARBÔNICO</text>
+                      <text class="q2-rot-esc" x="76" y="197" font-size="30">?</text>
+                    </svg>
+                    <span class="s7-lupa q2-lupa" aria-hidden="true">
+                      <span class="s7-lupa-vidro"><span class="s7-lupa-agua"></span><span class="s7-lupa-brilho"></span></span>
+                      <span class="s7-lupa-cabo"></span>
+                    </span>
+                  </span>
+                  <figcaption class="q2-nome">Gás carbônico</figcaption>
+                </figure>
+              </div>
+
+              <div class="q2-face f2">
+                <figure class="q2-amostra s7-frasco" style="--mol-svg:var(--amonia-svg);--molp:.27;--molgap:1.46;--qlupay:66%;--qlupak:.88">
+                  <span class="q2-frasco">
+                    <img src="imagens/amonia.png" alt="frasco de amônia" draggable="false">
+                    <span class="s7-lupa q2-lupa" aria-hidden="true">
+                      <span class="s7-lupa-vidro"><span class="s7-lupa-agua"></span><span class="s7-lupa-brilho"></span></span>
+                      <span class="s7-lupa-cabo"></span>
+                    </span>
+                  </span>
+                  <figcaption class="q2-nome">Amônia</figcaption>
+                </figure>
+              </div>
+
+              <div class="q2-face f3">
+                <figure class="q2-amostra s7-gasosa" style="--mol-svg:var(--metano-svg);--molp:.28;--molgap:1.9;--qlupay:74%;--qlupak:.92;--prop:200 / 320">
+                  <span class="q2-frasco">
+                    <svg viewBox="0 0 200 320" role="img" aria-label="botijão de gás de cozinha">
+                      <use href="#q2botijaoDes" width="200" height="320"/>
+                    </svg>
+                    <span class="s7-lupa q2-lupa" aria-hidden="true">
+                      <span class="s7-lupa-vidro"><span class="s7-lupa-agua"></span><span class="s7-lupa-brilho"></span></span>
+                      <span class="s7-lupa-cabo"></span>
+                    </span>
+                  </span>
+                  <figcaption class="q2-nome">Metano</figcaption>
+                </figure>
+              </div>
+
+              <div class="q2-face f4">
+                <figure class="q2-amostra s7-alcool" style="--mol-svg:var(--peroxido-svg);--molp:.30;--molgap:1.4;--qlupay:74%;--qlupak:.85;--prop:160 / 340">
+                  <span class="q2-frasco">
+                    <svg viewBox="0 0 160 340" role="img" aria-label="frasco de água oxigenada">
+                      <use href="#q2frascoDes" width="160" height="340"/>
+                      <text class="q2-rot-cil" x="80" y="135" font-size="9">ÁGUA OXIGENADA</text>
+                    </svg>
+                    <span class="s7-lupa q2-lupa" aria-hidden="true">
+                      <span class="s7-lupa-vidro"><span class="s7-lupa-agua"></span><span class="s7-lupa-brilho"></span></span>
+                      <span class="s7-lupa-cabo"></span>
+                    </span>
+                  </span>
+                  <figcaption class="q2-nome">Água oxigenada</figcaption>
+                </figure>
+              </div>
+
+              <div class="q2-face f5">
+                <figure class="q2-amostra s7-alcool" style="--mol-svg:var(--etanol-svg);--molp:.44;--molgap:1.22;--qlupay:64%;--qlupak:1">
+                  <span class="q2-frasco">
+                    <img src="imagens/etanol.png" alt="garrafa de álcool etílico" draggable="false">
+                    <span class="s7-lupa q2-lupa" aria-hidden="true">
+                      <span class="s7-lupa-vidro"><span class="s7-lupa-agua"></span><span class="s7-lupa-brilho"></span></span>
+                      <span class="s7-lupa-cabo"></span>
+                    </span>
+                  </span>
+                  <figcaption class="q2-nome">Etanol</figcaption>
+                </figure>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── as alternativas, no prisma que gira junto ──
+               data-ok marca a certa, e a ordem muda de face para face: a certa
+               não pode cair sempre no mesmo lugar.
+               AS ERRADAS SÃO FÓRMULAS DE VERDADE — água oxigenada, hidrazina,
+               monóxido de carbono, ozônio, etano, metanol, ácido acético —, e
+               não rabiscos: quem for pela memória do nome sem contar o que a
+               lupa mostra tem por onde tropeçar. -->
+          <div class="q2-cubo q2-cubo-alt" data-cubo="alt">
+            <div class="q2-giro">
+
+              <div class="q2-face f0">
+                <div class="q2-alts">
+                  <button type="button" class="quiz-opt q2-alt">H<sub>2</sub>O<sub>2</sub></button>
+                  <button type="button" class="quiz-opt q2-alt" data-ok>H<sub>2</sub>O</button>
+                  <button type="button" class="quiz-opt q2-alt">HO</button>
+                  <button type="button" class="quiz-opt q2-alt">H<sub>3</sub>O</button>
+                </div>
+              </div>
+
+              <div class="q2-face f1">
+                <div class="q2-alts">
+                  <button type="button" class="quiz-opt q2-alt">CO</button>
+                  <button type="button" class="quiz-opt q2-alt">C<sub>2</sub>O</button>
+                  <button type="button" class="quiz-opt q2-alt" data-ok>CO<sub>2</sub></button>
+                  <button type="button" class="quiz-opt q2-alt">CO<sub>3</sub></button>
+                </div>
+              </div>
+
+              <div class="q2-face f2">
+                <div class="q2-alts">
+                  <button type="button" class="quiz-opt q2-alt">NH<sub>2</sub></button>
+                  <button type="button" class="quiz-opt q2-alt">N<sub>2</sub>H<sub>4</sub></button>
+                  <button type="button" class="quiz-opt q2-alt">NH<sub>4</sub></button>
+                  <button type="button" class="quiz-opt q2-alt" data-ok>NH<sub>3</sub></button>
+                </div>
+              </div>
+
+              <div class="q2-face f3">
+                <div class="q2-alts">
+                  <button type="button" class="quiz-opt q2-alt">CH<sub>3</sub></button>
+                  <button type="button" class="quiz-opt q2-alt" data-ok>CH<sub>4</sub></button>
+                  <button type="button" class="quiz-opt q2-alt">C<sub>2</sub>H<sub>6</sub></button>
+                  <button type="button" class="quiz-opt q2-alt">CH<sub>2</sub></button>
+                </div>
+              </div>
+
+              <div class="q2-face f4">
+                <div class="q2-alts">
+                  <button type="button" class="quiz-opt q2-alt">H<sub>2</sub>O</button>
+                  <button type="button" class="quiz-opt q2-alt">HO<sub>2</sub></button>
+                  <button type="button" class="quiz-opt q2-alt">H<sub>4</sub>O<sub>2</sub></button>
+                  <button type="button" class="quiz-opt q2-alt" data-ok>H<sub>2</sub>O<sub>2</sub></button>
+                </div>
+              </div>
+
+              <div class="q2-face f5">
+                <div class="q2-alts">
+                  <button type="button" class="quiz-opt q2-alt">CH<sub>4</sub>O</button>
+                  <button type="button" class="quiz-opt q2-alt">C<sub>2</sub>H<sub>4</sub>O<sub>2</sub></button>
+                  <button type="button" class="quiz-opt q2-alt" data-ok>C<sub>2</sub>H<sub>6</sub>O</button>
+                  <button type="button" class="quiz-opt q2-alt">C<sub>3</sub>H<sub>8</sub>O</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ QUESTÃO 2 · da fórmula para a estrutura ══
+           A pergunta da questão 1 ao contrário: ali via-se a substância e
+           pedia-se a fórmula; aqui lê-se a fórmula e aponta-se o desenho.
+
+           NENHUMA DAS SEIS REPETE AS DA QUESTÃO 1, de propósito: com as mesmas
+           substâncias, quem acabou de acertar a fórmula reconheceria o desenho
+           de memória em vez de o ler. Estas são outras — oxigênio, ozônio,
+           dióxido de enxofre, acetileno, etano e metanol.
+
+           A COR NUNCA É A RESPOSTA. Num conjunto não há duas estruturas do
+           mesmo desenho pintadas de outra cor: o aluno não tem de decorar que
+           o azul é nitrogênio e o vermelho é oxigênio. O que separa uma
+           alternativa da outra é sempre a QUANTIDADE de átomos ou o arranjo
+           deles — duas bolas contra três, três tortas contra quatro em
+           leque, a mesma armação de carbono com dois, quatro ou seis
+           hidrogênios. Daí o trio acetileno / eteno / etano aparecer junto
+           mais de uma vez: são o mesmo desenho a ganhar hidrogênios, e só se
+           acerta contando. -->
+      <section class="q2-questao" data-n="2">
+        <h3 class="q2-n">Questão 02</h3>
+        <p class="q2-enunciado">Agora observe as fórmulas químicas em cada exemplo e marque a estrutura correspondente.</p>
+
+        <div class="q2-caso" data-caso="2">
+
+          <!-- ── o exemplo: a fórmula, grande ── -->
+          <div class="q2-cubo q2-cubo-ex" data-cubo="ex">
+            <div class="q2-giro">
+              <div class="q2-face f0"><div class="q2-ex">
+                <span class="q2-ex-n">Ex 01</span><span class="q2-ex-f">O<sub>2</sub></span></div></div>
+              <div class="q2-face f1"><div class="q2-ex">
+                <span class="q2-ex-n">Ex 02</span><span class="q2-ex-f">O<sub>3</sub></span></div></div>
+              <div class="q2-face f2"><div class="q2-ex">
+                <span class="q2-ex-n">Ex 03</span><span class="q2-ex-f">SO<sub>2</sub></span></div></div>
+              <div class="q2-face f3"><div class="q2-ex">
+                <span class="q2-ex-n">Ex 04</span><span class="q2-ex-f">C<sub>2</sub>H<sub>2</sub></span></div></div>
+              <div class="q2-face f4"><div class="q2-ex">
+                <span class="q2-ex-n">Ex 05</span><span class="q2-ex-f">C<sub>2</sub>H<sub>6</sub></span></div></div>
+              <div class="q2-face f5"><div class="q2-ex">
+                <span class="q2-ex-n">Ex 06</span><span class="q2-ex-f">CH<sub>4</sub>O</span></div></div>
+            </div>
+          </div>
+
+          <!-- ── as quatro estruturas, em grade ──
+               Em cada conjunto as quatro têm contagens diferentes: 2, 3, 4,
+               6 ou 8 átomos. Nunca duas do mesmo feitio. -->
+          <div class="q2-cubo q2-cubo-alt" data-cubo="alt">
+            <div class="q2-giro">
+
+              <!-- Ex 01 · O₂ (2) · contra 3, 4 e 8 -->
+              <div class="q2-face f0">
+                <div class="q2-alts q2-grade">
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura A"><span class="q2-est-des" style="--est:var(--ozonio-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" data-ok aria-label="estrutura B"><span class="q2-est-des" style="--est:var(--oxigenio-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura C"><span class="q2-est-des" style="--est:var(--acetileno-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura D"><span class="q2-est-des" style="--est:var(--etano-svg)"></span></button>
+                </div>
+              </div>
+
+              <!-- Ex 02 · O₃ (3 tortas) · contra 4 em leque, 6 e 2 -->
+              <div class="q2-face f1">
+                <div class="q2-alts q2-grade">
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura A"><span class="q2-est-des" style="--est:var(--trioxidoS-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura B"><span class="q2-est-des" style="--est:var(--metanol-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" data-ok aria-label="estrutura C"><span class="q2-est-des" style="--est:var(--ozonio-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura D"><span class="q2-est-des" style="--est:var(--oxigenio-svg)"></span></button>
+                </div>
+              </div>
+
+              <!-- Ex 03 · SO₂ (3 tortas) · o SO₃ ao lado, que é o mesmo
+                   enxofre com um oxigênio a mais e já em leque -->
+              <div class="q2-face f2">
+                <div class="q2-alts q2-grade">
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura A"><span class="q2-est-des" style="--est:var(--eteno-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura B"><span class="q2-est-des" style="--est:var(--trioxidoS-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura C"><span class="q2-est-des" style="--est:var(--monoxido-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" data-ok aria-label="estrutura D"><span class="q2-est-des" style="--est:var(--dioxidoS-svg)"></span></button>
+                </div>
+              </div>
+
+              <!-- Ex 04 · C₂H₂ (4) · com o eteno e o etano ao lado: a mesma
+                   armação de dois carbonos a ganhar hidrogênios -->
+              <div class="q2-face f3">
+                <div class="q2-alts q2-grade">
+                  <button type="button" class="quiz-opt q2-alt q2-est" data-ok aria-label="estrutura A"><span class="q2-est-des" style="--est:var(--acetileno-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura B"><span class="q2-est-des" style="--est:var(--etano-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura C"><span class="q2-est-des" style="--est:var(--nitrogenio-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura D"><span class="q2-est-des" style="--est:var(--eteno-svg)"></span></button>
+                </div>
+              </div>
+
+              <!-- Ex 05 · C₂H₆ (8) · o mesmo trio, agora do outro extremo -->
+              <div class="q2-face f4">
+                <div class="q2-alts q2-grade">
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura A"><span class="q2-est-des" style="--est:var(--eteno-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" data-ok aria-label="estrutura B"><span class="q2-est-des" style="--est:var(--etano-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura C"><span class="q2-est-des" style="--est:var(--dioxidoS-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura D"><span class="q2-est-des" style="--est:var(--acetileno-svg)"></span></button>
+                </div>
+              </div>
+
+              <!-- Ex 06 · CH₄O (6) · contra 8, 4 e 2 -->
+              <div class="q2-face f5">
+                <div class="q2-alts q2-grade">
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura A"><span class="q2-est-des" style="--est:var(--etano-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura B"><span class="q2-est-des" style="--est:var(--acetileno-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" data-ok aria-label="estrutura C"><span class="q2-est-des" style="--est:var(--metanol-svg)"></span></button>
+                  <button type="button" class="quiz-opt q2-alt q2-est" aria-label="estrutura D"><span class="q2-est-des" style="--est:var(--oxigenio-svg)"></span></button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+    <!-- o confete e o véu vermelho cobrem a janela inteira, e não só a
+         questão: o acerto e o erro são da página -->
+    <canvas class="q2-confete" id="q2Confete" aria-hidden="true"></canvas>
+    <span class="q2-veu" aria-hidden="true"></span>
+
+    <!-- ══ O CARTÃO DO FIM ══
+         Um só, e no fim de TUDO: não há mais um por questão. Quem faz a
+         página andar é o acerto — acertado o último exemplo de uma questão, a
+         folha vira para a seguinte sozinha; acertado o último exemplo da
+         última, aparece isto.
+         Por isso também não há rodapé: as setas "Anterior" e "Próxima" não
+         tinham o que fazer, e a altura que ocupavam passou para as questões. -->
+    <div class="q2-fim" id="q2Fim">
+      <div class="quiz-result">
+        <div class="quiz-score" id="q2Placar">12 / 12</div>
+        <p>Você leu todas as moléculas e todas as fórmulas.</p>
+        <div class="quiz-foot">
+          <button type="button" class="quiz-btn ghost" id="q2Refaz">Refazer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   QUIZ — trazido do app "Modelos Atômicos" (Capítulo II, 3º postulado).
+   Duas questões de seis exemplos cada; o acerto gira os dois prismas e
+   traz o exemplo seguinte, o erro marca a alternativa e treme a janela.
+   Não há botão de avançar: acabados os exemplos, a folha vira sozinha.
+   Abrir volta sempre à primeira questão.
+   ========================================================= */
+const Quiz = (() => {
+  const modal = document.getElementById("quizPost");
+  const questoes = [...modal.querySelectorAll(".q2-questao")];
+  const cartao = modal.querySelector(".q2-card");
+  const fim = document.getElementById("q2Fim");
+  const placar = document.getElementById("q2Placar");
+  const reinicios = [];
+  const vibe = p => { if (navigator.vibrate) { try { navigator.vibrate(p); } catch (_) {} } };
+
+  /* ── AS MOLÉCULAS: listas de peças, desenhadas em SVG ──
+       ["b", x1,y1, x2,y2, e1,e2]   uma ligação, em duas meias-barras
+       ["a", x,y, r, e]             uma esfera
+     numa caixa de 100×100, na ordem da profundidade (de trás para a frente) */
+  const MOLS = {
+    agua: [
+      ["b", 50,42.5, 17.6,67.6, "O","H"], ["b", 50,42.5, 82.4,67.6, "O","H"],
+      ["a", 17.6,67.6, 17.2, "H"], ["a", 82.4,67.6, 17.2, "H"],
+      ["a", 50,42.5, 27.2, "O"]
+    ],
+    amonia: [
+      ["b", 50,42.5, 18.7,49.3, "N","H"], ["b", 50,42.5, 81.3,49.3, "N","H"],
+      ["a", 18.7,49.3, 17.2, "H"], ["a", 81.3,49.3, 17.2, "H"],
+      ["a", 50,42.5, 27.7, "N"],
+      ["b", 50,42.5, 50,69.6, "N","H"], ["a", 50,69.6, 18.4, "H"]
+    ],
+    co2: [
+      ["b", 22.14,77.86, 50,50, "O","C"], ["b", 50,50, 77.86,22.14, "C","O"],
+      ["a", 22.14,77.86, 21.64, "O"], ["a", 77.86,22.14, 21.64, "O"],
+      ["a", 50,50, 20.36, "C"]
+    ],
+    metano: [
+      ["b", 57.02,67.10, 83.41,61.22, "C","H"], ["a", 83.41,61.22, 16.09, "H"],
+      ["b", 57.02,67.10, 57.02,25.04, "C","H"], ["a", 57.02,25.04, 16.09, "H"],
+      ["b", 57.02,67.10, 16.59,54.93, "C","H"], ["a", 16.59,54.93, 16.09, "H"],
+      ["a", 57.02,67.10, 23.95, "C"],
+      ["b", 57.02,67.10, 71.06,43.10, "C","H"], ["a", 71.06,43.10, 16.09, "H"]
+    ],
+    peroxido: [
+      ["a", 68.14,74.42, 16.54, "H"], ["a", 31.86,25.58, 16.54, "H"],
+      ["a", 26.63,53.45, 26.13, "O"], ["a", 73.37,46.55, 26.13, "O"]
+    ],
+    oxigenio: [
+      ["a", 26.65,58.50, 26.15, "O"], ["a", 73.35,41.50, 26.15, "O"]
+    ],
+    nitrogenio: [
+      ["a", 28.07,57.98, 27.57, "N"], ["a", 71.93,42.02, 27.57, "N"]
+    ],
+    monoxido: [
+      ["a", 26.34,59.12, 25.84, "C"], ["a", 72.04,42.49, 27.46, "O"]
+    ],
+    ozonio: [
+      ["a", 18.77,59.61, 18.27, "O"], ["a", 81.23,59.61, 18.27, "O"],
+      ["a", 50.00,40.39, 18.27, "O"]
+    ],
+    dioxidoS: [
+      ["a", 17.35,61.10, 16.85, "O"], ["a", 82.65,61.10, 16.85, "O"],
+      ["a", 50.00,41.87, 21.30, "S"]
+    ],
+    acetileno: [
+      ["b", 10.66,64.32, 35.78,55.18, "H","C"], ["b", 35.78,55.18, 64.22,44.82, "C","C"],
+      ["b", 64.22,44.82, 89.34,35.68, "C","H"],
+      ["a", 10.66,64.32, 10.16, "H"], ["a", 35.78,55.18, 15.12, "C"],
+      ["a", 64.22,44.82, 15.12, "C"], ["a", 89.34,35.68, 10.16, "H"]
+    ],
+    trioxidoS: [
+      ["b", 50.00,59.41, 50.00,21.76, "S","O"], ["b", 50.00,59.41, 17.39,78.24, "S","O"],
+      ["b", 50.00,59.41, 82.61,78.24, "S","O"],
+      ["a", 50.00,21.76, 16.89, "O"], ["a", 17.39,78.24, 16.89, "O"],
+      ["a", 82.61,78.24, 16.89, "O"], ["a", 50.00,59.41, 19.87, "S"]
+    ],
+    eteno: [
+      ["b", 24.25,50.00, 75.75,50.00, "C","C"],
+      ["b", 24.25,50.00, 46.10,83.91, "C","H"], ["b", 24.25,50.00, 46.10,16.09, "C","H"],
+      ["b", 75.75,50.00, 53.90,83.91, "C","H"], ["b", 75.75,50.00, 53.90,16.09, "C","H"],
+      ["a", 46.10,16.09, 15.59, "H"], ["a", 53.90,16.09, 15.59, "H"],
+      ["a", 24.25,50.00, 23.21, "C"], ["a", 75.75,50.00, 23.21, "C"],
+      ["a", 46.10,83.91, 15.59, "H"], ["a", 53.90,83.91, 15.59, "H"]
+    ],
+    etano: [
+      ["b", 35.30,35.15, 64.70,64.85, "C","C"],
+      ["b", 35.30,35.15, 56.52,14.13, "C","H"], ["b", 35.30,35.15, 14.21,14.00, "C","H"],
+      ["b", 35.30,35.15, 14.21,56.17, "C","H"], ["b", 64.70,64.85, 85.79,86.00, "C","H"],
+      ["b", 64.70,64.85, 85.79,43.83, "C","H"], ["b", 64.70,64.85, 43.48,85.87, "C","H"],
+      ["a", 85.79,43.83, 13.50, "H"], ["a", 43.48,85.87, 13.50, "H"],
+      ["a", 64.70,64.85, 20.09, "C"], ["a", 14.21,14.00, 13.50, "H"],
+      ["a", 85.79,86.00, 13.50, "H"], ["a", 35.30,35.15, 20.09, "C"],
+      ["a", 56.52,14.13, 13.50, "H"], ["a", 14.21,56.17, 13.50, "H"]
+    ],
+    metanol: [
+      ["b", 39.53,42.56, 68.53,70.53, "C","O"], ["b", 68.53,70.53, 87.95,58.91, "O","H"],
+      ["b", 39.53,42.56, 46.90,26.73, "C","H"], ["b", 39.53,42.56, 37.55,22.76, "C","H"],
+      ["b", 39.53,42.56, 12.05,56.89, "C","H"],
+      ["a", 37.55,22.76, 11.55, "H"], ["a", 87.95,58.91, 11.55, "H"],
+      ["a", 68.53,70.53, 18.26, "O"], ["a", 39.53,42.56, 17.19, "C"],
+      ["a", 12.05,56.89, 11.55, "H"], ["a", 46.90,26.73, 11.55, "H"]
+    ],
+    etanol: [
+      ["b", 30.31,54.31, 53.70,40.99, "C","C"],
+      ["b", 53.70,40.99, 75.85,62.35, "C","O"],
+      ["b", 75.85,62.35, 90.68,53.48, "O","H"],
+      ["b", 53.70,40.99, 63.45,22.27, "C","H"],
+      ["b", 53.70,40.99, 43.95,33.82, "C","H"],
+      ["b", 30.31,54.31, 35.94,50.85, "C","H"],
+      ["b", 30.31,54.31,  9.32,43.97, "C","H"],
+      ["b", 30.31,54.31, 28.80,77.73, "C","H"],
+      ["a", 43.95,33.82,  8.82, "H"], ["a", 90.68,53.48,  8.82, "H"],
+      ["a", 75.85,62.35, 13.95, "O"], ["a", 53.70,40.99, 13.13, "C"],
+      ["a", 63.45,22.27,  8.82, "H"], ["a",  9.32,43.97,  8.82, "H"],
+      ["a", 28.80,77.73,  8.82, "H"], ["a", 30.31,54.31, 13.13, "C"],
+      ["a", 35.94,50.85,  8.82, "H"]
+    ]
+  };
+  // esferas no padrão CPK: oxigênio vermelho, hidrogênio branco, nitrogênio azul, carbono escuro, enxofre amarelo
+  const ESFERAS = '<defs>'
+    + '<radialGradient id="o" cx="32%" cy="26%" r="78%">'
+    +   '<stop offset="0" stop-color="#ffe7e7"/><stop offset=".15" stop-color="#ffa3a3"/>'
+    +   '<stop offset=".52" stop-color="#ff0d0d"/><stop offset=".8" stop-color="#bd0a0a"/>'
+    +   '<stop offset="1" stop-color="#700606"/></radialGradient>'
+    + '<radialGradient id="h" cx="32%" cy="26%" r="78%">'
+    +   '<stop offset="0" stop-color="#fefeff"/><stop offset=".15" stop-color="#f9fbfc"/>'
+    +   '<stop offset=".52" stop-color="#f0f4f8"/><stop offset=".8" stop-color="#b2b5b8"/>'
+    +   '<stop offset="1" stop-color="#6a6b6d"/></radialGradient>'
+    + '<radialGradient id="n" cx="32%" cy="26%" r="78%">'
+    +   '<stop offset="0" stop-color="#e9ecff"/><stop offset=".15" stop-color="#aab6fd"/>'
+    +   '<stop offset=".52" stop-color="#3050f8"/><stop offset=".8" stop-color="#2138b8"/>'
+    +   '<stop offset="1" stop-color="#101c63"/></radialGradient>'
+    + '<radialGradient id="c" cx="32%" cy="26%" r="78%">'
+    +   '<stop offset="0" stop-color="#9aa4b2"/><stop offset=".15" stop-color="#6b7684"/>'
+    +   '<stop offset=".52" stop-color="#3b4553"/><stop offset=".8" stop-color="#1e2630"/>'
+    +   '<stop offset="1" stop-color="#0b1118"/></radialGradient>'
+    + '<radialGradient id="s" cx="32%" cy="26%" r="78%">'
+    +   '<stop offset="0" stop-color="#fffce0"/><stop offset=".15" stop-color="#ffef9e"/>'
+    +   '<stop offset=".52" stop-color="#e8d24a"/><stop offset=".8" stop-color="#a8941f"/>'
+    +   '<stop offset="1" stop-color="#5f530b"/></radialGradient>'
+    + '</defs>';
+  const GRAD  = { H: "h", O: "o", N: "n", C: "c", S: "s" };
+  const TINTA = { H: "#e7ecf2", O: "#e2564a", N: "#6f80fb", C: "#5b6572", S: "#d9c245" };
+  const LETRA = { H: "#16222f", O: "#ffffff", N: "#ffffff", C: "#ffffff", S: "#2a2405" };
+  function desenha(nome, rotulos) {
+    let corpo = "";
+    for (const p of MOLS[nome]) {
+      if (p[0] === "b") {
+        const mx = ((p[1] + p[3]) / 2).toFixed(2), my = ((p[2] + p[4]) / 2).toFixed(2);
+        corpo += '<g stroke-width="7" stroke-linecap="round" fill="none">'
+          + `<path d="M${p[1]} ${p[2]} ${mx} ${my}" stroke="${TINTA[p[5]]}"/>`
+          + `<path d="M${p[3]} ${p[4]} ${mx} ${my}" stroke="${TINTA[p[6]]}"/></g>`;
+      } else {
+        corpo += `<circle cx="${p[1]}" cy="${p[2]}" r="${p[3]}" fill="url(#${GRAD[p[4]]})"/>`;
+        if (rotulos) corpo += `<text x="${p[1]}" y="${p[2]}" fill="${LETRA[p[4]]}"`
+          + ` font-size="${(p[3] * 1.06).toFixed(1)}" font-family="system-ui,Segoe UI,Arial,sans-serif"`
+          + ` font-weight="700" text-anchor="middle" dominant-baseline="central">${p[4]}</text>`;
+      }
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' + ESFERAS + corpo + '</svg>';
+  }
+  const comoFundo = svg => 'url("data:image/svg+xml,' + encodeURIComponent(svg).replace(/'/g, "%27") + '")';
+  // cada molécula vira uma custom property; nos dois primeiros exemplos da questão 1 vão os símbolos nas esferas
+  const raiz = modal.style;
+  raiz.setProperty("--agua-rot-svg", comoFundo(desenha("agua", true)));
+  raiz.setProperty("--co2-rot-svg",  comoFundo(desenha("co2", true)));
+  ["amonia", "metano", "peroxido", "etanol", "oxigenio", "nitrogenio", "monoxido", "ozonio",
+   "dioxidoS", "acetileno", "metanol", "trioxidoS", "eteno", "etano"]
+    .forEach(n => raiz.setProperty(`--${n}-svg`, comoFundo(desenha(n))));
+
+  /* ── SOM, CONFETE E TREMOR ── o som nunca trava o quiz: se o navegador recusar, segue igual */
+  const SONS = {};
+  function som(nome) {
+    try {
+      const a = SONS[nome] || (SONS[nome] = new Audio("audio/vfx/" + nome + ".mp3"));
+      a.currentTime = 0; a.volume = .55; a.play().catch(() => {});
+    } catch (_) {}
+  }
+  const cv = document.getElementById("q2Confete");
+  let confRaf = 0;
+  function confete() {
+    const ctx = cv.getContext("2d");
+    const W = cv.width = cv.clientWidth, H = cv.height = cv.clientHeight;
+    const cores = ["#ff7a18", "#ffc777", "#46d39a", "#ff5436", "#fbeee2", "#6fc0f2", "#ffe24d"];
+    const pes = [];
+    for (let i = 0; i < 150; i++) pes.push({
+      x: W / 2 + (Math.random() - .5) * W * .35, y: H * .52,
+      vx: (Math.random() - .5) * 9, vy: Math.random() * -12 - 4,
+      g: .26 + Math.random() * .12, r: Math.random() * 6.28, vr: (Math.random() - .5) * .34,
+      s: 5 + Math.random() * 7, c: cores[(Math.random() * cores.length) | 0] });
+    const t0 = performance.now();
+    function quadro(t) {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of pes) {
+        p.vy += p.g; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.vx *= .99;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+        ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .62); ctx.restore();
+      }
+      if (t - t0 < 2600) confRaf = requestAnimationFrame(quadro);
+      else { ctx.clearRect(0, 0, W, H); confRaf = 0; }
+    }
+    if (confRaf) cancelAnimationFrame(confRaf);
+    confRaf = requestAnimationFrame(quadro);
+  }
+  function limpaConfete() {
+    if (confRaf) { cancelAnimationFrame(confRaf); confRaf = 0; }
+    cv.getContext("2d").clearRect(0, 0, cv.width, cv.height);
+  }
+  function treme() {
+    cartao.classList.remove("errou"); void cartao.offsetWidth; cartao.classList.add("errou");
+    clearTimeout(treme.t);
+    treme.t = setTimeout(() => cartao.classList.remove("errou"), 580);
+  }
+
+  /* ── O QUE SE VÊ DENTRO DA LUPA ── uma rede hexagonal de moléculas; cada figura
+     diz o tamanho (--molp) e o afastamento (--molgap) das suas */
+  function enchelupa(fig) {
+    const vidro = fig.querySelector(".q2-lupa .s7-lupa-agua");
+    if (!vidro) return;
+    const cs = getComputedStyle(fig);
+    const num = (n, pad) => { const v = parseFloat(cs.getPropertyValue(n)); return isNaN(v) ? pad : v; };
+    const CAMPO = 4, p = num("--molp", .26), gap = num("--molgap", 1.46);   // CAMPO = largura do .s7-lupa-campo, em lupas
+    const md = p / CAMPO * 100, S = p * gap / CAMPO * 100, LINHA = S * .866;
+    const bolas = [];
+    for (let r = 0, i = 0; r * LINHA - LINHA < 100 + LINHA; r++) {
+      for (let c = 0; c * S - S < 100 + S; c++, i++) {
+        const x = (c + (r % 2 ? .5 : 0)) * S - S * .6 - md / 2;
+        const y = r * LINHA - LINHA * .6 - md / 2;
+        bolas.push(`<span class="s7-mini" style="--md:${md.toFixed(2)}%;`
+          + `left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;`
+          + `--dx:${(md * .30 * Math.cos(i * 2.399)).toFixed(2)}%;`
+          + `--dy:${(md * .30 * Math.sin(i * 1.733)).toFixed(2)}%;`
+          + `--rot:${(16 * Math.cos(i * 1.117)).toFixed(0)}deg;`
+          + `--t:${(2.2 + (i % 7) * .32).toFixed(2)}s;--dl:${(-(i % 11) * .29).toFixed(2)}s`
+          + `"></span>`);
+      }
+    }
+    vidro.innerHTML = '<div class="s7-lupa-campo">' + bolas.join("") + '</div>';
+    arrastaLupa(fig);
+  }
+
+  /* ── A LUPA SE ARRASTA ──
+     Com o dedo ou o mouse, a lupa passeia pelo frasco; o campo de moléculas lá
+     dentro anda o mesmo tanto ao contrário, e por isso o líquido parece parado
+     e entram no círculo moléculas que estavam fora dele. O centro da lupa não
+     sai do frasco, nem passa da borda do campo (1,5 lupa para cada lado). */
+  function arrastaLupa(fig) {
+    const lupa = fig.querySelector(".q2-lupa"), vidro = lupa.querySelector(".s7-lupa-vidro");
+    const campo = lupa.querySelector(".s7-lupa-campo"), frasco = fig.querySelector(".q2-frasco");
+    let dx = 0, dy = 0, ini = null;
+    const poe = (x, y) => {
+      dx = x; dy = y;
+      lupa.style.transform = `translate(${x}px, ${y}px)`;
+      campo.style.transform = `translate(${-x}px, ${-y}px)`;
+    };
+    lupa.addEventListener("pointerdown", e => {
+      if (e.button > 0) return;
+      e.preventDefault();
+      const W = frasco.offsetWidth, H = frasco.offsetHeight, L = vidro.offsetWidth * 1.4;
+      const qy = parseFloat(getComputedStyle(fig).getPropertyValue("--qlupay")) / 100 || .62;
+      // a lupa inteira fica dentro da janela do prisma, que corta o que passa dela
+      const j = fig.closest(".q2-cubo").getBoundingClientRect(), r = lupa.getBoundingClientRect(), m = 4;
+      const rx0 = r.left - dx, ry0 = r.top - dy;      // onde a lupa fica parada
+      ini = { px: e.clientX, py: e.clientY, dx, dy,
+              x0: Math.max(-W / 2, -L, j.left + m - rx0), x1: Math.min(W / 2, L, j.right - m - r.width - rx0),
+              y0: Math.max(-qy * H, -L, j.top + m - ry0), y1: Math.min((1 - qy) * H, L, j.bottom - m - r.height - ry0) };
+      lupa.setPointerCapture(e.pointerId);
+      lupa.classList.add("arrastando");
+    });
+    lupa.addEventListener("pointermove", e => {
+      if (!ini) return;
+      const lim = (v, a, b) => Math.min(b, Math.max(a, v));
+      poe(lim(ini.dx + e.clientX - ini.px, ini.x0, ini.x1), lim(ini.dy + e.clientY - ini.py, ini.y0, ini.y1));
+    });
+    const solta = () => { ini = null; lupa.classList.remove("arrastando"); };
+    lupa.addEventListener("pointerup", solta);
+    lupa.addEventListener("pointercancel", solta);
+    fig._voltaLupa = () => { solta(); poe(0, 0); };   // o quiz recomeçando põe a lupa de volta no lugar
+  }
+
+  /* ── AS QUESTÕES DE EXEMPLOS QUE GIRAM ──
+     O acerto gira, o erro não: errar marca a alternativa de vermelho e a tira do
+     jogo; só o acerto traz o exemplo seguinte. */
+  let exemplosTodos = 0;
+  modal.querySelectorAll(".q2-caso").forEach((caso, nq) => {
+    const cubos = [...caso.querySelectorAll(".q2-cubo")];
+    const giros = cubos.map(c => c.querySelector(".q2-giro"));
+    const total = giros[0].children.length;
+    exemplosTodos += total;
+    let f = 0, travado = false;
+
+    caso.querySelectorAll(".q2-amostra").forEach(enchelupa);
+    // a letra de cada alternativa, para a turma poder responder em voz alta
+    caso.querySelectorAll(".q2-alts").forEach(g =>
+      [...g.children].forEach((b, k) => {
+        b.innerHTML = '<span class="q2-letra">' + "ABCD"[k] + '</span>'
+                    + '<span class="q2-formula">' + b.innerHTML + '</span>';
+      }));
+
+    function poe(n) {
+      f = n;
+      cubos.forEach(c => [1, 2, 3, 4, 5].forEach(k => c.classList.toggle("face-" + k, f === k)));
+      // só a face da frente pega o toque
+      giros.forEach(g => [...g.children].forEach((el, k) => el.classList.toggle("frente", k === f)));
+    }
+    function zera() {
+      caso.querySelectorAll(".q2-alt").forEach(b => { b.classList.remove("correct", "wrong"); b.disabled = false; });
+      caso.querySelectorAll(".q2-amostra").forEach(fig => fig._voltaLupa && fig._voltaLupa());
+      travado = false;
+      poe(0);
+    }
+
+    caso.addEventListener("click", e => {
+      const b = e.target.closest(".q2-alt");
+      if (!b || travado || b.disabled) return;
+      if (b.hasAttribute("data-ok")) {
+        travado = true;                       // nada mais responde durante o giro
+        b.classList.add("correct");
+        som("yes"); som("applause"); confete();
+        vibe([40, 40, 80]);
+        setTimeout(() => {
+          if (f < total - 1) { poe(f + 1); travado = false; return; }
+          if (nq < questoes.length - 1) mostra(nq + 1, true);
+          else {
+            placar.textContent = exemplosTodos + " / " + exemplosTodos;
+            fim.classList.add("on");
+          }
+        }, 1250);
+      } else {
+        b.classList.add("wrong");
+        b.disabled = true;                    // fica marcada: o aluno vê o que já tentou
+        som("error"); treme();
+        vibe([12, 40, 12]);
+      }
+    });
+
+    reinicios.push(zera);
+    zera();
+  });
+
+  /* ── TROCAR DE QUESTÃO É VIRAR A FOLHA ── em duas metades: a troca acontece
+     com a folha de perfil, sem nada à vista */
+  const corpo = modal.querySelector(".q2-corpo");
+  let i = 0, viradaA = 0, viradaB = 0;
+  function poeQuestao(n) {
+    i = n;
+    questoes.forEach((q, k) => q.classList.toggle("atual", k === i));
+  }
+  function mostra(n, virando) {
+    const alvo = Math.max(0, Math.min(questoes.length - 1, n));
+    clearTimeout(viradaA); clearTimeout(viradaB);
+    corpo.classList.remove("vira-sai", "vira-entra");
+    if (!virando || alvo === i) { poeQuestao(alvo); return; }
+    void corpo.offsetWidth;
+    corpo.classList.add("vira-sai");
+    viradaA = setTimeout(() => {
+      poeQuestao(alvo);
+      corpo.classList.remove("vira-sai");
+      corpo.classList.add("vira-entra");
+      viradaB = setTimeout(() => corpo.classList.remove("vira-entra"), 440);
+    }, 240);
+  }
+
+  function recomeca() {
+    fim.classList.remove("on");
+    limpaConfete();
+    reinicios.forEach(r => r());
+    mostra(0);
+  }
+  document.getElementById("q2Refaz").addEventListener("click", recomeca);
+
+  let focoAntes = null;
+  function abrir() {
+    if (typeof Player !== "undefined" && Player.fonte && !Player.fonte.paused) Player.pausar();
+    recomeca();
+    focoAntes = document.activeElement;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    // o foco vai para o ✕: daí o Tab percorre o quiz, e não a página por trás
+    setTimeout(() => modal.querySelector(".modal-close").focus({ preventScroll: true }), 260);
+    vibe(18);
+  }
+  function fechar() {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    limpaConfete();
+    if (focoAntes && focoAntes.focus) focoAntes.focus({ preventScroll: true });
+  }
+  modal.querySelector("[data-close]").addEventListener("click", fechar);
+  modal.addEventListener("click", e => { if (e.target === modal) fechar(); });   // toque no fundo escuro fecha
+
+  mostra(0);
+  return { abrir, fechar, aberto: () => modal.classList.contains("open") };
+})();
+</script>
 <script src="libs/three.min.js"></script>
 <script>
 /* =========================================================
@@ -659,7 +1868,12 @@ const NARRACOES = [
       { tempo: 16.3, acao: () => Cena4R.formula() },        // H₂O embaixo da molécula
       { tempo: 17,   acao: () => Cena4W.formulaDestaque() } // fórmula cresce com brilho
     ],
-    aoFim: () => Cena4W.formulaNormal() }                  // ao fim do áudio, volta ao normal
+    aoFim: () => Cena4W.formulaNormal() },                 // ao fim do áudio, volta ao normal
+  { id: "dialogo5", titulo: "Hora do quiz", src: "audio/audio_moleculas_5.mp3",
+    // vindo do play, a cena do copo continua no palco; pela navegação rápida, parte do mundo quântico
+    inicio: () => { if (!Palco.el.firstElementChild) Cena4.montarFinal(); },
+    eventos: [],
+    aoFim: () => ui.modoQuiz(true) }                       // o play vira o botão "Quiz"
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -2000,6 +3214,7 @@ const Player = {
     const n = NARRACOES[i];
     this.fonte = criarFonte(n);
     this.disparados = new Set();
+    ui.modoQuiz(false);
     if (continuar) Palco.pausado = false; else Palco.reiniciar();
     ui.progresso(0);
     if (n.inicio) n.inicio(Palco);      // cena de antes do play
@@ -2070,6 +3285,7 @@ const Player = {
   // Botão play: 1º clique = dialogo0; depois alterna pausa;
   // ao fim de uma narração, o próximo clique toca a seguinte.
   cliquePlay() {
+    if (ui.emQuiz) { Quiz.abrir(); return; }     // fim do áudio 5: o play virou "Quiz"
     if (this.indice === -1) { this.irPara(0); return; }
     if (this.terminou) {
       this.terminou = false;
@@ -2087,6 +3303,7 @@ const Player = {
     this.indice = -1;
     this.fonte = null;
     this.terminou = false;
+    ui.modoQuiz(false);
     Palco.reiniciar();
     atualizarSumario();
   }
@@ -2108,6 +3325,13 @@ const ui = {
   anel: document.getElementById("anelTempo"),
   progresso(fracao) {
     this.anel.style.strokeDashoffset = 100 - Math.min(Math.max(fracao || 0, 0), 1) * 100;
+  },
+  // fim do áudio 5: o play dá lugar ao botão "Quiz" (e volta ao trocar de narração)
+  emQuiz: false,
+  faixa: document.querySelector(".faixa-player"),
+  modoQuiz(ligar) {
+    this.emQuiz = ligar;
+    this.faixa.classList.toggle("modo-quiz", ligar);
   }
 };
 
@@ -2154,6 +3378,7 @@ document.getElementById("btnHome").addEventListener("click", () => {
   mostrarTela(capa);
 });
 ui.btnPlay.addEventListener("click", () => Player.cliquePlay());
+document.getElementById("btnQuiz").addEventListener("click", () => Quiz.abrir());
 
 /* ---------- Navegação rápida (sumário) ---------- */
 const gaveta = document.getElementById("gaveta");
@@ -2199,6 +3424,7 @@ sumario.addEventListener("click", e => {
 });
 
 document.addEventListener("keydown", e => {
+  if (Quiz.aberto()) { if (e.key === "Escape") Quiz.fechar(); return; }   // com o quiz aberto, o teclado é dele
   if (e.key === "Escape") fecharGaveta();
   if (e.code === "Space" && pagina1.classList.contains("ativa") && !gaveta.classList.contains("aberta")
       && document.activeElement.tagName !== "BUTTON") {
