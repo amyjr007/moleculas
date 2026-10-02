@@ -956,7 +956,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v54 · 02/10/2026</span>
+    <span class="versao" id="versao">v55 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2682,6 +2682,7 @@ const Cena3 = {
   dash() {
     const cubo = this.$(".c3-cubo");
     if (!cubo) return;
+    Vibra.tocar("mergulhoAgua");
     cubo.insertAdjacentHTML("beforeend", `<div class="c3-dash"></div>`);
     Palco.adicionar(`<div class="c3-flash"></div>`);
     Palco.animar(this.$(".c3-dash"), [
@@ -3051,6 +3052,7 @@ const Quantico = {
     renderer.domElement.addEventListener("pointerdown", e => {
       if (!estado.visivel || Palco.pausado) return;
       const m = acharMolecula(e); if (!m || m.userData.est.semToque) return;   // semToque: a molécula da aula não reage ao toque
+      Vibra.tocar(molecula === "cloro" ? "toqueCloro" : "toqueAgua");
       const u = m.userData, ant = u.acao && u.acao.nome;
       const nome = nomes.filter(n => n !== ant)[Math.floor(Math.random() * (nomes.length - 1))];
       u.acao = { nome, t0: estado.t, dir: new THREE.Vector3(Math.random() - .5, Math.random() - .5, (Math.random() - .5) * .4).normalize(),
@@ -3326,6 +3328,7 @@ const Cena4 = {
   errou(b) {
     const caixa = this.$(".c4-opcoes");
     caixa.classList.add("respondido-erro"); b.classList.add("errada");
+    Vibra.tocar("aguaErrada");
     const palco = document.getElementById("palco");
     palco.animate([0, -14, 12, -10, 8, -5, 3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 520, easing: "ease-out" });
     Palco.adicionar(`<div class="c4-vermelho"></div>`);
@@ -3341,6 +3344,7 @@ const Cena4 = {
   acertou(b) {
     const caixa = this.$(".c4-opcoes");
     caixa.classList.add("respondido"); b.classList.add("certa");
+    Vibra.tocar("aguaCerta");
     Palco.adicionar(`<div class="c4-verde"></div>`);
     this.$(".c4-verde").animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" })
       .finished.then(() => { const v = this.$(".c4-verde"); v && v.remove(); });
@@ -3927,6 +3931,7 @@ const Cena71 = {
   entrar() {
     const cil = this.$(".c71-cilindro"), area = this.$(".c71-area");
     if (!cil || cil.classList.contains("tocado") || this.$(".c71-cubo")) return;
+    Vibra.tocar("cilindro");
     cil.classList.add("tocado");
     if (!this.$(".c71-quantico")) this.prepararQuantico();
     area.insertAdjacentHTML("beforeend", `<div class="c3-dash"></div>`);
@@ -3993,6 +3998,7 @@ const Cena71 = {
   // erro: a tela treme em vermelho e a opção errada fica marcada (dá para tentar de novo)
   errou(b) {
     b.classList.add("errada"); b.disabled = true;
+    Vibra.tocar("cloroErrada");
     const palco = document.getElementById("palco");
     palco.animate([0, -14, 12, -10, 8, -5, 3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 520, easing: "ease-out" });
     Palco.adicionar(`<div class="c4-vermelho"></div>`);
@@ -4003,6 +4009,7 @@ const Cena71 = {
   acertou(b) {
     const caixa = this.$(".c72-quiz .c4-opcoes");
     caixa.classList.add("respondido"); b.classList.add("certa");
+    Vibra.tocar("cloroCerta");
     Palco.adicionar(`<div class="c4-verde"></div>`);
     const v = Palco.el.lastElementChild;
     v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
@@ -4034,6 +4041,7 @@ const Cena71 = {
     const agora = Player.fonte ? Player.fonte.currentTime : 10, total = Math.max(ate - agora - .2, 0);   // o último estouro dura 0,2s
     const passo = lista.length > 1 ? total / (lista.length - 1) : 0;
     lista.forEach((m, i) => q.estourar(m, i * passo));
+    Vibra.estouros(lista.length, passo);   // uma batida por estouro
   },
 
   // 14s: a que sobrou vai para o meio da tela, girando
@@ -4073,6 +4081,7 @@ const Cena71 = {
     m.updateMatrixWorld();
     const meio = m.localToWorld(u.baseO.clone().add(u.baseH[0]).multiplyScalar(.5));
     q.clarao(meio, { tam: 3.2, dur: .4 });
+    Vibra.tocar("quebra");
     q.faiscas(meio, { cor: 0xFFFFFF, qtd: 26, forca: 5.5, dur: .6, tam: .2 });
     q.faiscas(meio, { cor: 0xB8FF8A, qtd: 18, forca: 3.5, dur: .75, tam: .16 });
     document.getElementById("palco").animate([0, -9, 8, -6, 4, -2, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 380, easing: "ease-out" });
@@ -4361,6 +4370,7 @@ const Cena75 = {
     this.arrastando = { set: perto.set, inicio: [x, y], centro: [perto.A.x, perto.A.y], pega: [x - perto.A.x, y - perto.A.y] };
     this.$(".c75-arrasto").classList.add("pegando");   // o outro átomo fica parado, à espera do encaixe
     Cena71.m.userData.est.segura = perto.set;          // na mão, ele para de tremer
+    Vibra.tocar("pegar");
   },
   mover(e) {
     const a = this.arrastando; if (!a) return;
@@ -4381,7 +4391,10 @@ const Cena75 = {
     // matéria não atravessa matéria: o átomo esbarra no outro (na distância da ligação) e desliza pela borda
     const O = Cena74.atomo(a.set === "A" ? "B" : "A"), min = 2 * Cena74.medidas(O).g;
     let vx = nx - O.x, vy = ny - O.y, L = Math.hypot(vx, vy);
-    if (L < min) { if (L < .01) { vx = a.set === "A" ? -1 : 1; vy = 0; L = 1; } nx = O.x + vx / L * min; ny = O.y + vy / L * min; }
+    const encosta = L < min;
+    if (encosta) { if (L < .01) { vx = a.set === "A" ? -1 : 1; vy = 0; L = 1; } nx = O.x + vx / L * min; ny = O.y + vy / L * min; }
+    if (encosta && !a.encostado) Vibra.tocar("esbarrar");   // uma batida ao esbarrar (não a cada movimento)
+    a.encostado = encosta;
     const dx = nx - a.centro[0], dy = ny - a.centro[1];
     a.centro = [nx, ny];
     const s = Cena71.m.userData.est, [kx, ky] = this.chave(a.set);
@@ -4408,6 +4421,7 @@ const Cena75 = {
     const a = this.arrastando; if (!a || this.ligado) return;
     this.ligado = true; this.armado = false; this.soltar();   // o encaixe tira o átomo da mão
     Cena71.instabilizar(false, .35);                         // a molécula fecha o octeto dos dois: o tremor cessa
+    Vibra.tocar("encaixe");
     this.status("estavel");                                   // "Átomos Instáveis" sai; "Molécula estável" entra pronto
     const q = Cena71.quantum, s = Cena71.m.userData.est, alvo = this.alvo(a.set);
     // a ligação: um bastão transparente entre os dois átomos, com o par de elétrons dentro
@@ -4468,6 +4482,7 @@ const Cena75 = {
     Cena71.instabilizar(true, .3);   // fora do octeto de novo: os dois voltam a tremer (o que está na mão, só quando for solto)
     this.status("instavel");
     Cena76.tirar("A"); Cena76.tirar("B");
+    Vibra.tocar("puxao");
     const q = Cena71.quantum, u = Cena71.m.userData;
     Cena71.m.updateMatrixWorld();
     const meio = u.O.getWorldPosition(new THREE.Vector3()).add(u.Hs[0].getWorldPosition(new THREE.Vector3())).multiplyScalar(.5);
@@ -4563,6 +4578,40 @@ const Lupa = {
       requestAnimationFrame(quadro);
     };
     requestAnimationFrame(quadro);
+  }
+};
+
+/* ---------- Vibração (celulares e tablets que suportam; nos outros, nada acontece) ----------
+   Cada exemplo tem a sua: a água é líquida e macia (ondas que crescem); o cloro é gás e
+   instável (batidas secas, curtas). O quiz principal já tem as suas, dentro dele. */
+const Vibra = {
+  PADROES: {
+    // água
+    mergulhoAgua: [10, 20, 20, 20, 40, 20, 80],     // o dash para dentro do copo
+    toqueAgua:    14,                                // tocar numa molécula de água
+    aguaCerta:    [30, 20, 90],                      // H₂O
+    aguaErrada:   [60, 40, 60],
+    // cloro
+    cilindro:     [20, 30, 40, 30, 80],              // o zoom para dentro do cilindro de gás
+    toqueCloro:   [8, 30, 8],                        // tocar numa molécula de Cl₂
+    cloroCerta:   [25, 25, 25, 25, 140],             // Cl₂
+    cloroErrada:  [90, 50, 90],
+    quebra:       [100, 30, 50],                     // a ligação do Cl₂ arrebenta (áudio 7.3)
+    pegar:        12,                                // pegar um átomo de Cl
+    esbarrar:     22,                                // um Cl esbarra no outro
+    encaixe:      [30, 30, 30, 30, 200],             // os dois Cl se ligam: octeto fechado
+    puxao:        [80, 30, 40]                       // o aluno rompe a ligação com um puxão
+  },
+  tocar(nome) {
+    const p = typeof nome === "string" ? this.PADROES[nome] : nome;
+    if (p == null || !navigator.vibrate) return;
+    try { navigator.vibrate(p); } catch (_) {}
+  },
+  // uma batida curta a cada estouro: "qtd" batidas, uma a cada "passo" segundos
+  estouros(qtd, passo) {
+    const p = [];
+    for (let i = 0; i < qtd; i++) { if (i) p.push(Math.max(Math.round(passo * 1000) - 18, 10)); p.push(18); }
+    this.tocar(p);
   }
 };
 
