@@ -195,7 +195,9 @@
     display: flex; align-items: center; justify-content: center;
     min-height: 0;
   }
-  #conteudoPalco { position: absolute; inset: 0; }
+  /* z-index: a cena inteira fica numa camada só, abaixo do play — nada dela (como a área de arrastar
+     os átomos de Cl) pode cobrir o botão e roubar o toque */
+  #conteudoPalco { position: absolute; inset: 0; z-index: 1; }
 
   .faixa-player {
     position: absolute; z-index: 2;
@@ -965,7 +967,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v56 · 02/10/2026</span>
+    <span class="versao" id="versao">v57 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2255,7 +2257,7 @@ const NARRACOES = [
     eventos: [
       { tempo: 12.8, acao: () => Cena76.elipse(true) }                               // a elipse com o par compartilhado cresce
     ],
-    aoFim: () => Cena76.elipse(false) },                                             // e volta ao normal
+    aoFim: () => { Cena76.elipse(false); Cena75.tirarStatus(); } },                  // volta ao normal; "Molécula estável" sai em fade
   // os pares de elétrons do Cl₂: o octeto de cada Cl, os pares não ligantes e o par ligante
   { id: "dialogo7_7", titulo: "Pares ligantes e não ligantes", src: "audio/audio_moleculas_7.7.mp3",
     inicio: () => Cena75.montarPronta(),                   // pela navegação rápida: a molécula de Cl₂ já formada
@@ -4369,7 +4371,13 @@ const Cena75 = {
     Object.assign(s, { instO: 0, instH: 0 });
     this.ligado = true; this.armado = false; this.festejou = true;
     this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", `<div class="c75-ligacao"></div>`);
-    this.status("estavel");
+    this.tirarStatus();   // como no fim da 7.6: sem "Molécula estável" na tela
+  },
+  // o texto de estado sai em fade
+  tirarStatus() {
+    const st = this.$(".c75-status"); if (!st) return;
+    st.classList.remove("c75-status");
+    Palco.animar(st, [{ opacity: getComputedStyle(st).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => st.remove(), () => {});
   },
 
   // fim do áudio 7.5: os átomos passam a poder ser arrastados (convite: os dois dão uma pulsada)
