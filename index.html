@@ -939,7 +939,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v49 · 02/10/2026</span>
+    <span class="versao" id="versao">v50 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -4190,14 +4190,18 @@ const Cena74 = {
 };
 
 /* ---------- Cena do fim da narração 7.5: o aluno junta os dois átomos de Cl ----------
-   Ao fim do áudio, qualquer um dos dois átomos pode ser arrastado. Logo no começo do arrasto,
-   o outro vai para o meio da tela, à espera. Os elétrons acompanham o seu átomo. Quando o arrastado
-   chega ao lado certo do outro, os dois elétrons sozinhos se encaixam (um em cima do outro):
-   brilho verde, os átomos se prendem, aparece a ligação com o par de elétrons dentro,
-   confetes, fanfarra e o áudio 7.6. */
+   Ao fim do áudio, qualquer um dos dois átomos pode ser arrastado; o outro fica parado, à espera.
+   Os elétrons acompanham o seu átomo, e um átomo não atravessa o outro: esbarra e desliza pela borda.
+   Quando o arrastado chega ao lado certo do outro, os dois elétrons sozinhos se encaixam (um em cima
+   do outro): brilho verde, os átomos se prendem, aparece a ligação com o par de elétrons dentro e a
+   molécula vai para o meio da tela. Na 1ª vez: confetes, fanfarra e o áudio 7.6.
+   Pronta, a molécula pode ser desfeita (como no slide 13 do app de Ligações Químicas): um puxão de
+   verdade num átomo rompe a ligação, e os dois podem ser juntados de novo. O encaixe só volta a valer
+   depois que os átomos se afastaram uma vez — senão a molécula se refaria na hora do puxão. */
 const Cena75 = {
   $(sel) { return Palco.el.querySelector(sel); },
   ativo: false,
+  PUXAO: 34,          // px de arrasto para romper a ligação (um roçar no átomo não desmancha a molécula)
 
   // fim do áudio 7.5: os átomos passam a poder ser arrastados
   liberar() {
@@ -4208,7 +4212,7 @@ const Cena75 = {
     this.seguir();
     Palco.adicionar(`<div class="c75-arrasto" aria-label="Arraste um átomo de cloro até o outro"></div>`);
     const zona = this.$(".c75-arrasto");
-    this.ativo = true; this.encaixado = false; this.centrado = null;
+    this.ativo = true; this.ligado = false; this.armado = true; this.festejou = false;
     zona.addEventListener("pointerdown", e => this.pegar(e));
     zona.addEventListener("pointermove", e => this.mover(e));
     zona.addEventListener("pointerup", () => this.soltar());
@@ -4234,32 +4238,46 @@ const Cena75 = {
 
   ponto(e) { const P = Palco.el.getBoundingClientRect(); return [e.clientX - P.left, e.clientY - P.top]; },
   chave(set) { return set === "A" ? ["offOx", "offOy"] : ["offHx", "offHy"]; },
+  raioEncaixe(set) { return Math.max(28, Cena74.atomo(set).R * .8); },
 
   pegar(e) {
-    if (!this.ativo || this.encaixado) return;
+    if (!this.ativo) return;
     const [x, y] = this.ponto(e);
     const perto = ["A", "B"].map(set => { const A = Cena74.atomo(set); return { set, A, d: Math.hypot(A.x - x, A.y - y) }; })
       .filter(o => o.d < o.A.R * 1.9).sort((a, b) => a.d - b.d)[0];
     if (!perto) return;
     e.target.setPointerCapture(e.pointerId);
-    this.arrastando = { set: perto.set, ultimo: [x, y], centro: [perto.A.x, perto.A.y], pega: [x - perto.A.x, y - perto.A.y] };
+    this.arrastando = { set: perto.set, inicio: [x, y], centro: [perto.A.x, perto.A.y], pega: [x - perto.A.x, y - perto.A.y] };
     this.$(".c75-arrasto").classList.add("pegando");   // o outro átomo fica parado, à espera do encaixe
   },
   mover(e) {
-    const a = this.arrastando; if (!a || this.encaixado) return;
+    const a = this.arrastando; if (!a) return;
     const [x, y] = this.ponto(e);
-    a.ultimo = [x, y];
-    // o átomo não sai da área da cena 3D (senão seria cortado na borda)
-    const cr = this.$(".c71-quantico").getBoundingClientRect(), P = Palco.el.getBoundingClientRect(), R = Cena74.atomo(a.set).R;
-    const nx = Math.min(Math.max(x - a.pega[0], cr.left - P.left + R), cr.right - P.left - R);   // pega: onde o dedo pegou no átomo
-    const ny = Math.min(Math.max(y - a.pega[1], cr.top - P.top + R), cr.bottom - P.top - R);
+    // ligada, a molécula só se abre com um puxão de verdade
+    if (this.ligado) {
+      if (Math.hypot(x - a.inicio[0], y - a.inicio[1]) < this.PUXAO) return;
+      this.quebrar();
+      // rebaseia o arrasto no ponto em que a ligação cedeu: o átomo não salta o tamanho do puxão
+      const A = Cena74.atomo(a.set);
+      a.centro = [A.x, A.y]; a.pega = [x - A.x, y - A.y];
+    }
+    // o átomo (com os elétrons em volta) não sai da área da cena 3D (senão seria cortado na borda)
+    const cr = this.$(".c71-quantico").getBoundingClientRect(), P = Palco.el.getBoundingClientRect(), Am = Cena74.atomo(a.set);
+    const me = Cena74.medidas(Am), R = me.g + me.e / 2 + 2;
+    let nx = Math.min(Math.max(x - a.pega[0], cr.left - P.left + R), cr.right - P.left - R);   // pega: onde o dedo pegou no átomo
+    let ny = Math.min(Math.max(y - a.pega[1], cr.top - P.top + R), cr.bottom - P.top - R);
+    // matéria não atravessa matéria: o átomo esbarra no outro (na distância da ligação) e desliza pela borda
+    const O = Cena74.atomo(a.set === "A" ? "B" : "A"), min = 2 * Cena74.medidas(O).g;
+    let vx = nx - O.x, vy = ny - O.y, L = Math.hypot(vx, vy);
+    if (L < min) { if (L < .01) { vx = a.set === "A" ? -1 : 1; vy = 0; L = 1; } nx = O.x + vx / L * min; ny = O.y + vy / L * min; }
     const dx = nx - a.centro[0], dy = ny - a.centro[1];
     a.centro = [nx, ny];
     const s = Cena71.m.userData.est, [kx, ky] = this.chave(a.set);
     s[kx] += dx / this.ppu; s[ky] -= dy / this.ppu;
-    // encaixe: o arrastado chegou ao seu lugar ao lado do que espera no meio (A à esquerda, B à direita)
-    const alvo = this.alvo(a.set);
-    if (Math.hypot(a.centro[0] - alvo[0], a.centro[1] - alvo[1]) < Math.max(28, Cena74.atomo(a.set).R * .8)) this.encaixar();
+    // encaixe: o arrastado chegou ao seu lugar ao lado do outro (A à esquerda, B à direita)
+    const alvo = this.alvo(a.set), d = Math.hypot(nx - alvo[0], ny - alvo[1]), r = this.raioEncaixe(a.set);
+    if (d > r * 2.4) this.armado = true;           // só arma depois de afastar de verdade
+    if (this.armado && d < r) this.encaixar();
   },
   soltar() {
     this.arrastando = null;
@@ -4271,19 +4289,17 @@ const Cena75 = {
     return [O.x + (set === "A" ? -2 * g : 2 * g), O.y];
   },
 
-  // encaixou: os átomos se prendem, brilho verde, ligação com o par de elétrons dentro, confetes, fanfarra e o áudio 7.6
+  // encaixou: os átomos se prendem, brilho verde, ligação com o par de elétrons dentro e a molécula vai ao centro.
+  // Na 1ª vez, também confetes, fanfarra e o áudio 7.6.
   encaixar() {
-    const a = this.arrastando; if (!a || this.encaixado) return;
-    this.encaixado = true; this.ativo = false; this.soltar();
-    const q = Cena71.quantum, s = Cena71.m.userData.est, [kx, ky] = this.chave(a.set), alvo = this.alvo(a.set);
-    q.animar(s, kx, s[kx] + (alvo[0] - a.centro[0]) / this.ppu, .25);
-    q.animar(s, ky, s[ky] - (alvo[1] - a.centro[1]) / this.ppu, .25);
-    const z = this.$(".c75-arrasto"); if (z) z.remove();
+    const a = this.arrastando; if (!a || this.ligado) return;
+    this.ligado = true; this.armado = false; this.soltar();   // o encaixe tira o átomo da mão
+    const q = Cena71.quantum, s = Cena71.m.userData.est, alvo = this.alvo(a.set);
     // a ligação: um bastão transparente entre os dois átomos, com o par de elétrons dentro
-    const primeiro = this.$(".c74-eletrons");
-    primeiro.insertAdjacentHTML("beforebegin", `<div class="c75-ligacao"></div>`);
+    const velha = this.$(".c75-ligacao"); if (velha) velha.remove();
+    this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", `<div class="c75-ligacao"></div>`);
     const lig = this.$(".c75-ligacao");
-    this.posicionarLigacao(lig, alvo);
+    this.posicionarLigacao(lig);
     Palco.animar(lig, [{ opacity: 0, scale: ".4 1" }, { opacity: 1, scale: "1 1" }], { duracao: .5, atraso: .2, easing: "cubic-bezier(.3,1.4,.5,1)" });
     // os dois elétrons do par brilham juntos
     [Cena74.els("A")[6], Cena74.els("B")[6]].forEach(el => el && Palco.animar(el, [
@@ -4294,19 +4310,38 @@ const Cena75 = {
     const v = Palco.el.lastElementChild;
     v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
     ["brilhoO", "brilhoH"].forEach(b => { q.animar(s, b, 1.2, .3, .2); q.animar(s, b, 0, .8, .5); });
-    Confete.soltar({ de: "cantos" });
-    Confete.soltar({ de: "topo" });
-    // fanfarra mais baixa: o áudio 7.6 começa junto, no encaixe
-    const som = new Audio("audio/funfare.mp3"); som.volume = .35; som.play().catch(() => {});
-    Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo7_6"), true);
-    // a molécula pronta vai para o meio da tela (os dois átomos juntos; elétrons e ligação acompanham)
+    if (!this.festejou) {
+      this.festejou = true;
+      Confete.soltar({ de: "cantos" });
+      Confete.soltar({ de: "topo" });
+      // fanfarra mais baixa: o áudio 7.6 começa junto, no encaixe
+      const som = new Audio("audio/funfare.mp3"); som.volume = .35; som.play().catch(() => {});
+      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo7_6"), true);
+    }
+    // os átomos se prendem no lugar exato e a molécula pronta vai para o meio da tela (elétrons e ligação acompanham)
     const O = Cena74.atomo(a.set === "A" ? "B" : "A"), P = Palco.el;
     const mx = P.clientWidth / 2 - (O.x + alvo[0]) / 2, my = P.clientHeight / 2 - (O.y + alvo[1]) / 2;
     ["A", "B"].forEach(set => {
       const [cx, cy] = this.chave(set), extraX = set === a.set ? (alvo[0] - a.centro[0]) / this.ppu : 0, extraY = set === a.set ? -(alvo[1] - a.centro[1]) / this.ppu : 0;
+      q.animar(s, cx, s[cx] + extraX, .25);
+      q.animar(s, cy, s[cy] + extraY, .25);
       q.animar(s, cx, s[cx] + extraX + mx / this.ppu, .9, .35);
       q.animar(s, cy, s[cy] + extraY - my / this.ppu, .9, .35);
     });
+  },
+
+  // um puxão rompe a ligação: estalo de luz e faíscas no meio, tranco da tela, e o bastão se desfaz
+  quebrar() {
+    if (!this.ligado) return;
+    this.ligado = false; this.armado = false;
+    const q = Cena71.quantum, u = Cena71.m.userData;
+    Cena71.m.updateMatrixWorld();
+    const meio = u.O.getWorldPosition(new THREE.Vector3()).add(u.Hs[0].getWorldPosition(new THREE.Vector3())).multiplyScalar(.5);
+    q.clarao(meio, { tam: 2.6, dur: .35 });
+    q.faiscas(meio, { cor: 0xFFFFFF, qtd: 20, forca: 4.5, dur: .55, tam: .18 });
+    document.getElementById("palco").animate([0, -6, 5, -3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 300, easing: "ease-out" });
+    const lig = this.$(".c75-ligacao");
+    if (lig) Palco.animar(lig, [{ opacity: 1, scale: "1 1" }, { opacity: 0, scale: ".2 1.3" }], { duracao: .25, easing: "ease-in" }).finished.then(() => lig.remove(), () => {});
   },
   // o bastão da ligação vai da beira de um átomo à do outro e é alto o bastante para o par de elétrons
   posicionarLigacao(lig) {
