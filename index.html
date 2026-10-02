@@ -406,8 +406,10 @@
   /* cada face tem o fundo pontilhado do palco: quando o cubo sai, a tela não muda */
   .c71-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
     background-color: var(--preto); background-image: radial-gradient(circle, rgba(163,219,247,.16) 1.6px, transparent 1.8px); background-size: 28px 28px; }
-  .c71-titulo { font-size: clamp(1.9rem, 5.2vmin + .9rem, 3.8rem); white-space: nowrap; }
+  .c71-titulo { font-size: clamp(1.52rem, 4.16vmin + .72rem, 3.04rem); white-space: nowrap; }
   .c71-titulo .fam { color: var(--ambar); }
+  /* o título só aparece no mundo quântico (sobre o cilindro ele fica escondido) */
+  .c71-titulo.escondido { opacity: 0; }
   /* a área do cilindro (e depois do mundo quântico): do título até 30% da base, que fica livre */
   .c71-area { position: absolute; left: 0; right: 0; top: 17%; bottom: 30%; }
   .c71-cilindro {
@@ -429,6 +431,12 @@
   .c71-quantico.ativo { pointer-events: auto; }
   .c71-quantico canvas { display: block; width: 100%; height: 100%; }
   @media (prefers-reduced-motion: reduce) { .c71-cilindro::before { animation: none; } }
+  /* narração 7.2 — a pergunta da fórmula do gás cloro, na parte de baixo (livre) da tela */
+  .c72-quiz { position: absolute; left: 0; right: 0; bottom: calc(clamp(18px, 2.5vw, 28px) + 58px); z-index: 3;
+    display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 1.8vh, 18px); }
+  .c72-pergunta { margin: 0; text-align: center; font-family: var(--display); font-weight: 800; color: var(--celeste);
+    font-size: clamp(1.2rem, 2.8vmin + .55rem, 2.1rem); letter-spacing: -.01em; text-shadow: 0 0 22px rgba(163,219,247,.55); }
+  .c72-quiz .c4-opcoes { position: static; translate: none; }
   .c7-regra {
     margin: 0; width: min(94%, 30ch); text-align: center;
     font-family: var(--display); font-weight: 500; line-height: 1.3; color: #fff;
@@ -908,7 +916,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v40 · 01/10/2026</span>
+    <span class="versao" id="versao">v41 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2134,7 +2142,17 @@ const NARRACOES = [
       { tempo: 8.6,  acao: () => Cena71.realcar(".r-gases") },   // "gases nobres" também
       { tempo: 13.5, acao: () => Cena71.preparar() },            // monta a face nova (tela parada: nada muda à vista)
       { tempo: 15,   acao: () => Cena71.girar() }                // a tela vira um cubo: entra o cilindro de gás cloro
-    ] }
+    ] },
+  // a pergunta: qual a fórmula do gás cloro? (Cl, Cl₂ ou Cl₃)
+  { id: "dialogo7_2", titulo: "Qual a fórmula do cloro?", src: "audio/audio_moleculas_7.2.mp3",
+    inicio: () => Cena71.montarFinal(),                    // pela navegação rápida: o mundo quântico do cloro
+    eventos: [
+      { tempo: 4,    acao: () => Cena71.pergunta() }       // "Qual a fórmula desse gás?" e as três opções
+    ] },
+  // resposta: toca só depois do acerto (não aparece na navegação rápida)
+  { id: "dialogo7_3", titulo: "Resposta: Cl₂", src: "audio/audio_moleculas_7.3.mp3", oculta: true,
+    inicio: () => Cena71.montarFinal(),
+    eventos: [] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -3670,7 +3688,7 @@ const Cena71 = {
       <div class="c71-cubo"><div class="c71-giro">
         <div class="c71-face f1"></div>
         <div class="c71-face f2">
-          <h2 class="c0-titulo c71-titulo" style="top:5%">Cloro <span class="fam">– Família 7A</span></h2>
+          <h2 class="c0-titulo c71-titulo escondido" style="top:5%">Cloro <span class="fam">– Família 7A</span></h2>
           <div class="c71-area">
             <button type="button" class="c71-cilindro" aria-label="Cilindro de gás cloro: toque para ver as moléculas">${this.CILINDRO}</button>
           </div>
@@ -3735,7 +3753,73 @@ const Cena71 = {
       if (this.quantum) this.quantum.visivel = true;
       cil.style.visibility = "hidden";
       Palco.animar(q, [{ opacity: 0 }, { opacity: 1 }], { duracao: .25 });
+      // o título "Cloro – Família 7A" chega junto com as moléculas
+      const t = this.$(".c71-titulo");
+      if (t) { t.classList.remove("escondido"); Palco.animar(t, [{ opacity: 0 }, { opacity: 1 }], { duracao: .6, easing: "ease-out" }); }
     }, () => {});
+  },
+
+  // tela final da narração 7.1, já no mundo quântico (para quem pula direto para a 7.2)
+  montarFinal() {
+    if (this.$(".c71-quantico.ativo")) return;
+    // veio do play com o cilindro na tela: entra nele agora, se ninguém tocou (zoom, dash e clarão)
+    const cil = this.$(".c71-cilindro");
+    if (cil && !this.$(".c71-cubo")) { this.entrar(); return; }
+    Palco.mostrar(`
+      <h2 class="c0-titulo c71-titulo" style="top:5%">Cloro <span class="fam">– Família 7A</span></h2>
+      <div class="c71-area"></div>`);
+    this.prepararQuantico();
+    const q = this.$(".c71-quantico");
+    q.classList.add("ativo"); q.style.opacity = 1;
+    if (this.quantum) this.quantum.visivel = true;
+  },
+
+  // áudio 7.2, 4s: "Qual a fórmula desse gás?" e três opções, na parte de baixo da tela
+  pergunta() {
+    if (this.$(".c72-quiz")) return;
+    Palco.adicionar(`
+      <div class="c72-quiz">
+        <p class="c72-pergunta">Qual a fórmula desse gás?</p>
+        <div class="c4-opcoes" role="group" aria-label="Qual a fórmula desse gás?">
+          <button class="c4-op" data-certa="0">Cl</button>
+          <button class="c4-op" data-certa="1">Cl<sub>2</sub></button>
+          <button class="c4-op" data-certa="0">Cl<sub>3</sub></button>
+        </div>
+      </div>`);
+    const caixa = this.$(".c72-quiz .c4-opcoes");
+    Palco.animar(this.$(".c72-pergunta"), [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duracao: .5, easing: "ease-out" });
+    [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
+      { duracao: .45, atraso: .25 + i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
+    caixa.addEventListener("click", e => {
+      const b = e.target.closest(".c4-op"); if (!b || caixa.classList.contains("respondido")) return;
+      b.dataset.certa === "1" ? this.acertou(b) : this.errou(b);
+    });
+  },
+  // erro: a tela treme em vermelho e a opção errada fica marcada (dá para tentar de novo)
+  errou(b) {
+    b.classList.add("errada"); b.disabled = true;
+    const palco = document.getElementById("palco");
+    palco.animate([0, -14, 12, -10, 8, -5, 3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 520, easing: "ease-out" });
+    Palco.adicionar(`<div class="c4-vermelho"></div>`);
+    const v = Palco.el.lastElementChild;
+    v.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }], { duration: 900, easing: "ease-out" }).finished.then(() => v.remove());
+  },
+  // acerto: confetes, tela brilha em verde, aplausos + fanfarra; depois a narração 7.3
+  acertou(b) {
+    const caixa = this.$(".c72-quiz .c4-opcoes");
+    caixa.classList.add("respondido"); b.classList.add("certa");
+    Palco.adicionar(`<div class="c4-verde"></div>`);
+    const v = Palco.el.lastElementChild;
+    v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
+    Confete.soltar({ de: "cantos" });
+    Confete.soltar({ de: "topo" });
+    const sons = ["audio/vfx/applause.mp3", "audio/funfare.mp3"].map(src => { const a = new Audio(src); a.play().catch(() => {}); return a; });
+    const fim = a => new Promise(r => { a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 15000); });
+    const indice = NARRACOES.findIndex(n => n.id === "dialogo7_2"), cena = this.$(".c72-quiz");
+    Promise.all(sons.map(fim)).then(() => {
+      if (Player.indice !== indice || !cena.isConnected) return;   // saiu da cena no meio da festa
+      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo7_3"), true);
+    });
   }
 };
 
