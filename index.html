@@ -916,7 +916,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v41 · 01/10/2026</span>
+    <span class="versao" id="versao">v42 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2152,7 +2152,12 @@ const NARRACOES = [
   // resposta: toca só depois do acerto (não aparece na navegação rápida)
   { id: "dialogo7_3", titulo: "Resposta: Cl₂", src: "audio/audio_moleculas_7.3.mp3", oculta: true,
     inicio: () => Cena71.montarFinal(),
-    eventos: [] }
+    eventos: [
+      { tempo: 3,    acao: () => Cena71.tirarPergunta() },  // a pergunta e as alternativas somem em fade
+      { tempo: 10,   acao: () => Cena71.estourar(11) },     // as moléculas estouram em sequência até 11s; fica uma
+      { tempo: 14,   acao: () => Cena71.centralizar() },    // a que sobrou vai girando para o meio da tela
+      { tempo: 21,   acao: () => Cena71.separar() }         // os átomos se separam, a ligação quebra e aparece "Cl"
+    ] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -2860,9 +2865,12 @@ const Quantico = {
     const A = new THREE.Mesh(geo.esfera, m1); A.scale.setScalar(r); A.position.set(-d / 2, 0, 0); grupo.add(A);
     const B = new THREE.Mesh(geo.esfera, m2); B.scale.setScalar(r); B.position.set(d / 2, 0, 0); grupo.add(B);
     const b = new THREE.Mesh(geo.bastao, mL); grupo.add(b);
+    // as duas metades da ligação, para quando ela se quebra (cada uma presa ao seu átomo)
+    const meias = [0, 1].map(() => { const h = new THREE.Mesh(geo.bastao, mL); h.visible = false; grupo.add(h); return h; });
     const nuvem = new THREE.Sprite(mats.nuvem.clone()); nuvem.scale.setScalar(4.4); grupo.add(nuvem);
-    const est = { escalaO: 1, escalaH: 1, h0: 1, h1: 1, opac: 1, rotH: 0, rotO: 0, mov: 0, fixa: false, pulso: 0 };
-    grupo.userData = { O: A, Hs: [B], bastoes: [b], nuvem, alvos: [A, B, b], rO: r, rH: r, mats: [m1, m2, mL], est, baseH: [B.position.clone()] };
+    const est = { escalaO: 1, escalaH: 1, h0: 1, h1: 1, opac: 1, rotH: 0, rotO: 0, mov: 0, fixa: false, pulso: 0, separa: 0, quebra: 0 };
+    grupo.userData = { O: A, Hs: [B], bastoes: [b], meias, nuvem, alvos: [A, B, b], rO: r, rH: r, mats: [m1, m2, mL], est,
+                       baseO: A.position.clone(), baseH: [B.position.clone()], letras: { O: "Cl", H: "Cl", corO: "#0A1322" } };
     this.alinharBastoes(grupo.userData);
     return grupo;
   },
@@ -2968,25 +2976,45 @@ const Quantico = {
     estado.topo = () => moleculas.filter(m => m.userData.est.opac > .5)
       .reduce((a, b) => estado.naTela(b.position).y < estado.naTela(a.position).y ? b : a);
     // leva a molécula ao centro, mais perto, e a vira de frente (O em cima)
-    estado.destacar = (m, dur = 1.6) => {
+    // f: altura do centro dela na caixa (0 = topo, 1 = base) · giros: voltas extras em torno do eixo vertical no caminho
+    estado.destacar = (m, dur = 1.6, { f, giros = 0 } = {}) => {
       const s = m.userData.est;
       // centro da molécula a 54% (tela deitada) ou 44% (em pé) da altura: sobra espaço embaixo para a legenda e as opções
-      const D = camera.position.z * .7, meiaAltura = Math.tan(THREE.MathUtils.degToRad(20)) * D, f = camera.aspect >= 1 ? .54 : .44;
-      Object.assign(s, { de: m.position.clone(), qDe: m.quaternion.clone(), qPara: new THREE.Quaternion(),
+      const D = camera.position.z * .7, meiaAltura = Math.tan(THREE.MathUtils.degToRad(20)) * D;
+      if (f === undefined) f = camera.aspect >= 1 ? .54 : .44;
+      Object.assign(s, { de: m.position.clone(), qDe: m.quaternion.clone(), qPara: new THREE.Quaternion(), giros,
         para: new THREE.Vector3(0, (1 - 2 * f) * meiaAltura, camera.position.z - D), fixa: true, mov: dur ? 0 : 1 });
       if (dur) estado.animar(s, "mov", 1, dur);
+    };
+    // faíscas: pontinhos que saem voando de um ponto e se apagam (estouro de molécula, ligação que se quebra)
+    const faiscas = [], mapaFaisca = this.textura([[0, "rgba(255,255,255,1)"], [.4, "rgba(255,255,255,.6)"], [1, "rgba(255,255,255,0)"]]);
+    estado.faiscas = (origem, { cor = 0xB8FF8A, qtd = 18, forca = 3.2, dur = .55, atraso = 0, tam = .22 } = {}) => {
+      const pos = new Float32Array(qtd * 3), vel = [];
+      for (let i = 0; i < qtd; i++) vel.push(new THREE.Vector3(Math.random() - .5, Math.random() - .5, (Math.random() - .5) * .5).normalize().multiplyScalar(forca * (.5 + Math.random() * .7)));
+      const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: tam, map: mapaFaisca, color: cor, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+      pts.renderOrder = 11; cena.add(pts);
+      faiscas.push({ pts, vel, origem: origem.clone(), dur, t0: estado.t + atraso });
+    };
+    // estouro: a molécula incha, some, e solta faíscas do lugar onde estava
+    estado.estourar = (m, atraso = 0) => {
+      const s = m.userData.est;
+      estado.animar(s, "estouro", 1, .2, atraso);
+      estado.animar(s, "opac", 0, .2, atraso);
+      tweens.push({ obj: {}, chave: "x", para: 1, dur: .01, t0: estado.t + atraso + .1, de: null, aoComecar: () => estado.faiscas(m.position) });
     };
     // símbolos (H, O) desenhados sobre as esferas
     const rotulo = (letra, cor) => {
       const c = document.createElement("canvas"); c.width = c.height = 128;
-      const g = c.getContext("2d"); g.fillStyle = cor; g.font = "800 92px 'Bricolage Grotesque', 'Segoe UI', sans-serif";
+      const g = c.getContext("2d"); g.fillStyle = cor; g.font = `800 ${letra.length > 1 ? 76 : 92}px 'Bricolage Grotesque', 'Segoe UI', sans-serif`;
       g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(letra, 64, 70);
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 0, depthTest: false, depthWrite: false }));
       s.renderOrder = 10; cena.add(s); return s;
     };
     estado.rotular = m => {
       const u = m.userData;
-      if (!u.rotulos) u.rotulos = { O: rotulo("O", "#FFFFFF"), H: u.Hs.map(() => rotulo("H", "#0A1322")) };
+      const L = u.letras || { O: "O", H: "H" };   // o cloro traz as suas ("Cl" nos dois átomos)
+      if (!u.rotulos) u.rotulos = { O: rotulo(L.O, L.corO || "#FFFFFF"), H: u.Hs.map(() => rotulo(L.H, "#0A1322")) };
     };
     const pAtomo = new THREE.Vector3(), paraCam = new THREE.Vector3();
     const posicionarRotulo = (sprite, atomo, raio, opac) => {
@@ -3005,7 +3033,7 @@ const Quantico = {
       // roteiro: avança as animações de variáveis e os pulsos
       for (let i = tweens.length - 1; i >= 0; i--) {
         const w = tweens[i]; if (t < w.t0) continue;
-        if (w.de === null) w.de = w.obj[w.chave];
+        if (w.de === null) { w.de = w.obj[w.chave] ?? 0; if (w.aoComecar) w.aoComecar(); }
         const p = Math.min((t - w.t0) / w.dur, 1);
         w.obj[w.chave] = w.de + (w.para - w.de) * suave(p);
         if (p >= 1) tweens.splice(i, 1);
@@ -3025,22 +3053,43 @@ const Quantico = {
           const k = suave(s.mov);
           m.position.lerpVectors(s.de, s.para, k);
           m.quaternion.slerpQuaternions(s.qDe, s.qPara, k);
+          if (s.giros) m.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI * 2 * s.giros * k));
         } else {
           // deriva lenta (agitação térmica) e giro próprio
           m.position.set(u.base.x + Math.sin(t * .31 + u.fase) * .5, u.base.y + Math.sin(t * .27 + u.fase * 1.7) * .4, u.base.z + Math.sin(t * .23 + u.fase * .6) * .5);
           m.quaternion.copy(u.q0).multiply(new THREE.Quaternion().setFromAxisAngle(u.giro, t * u.vel));
         }
-        m.scale.setScalar((e > 0 ? saida(e) : 0) * (1 + .22 * s.pulso));
+        m.scale.setScalar((e > 0 ? saida(e) : 0) * (1 + .22 * s.pulso) * (1 + .7 * (s.estouro || 0)));
         u.O.scale.setScalar(u.rO * s.escalaO);
         u.nuvem.material.opacity = (.55 + .12 * Math.sin(t * 2.1 + u.fase) + .9 * s.pulso) * s.opac;   // nuvem eletrônica "respirando"
         u.mats.forEach(x => { x.opacity = s.opac; x.emissiveIntensity = .55 * s.pulso; x.depthWrite = s.opac > .95; });
-        u.Hs.forEach((h, i) => { h.position.copy(u.baseH[i]); h.scale.setScalar(u.rH * s.escalaH * s["h" + i]); });
+        // separa: os átomos se afastam um do outro, ao longo da ligação
+        const sep = s.separa || 0;
+        if (u.baseO) u.O.position.copy(u.baseO);
+        u.Hs.forEach((h, i) => {
+          h.position.copy(u.baseH[i]); h.scale.setScalar(u.rH * s.escalaH * s["h" + i]);
+          if (sep && u.baseO) { const dir = u.baseH[i].clone().sub(u.baseO).normalize(); h.position.addScaledVector(dir, sep); u.O.position.addScaledVector(dir, -sep); }
+        });
         if (u.acao) {
           const A = this.ACOES[u.acao.nome], p = (t - u.acao.t0) / A.dur;
           if (p >= 1) u.acao = null;
           else A.f(m, Math.max(p, 0), u.acao);
         }
         this.alinharBastoes(u);
+        // ligação quebrada: no lugar do bastão, duas metades que se recolhem para dentro de cada átomo
+        if (u.meias) {
+          const q = s.quebra || 0;
+          u.bastoes[0].visible = !q;
+          u.meias.forEach((b, i) => {
+            b.visible = q > 0 && q < 1;
+            if (!b.visible) return;
+            const de = i ? u.Hs[0].position : u.O.position, outro = i ? u.O.position : u.Hs[0].position;
+            const dir = outro.clone().sub(de).normalize(), comp = Math.max((u.baseH[0].distanceTo(u.baseO) / 2) * (1 - q), .001);
+            b.position.copy(de).addScaledVector(dir, comp / 2);
+            b.scale.set(1, comp, 1);
+            b.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+          });
+        }
         if (u.rotulos) {
           m.updateMatrixWorld();
           const esc = m.scale.x;
@@ -3048,6 +3097,15 @@ const Quantico = {
           u.rotulos.H.forEach((r, i) => posicionarRotulo(r, u.Hs[i], u.rH * s.escalaH * s["h" + i] * esc, s.rotH * s.opac));
         }
       });
+      for (let i = faiscas.length - 1; i >= 0; i--) {
+        const fa = faiscas[i], p = (t - fa.t0) / fa.dur;
+        if (p >= 1) { cena.remove(fa.pts); fa.pts.geometry.dispose(); fa.pts.material.dispose(); faiscas.splice(i, 1); continue; }
+        if (p < 0) continue;
+        const a = fa.pts.geometry.attributes.position, d = (t - fa.t0) * (1 - p * .45);   // desaceleram no fim
+        fa.vel.forEach((v, k) => a.setXYZ(k, fa.origem.x + v.x * d, fa.origem.y + v.y * d, fa.origem.z + v.z * d));
+        a.needsUpdate = true;
+        fa.pts.material.opacity = 1 - p * p;
+      }
       poeira.material.opacity = .4 + .15 * Math.sin(t * 1.3);
       poeira.rotation.y = t * .01;
       renderer.render(cena, camera);
@@ -3724,6 +3782,7 @@ const Cena71 = {
   prepararQuantico() {
     const area = this.$(".c71-area");
     if (!area || this.$(".c71-quantico")) return;
+    this.m = null;                                       // a molécula que sobra na 7.3 é escolhida de novo
     area.insertAdjacentHTML("beforeend", `<div class="c71-quantico" aria-label="Moléculas de gás cloro: toque nelas"></div>`);
     this.quantum = Quantico.montar(this.$(".c71-quantico"), { molecula: "cloro", cheia: true });
   },
@@ -3820,6 +3879,46 @@ const Cena71 = {
       if (Player.indice !== indice || !cena.isConnected) return;   // saiu da cena no meio da festa
       Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo7_3"), true);
     });
+  },
+
+  // áudio 7.3, 3s: a pergunta e as alternativas saem em fade
+  tirarPergunta() {
+    const quiz = this.$(".c72-quiz"); if (!quiz) return;
+    Palco.animar(quiz, [{ opacity: 1 }, { opacity: 0 }], { duracao: .8, easing: "ease-in" }).finished.then(() => quiz.remove(), () => {});
+  },
+
+  // 10 → 11s: as moléculas estouram uma a uma (da esquerda para a direita); fica a mais perto do centro
+  estourar(ate = 11) {
+    const q = this.quantum; if (!q) return;
+    const caixa = this.$(".c71-quantico"), cx = caixa.clientWidth / 2, cy = caixa.clientHeight / 2;
+    const vivas = q.moleculas.filter(m => m.userData.est.opac > .5);
+    const dist = m => { const p = q.naTela(m.position); return Math.hypot(p.x - cx, p.y - cy); };
+    const fica = this.m = vivas.reduce((a, b) => dist(b) < dist(a) ? b : a);
+    const lista = vivas.filter(m => m !== fica).sort((a, b) => q.naTela(a.position).x - q.naTela(b.position).x);
+    const agora = Player.fonte ? Player.fonte.currentTime : 10, total = Math.max(ate - agora - .2, 0);   // o último estouro dura 0,2s
+    const passo = lista.length > 1 ? total / (lista.length - 1) : 0;
+    lista.forEach((m, i) => q.estourar(m, i * passo));
+  },
+
+  // 14s: a que sobrou vai para o meio da tela, girando
+  centralizar() {
+    const q = this.quantum; if (!q) return;
+    if (!this.m) this.estourar(0);
+    const caixa = this.$(".c71-quantico").getBoundingClientRect(), P = Palco.el.getBoundingClientRect();
+    const f = (P.top + P.height / 2 - caixa.top) / caixa.height;   // o meio do palco, medido dentro da caixa das moléculas
+    q.destacar(this.m, 2, { f, giros: 1 });
+  },
+
+  // 21s: os átomos se separam, a ligação se quebra e o símbolo Cl aparece dentro de cada bola
+  separar() {
+    const q = this.quantum, m = this.m; if (!q || !m) return;
+    const s = m.userData.est, u = m.userData;
+    q.animar(s, "separa", .85, 1);
+    q.animar(s, "quebra", 1, .6);
+    m.updateMatrixWorld();
+    q.faiscas(m.localToWorld(u.baseO.clone().add(u.baseH[0]).multiplyScalar(.5)), { cor: 0xFFFFFF, qtd: 14, forca: 2.2, dur: .5, tam: .16 });
+    q.rotular(m);
+    q.animar(s, "rotO", 1, .8, .2); q.animar(s, "rotH", 1, .8, .2);
   }
 };
 
