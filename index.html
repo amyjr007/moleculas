@@ -417,7 +417,9 @@
   .c74-eletrons { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
   .c74-e { position: absolute; left: 0; top: 0; width: clamp(12px, 1.6vmin + 6px, 18px); aspect-ratio: 1; border-radius: 50%; translate: -50% -50%;
     background: radial-gradient(circle at 35% 35%, #fff 0%, #D3EFFC 35%, #6FC0EA 100%);
-    box-shadow: 0 0 8px 2px rgba(163,219,247,.85), 0 0 22px 6px rgba(163,219,247,.45); }
+    box-shadow: 0 0 0 0 rgba(163,219,247,0), 0 0 0 0 rgba(163,219,247,0); }
+  /* só o elétron isolado (o que vai fazer a ligação) tem brilho em volta */
+  .c74-e.isolado { box-shadow: 0 0 8px 2px rgba(163,219,247,.85), 0 0 22px 6px rgba(163,219,247,.45); }
   /* áudio 7.3: a frase do octeto, digitada logo acima dos dois átomos */
   .c73-octeto { position: absolute; left: 50%; translate: -50% -100%; width: min(92%, 22ch); margin: 0; text-align: center; z-index: 3; pointer-events: none;
     font-family: var(--display); font-weight: 800; color: #fff; line-height: 1.2; letter-spacing: -.01em;
@@ -931,7 +933,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v46 · 02/10/2026</span>
+    <span class="versao" id="versao">v47 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3962,11 +3964,17 @@ const Cena71 = {
   // 21s: a ligação arrebenta — estalo de luz, faíscas, tranco da tela; os átomos são arremessados para os lados
   // (passam do ponto e voltam), crescem 44% (1,2 × 1,2), o brilho do meio some e o símbolo Cl aparece dentro de cada bola
   ESCALA_SEPARADOS: 1.44,
+  // quanto cada átomo se afasta do centro: .95 (unidades da cena) + 1px na tela, cada um para o seu lado
+  separaFinal(m) {
+    const q = this.quantum, c = (m.userData.est.para || m.position).clone();
+    const pxPorUnidade = Math.abs(q.naTela(c.clone().add(new THREE.Vector3(1, 0, 0))).x - q.naTela(c).x) || 1;
+    return .95 + 1 / pxPorUnidade;
+  },
   separar() {
     const q = this.quantum, m = this.m; if (!q || !m) return;
     const s = m.userData.est, u = m.userData;
     const tranco = p => 1 + 2.70158 * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2);   // sai rápido, passa do ponto e volta
-    q.animar(s, "separa", .95, .7, 0, tranco);
+    q.animar(s, "separa", this.separaFinal(m), .7, 0, tranco);
     q.animar(s, "quebra", 1, .22, 0, p => 1 - Math.pow(1 - p, 3));   // as metades da ligação chicoteiam para dentro dos átomos
     q.animar(s, "escalaO", this.ESCALA_SEPARADOS, .5); q.animar(s, "escalaH", this.ESCALA_SEPARADOS, .5);
     q.animar(s, "nuvem", 0, .3);
@@ -4018,7 +4026,7 @@ const Cena71 = {
     const cr = caixa.getBoundingClientRect(), P = Palco.el.getBoundingClientRect();
     q.destacar(m, 0, { f: (P.top + P.height / 2 - cr.top) / cr.height });
     q.rotular(m);
-    Object.assign(m.userData.est, { separa: .95, quebra: 1, nuvem: 0, escalaO: this.ESCALA_SEPARADOS, escalaH: this.ESCALA_SEPARADOS, rotO: 1, rotH: 1 });
+    Object.assign(m.userData.est, { separa: this.separaFinal(m), quebra: 1, nuvem: 0, escalaO: this.ESCALA_SEPARADOS, escalaH: this.ESCALA_SEPARADOS, rotO: 1, rotH: 1 });
   }
 };
 
@@ -4054,7 +4062,7 @@ const Cena74 = {
   // 4s → "ate": os 7 elétrons aparecem logo abaixo do título, um depois do outro
   mostrar(ate = 6) {
     if (this.$(".c74-eletrons")) return;
-    Palco.adicionar(`<div class="c74-eletrons">${'<span class="c74-e"></span>'.repeat(7)}</div>`);
+    Palco.adicionar(`<div class="c74-eletrons">${'<span class="c74-e"></span>'.repeat(6)}<span class="c74-e isolado"></span></div>`);
     const P = Palco.el, els = this.els(), e = els[0].offsetWidth, passo = e * 2.6, t = this.$(".c71-titulo");
     const y = t ? t.getBoundingClientRect().bottom - P.getBoundingClientRect().top + e * 1.6 : P.clientHeight * .2;
     const agora = Player.fonte ? Player.fonte.currentTime : 4, total = Math.max(ate - agora - .4, 0);
@@ -4080,13 +4088,16 @@ const Cena74 = {
     });
   },
 
-  BRILHO_NORMAL: "0 0 8px 2px rgba(163,219,247,.85), 0 0 22px 6px rgba(163,219,247,.45)",
+  // brilho de repouso: só o isolado brilha; os outros, sem brilho (sombra zerada, para a animação ter de onde partir)
+  BRILHO_ISOLADO: "0 0 8px 2px rgba(163,219,247,.85), 0 0 22px 6px rgba(163,219,247,.45)",
+  SEM_BRILHO: "0 0 0 0 rgba(163,219,247,0), 0 0 0 0 rgba(163,219,247,0)",
   BRILHO_FORTE: "0 0 12px 4px rgba(255,255,255,.95), 0 0 34px 12px rgba(163,219,247,.75)",
+  normal(el) { return el.classList.contains("isolado") ? this.BRILHO_ISOLADO : this.SEM_BRILHO; },
   // pulso com brilho (cresce e volta)
   pulsar(idx, dur = .7) {
     const els = this.els();
     idx.forEach(i => els[i] && Palco.animar(els[i], [
-      { scale: 1, boxShadow: this.BRILHO_NORMAL }, { scale: 1.7, boxShadow: this.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: this.BRILHO_NORMAL }
+      { scale: 1, boxShadow: this.normal(els[i]) }, { scale: 1.7, boxShadow: this.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: this.normal(els[i]) }
     ], { duracao: dur, easing: "ease-in-out", fill: "none" }));
   },
   // 32,2s: pulso com brilho na estrutura toda (o Cl da esquerda e os 7 elétrons)
@@ -4103,7 +4114,7 @@ const Cena74 = {
     idx.forEach(i => {
       const el = els[i]; if (!el) return;
       const atual = getComputedStyle(el), de = { scale: atual.scale === "none" ? "1" : atual.scale, boxShadow: atual.boxShadow };
-      Palco.animar(el, [de, ligar ? { scale: esc, boxShadow: this.BRILHO_FORTE } : { scale: 1, boxShadow: this.BRILHO_NORMAL }],
+      Palco.animar(el, [de, ligar ? { scale: esc, boxShadow: this.BRILHO_FORTE } : { scale: 1, boxShadow: this.normal(el) }],
         { duracao: .45, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out" });
     });
   }
