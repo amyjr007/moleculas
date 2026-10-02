@@ -413,6 +413,11 @@
   .c71-titulo .c71-nome, .c71-titulo .fam { display: inline-block; }
   .c71-titulo .c71-nome { transform-origin: 100% 60%; }
   .c71-titulo .fam { transform-origin: 0% 60%; }
+  /* áudio 7.4: os 7 elétrons de valência do cloro (bolinhas brilhosas sobre a cena 3D) */
+  .c74-eletrons { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+  .c74-e { position: absolute; left: 0; top: 0; width: clamp(12px, 1.6vmin + 6px, 18px); aspect-ratio: 1; border-radius: 50%; translate: -50% -50%;
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #D3EFFC 35%, #6FC0EA 100%);
+    box-shadow: 0 0 8px 2px rgba(163,219,247,.85), 0 0 22px 6px rgba(163,219,247,.45); }
   /* áudio 7.3: a frase do octeto, digitada logo acima dos dois átomos */
   .c73-octeto { position: absolute; left: 50%; translate: -50% -100%; width: min(92%, 22ch); margin: 0; text-align: center; z-index: 3; pointer-events: none;
     font-family: var(--display); font-weight: 800; color: #fff; line-height: 1.2; letter-spacing: -.01em;
@@ -926,7 +931,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v44 · 02/10/2026</span>
+    <span class="versao" id="versao">v45 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2174,7 +2179,19 @@ const NARRACOES = [
     inicio: () => Cena71.montarSeparados(),                // pela navegação rápida: os dois átomos de Cl separados no centro
     eventos: [
       { tempo: 0,    acao: () => { Cena71.tirarOcteto(); Cena71.realcarTitulo(".c71-nome"); } },          // o texto sai; "Cloro" cresce
-      { tempo: 1,    acao: () => { Cena71.realcarTitulo(".c71-nome", false); Cena71.realcarTitulo(".fam"); } }  // "Cloro" volta; "Família 7A" cresce
+      { tempo: 1,    acao: () => { Cena71.realcarTitulo(".c71-nome", false); Cena71.realcarTitulo(".fam"); } }, // "Cloro" volta; "Família 7A" cresce
+      // os 7 elétrons de valência montam a estrutura de Lewis no Cl da direita (o elétron sozinho fica de frente para o outro Cl)
+      { tempo: 4,    acao: () => Cena74.mostrar(6) },          // 7 elétrons embaixo, um depois do outro (até 6s)
+      { tempo: 21.2, acao: () => Cena74.saltar([0, 1], "cima") },
+      { tempo: 23,   acao: () => Cena74.saltar([2, 3], "direita") },
+      { tempo: 25,   acao: () => Cena74.saltar([4, 5], "baixo") },
+      { tempo: 28,   acao: () => Cena74.pulsar([6]) },          // o que ficou embaixo pulsa
+      { tempo: 30,   acao: () => Cena74.saltar([6], "frente") },  // e salta para a frente do símbolo
+      { tempo: 32.2, acao: () => Cena74.pulsarEstrutura() },    // pulso com brilho no átomo e nos 7 elétrons
+      { tempo: 34,   acao: () => Cena74.crescer([0, 1, 2, 3, 4, 5, 6]) },
+      { tempo: 38,   acao: () => { Cena74.crescer([0, 1, 2, 3, 4, 5], false); Cena74.crescer([6], true, 1.7); } },  // fica grande só o isolado
+      { tempo: 40,   acao: () => Cena74.crescer([6], false) },  // tudo volta ao normal
+      { tempo: 41,   acao: () => Cena74.pulsar([6]) }           // pulso no elétron isolado
     ] }
 ];
 
@@ -3089,6 +3106,7 @@ const Quantico = {
         u.O.scale.setScalar(u.rO * s.escalaO);
         u.nuvem.material.opacity = (.55 + .12 * Math.sin(t * 2.1 + u.fase) + .9 * s.pulso) * s.opac * (s.nuvem ?? 1);   // nuvem eletrônica "respirando"
         u.mats.forEach(x => { x.opacity = s.opac; x.emissiveIntensity = .55 * s.pulso; x.depthWrite = s.opac > .95; });
+        if (s.brilhoH) u.mats[1].emissiveIntensity += .6 * s.brilhoH;   // brilho só no 2º átomo (o Cl da estrutura de Lewis)
         // separa: os átomos se afastam um do outro, ao longo da ligação
         const sep = s.separa || 0;
         if (u.baseO) u.O.position.copy(u.baseO);
@@ -4001,6 +4019,90 @@ const Cena71 = {
     q.destacar(m, 0, { f: (P.top + P.height / 2 - cr.top) / cr.height });
     q.rotular(m);
     Object.assign(m.userData.est, { separa: .95, quebra: 1, nuvem: 0, escalaO: this.ESCALA_SEPARADOS, escalaH: this.ESCALA_SEPARADOS, rotO: 1, rotH: 1 });
+  }
+};
+
+/* ---------- Cenas da narração 7.4: os 7 elétrons de valência do cloro ----------
+   Bolinhas brilhosas (HTML) por cima da cena 3D. Nascem numa fileira embaixo e saltam em arco
+   para a volta do Cl da direita: dois em cima, dois à direita, dois embaixo e o sozinho na frente
+   (à esquerda, de frente para o outro Cl — é por ele que vai sair a ligação). */
+const Cena74 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  els() { return [...Palco.el.querySelectorAll(".c74-e")]; },
+
+  // centro e raio (px, no palco) do Cl da direita
+  atomo() {
+    const q = Cena71.quantum, m = Cena71.m; if (!q || !m) return null;
+    const u = m.userData, s = u.est, caixa = this.$(".c71-quantico"); if (!caixa) return null;
+    m.updateMatrixWorld();
+    const c = u.Hs[0].getWorldPosition(new THREE.Vector3());
+    const r = u.rH * s.escalaH * s.h0 * m.scale.x;
+    const a = q.naTela(c), b = q.naTela(c.clone().add(new THREE.Vector3(r, 0, 0)));
+    const cr = caixa.getBoundingClientRect(), P = Palco.el.getBoundingClientRect();
+    return { x: cr.left - P.left + a.x, y: cr.top - P.top + a.y, R: Math.abs(b.x - a.x) };
+  },
+  // onde cada elétron fica em volta do símbolo
+  destino(lado, k) {
+    const A = this.atomo(); if (!A) return null;
+    const e = this.els()[0].offsetWidth, g = A.R + Math.max(8, A.R * .22) + e / 2, s = Math.max(e * .95, A.R * .3) * (k ? 1 : -1);   // folga no par: crescidos (34s) eles não se encostam
+    return { cima: [A.x + s, A.y - g], direita: [A.x + g, A.y + s], baixo: [A.x + s, A.y + g], frente: [A.x - g, A.y] }[lado];
+  },
+  pos(el, [x, y]) { el.style.left = `${x}px`; el.style.top = `${y}px`; },
+
+  // 4s → "ate": os 7 elétrons aparecem embaixo, um depois do outro
+  mostrar(ate = 6) {
+    if (this.$(".c74-eletrons")) return;
+    Palco.adicionar(`<div class="c74-eletrons">${'<span class="c74-e"></span>'.repeat(7)}</div>`);
+    const P = Palco.el, els = this.els(), e = els[0].offsetWidth, passo = e * 2.6, y = P.clientHeight * .78;
+    const agora = Player.fonte ? Player.fonte.currentTime : 4, total = Math.max(ate - agora - .4, 0);
+    els.forEach((el, i) => {
+      this.pos(el, [P.clientWidth / 2 + (i - 3) * passo, y]);
+      Palco.animar(el, [{ opacity: 0, scale: 0 }, { opacity: 1, scale: 1.5, offset: .6 }, { opacity: 1, scale: 1 }],
+        { duracao: .4, atraso: i * total / 6, easing: "ease-out" });
+    });
+  },
+
+  // salto em arco até o seu lugar em volta do símbolo (o par sai com um pequeno intervalo)
+  saltar(idx, lado) {
+    if (!this.$(".c74-eletrons")) this.mostrar(0);
+    const els = this.els();
+    idx.forEach((i, k) => {
+      const el = els[i], para = this.destino(lado, k); if (!el || !para) return;
+      const de = [parseFloat(el.style.left), parseFloat(el.style.top)];
+      const dx = de[0] - para[0], dy = de[1] - para[1], h = Math.max(70, Math.hypot(dx, dy) * .45);
+      this.pos(el, para);   // já no destino; a animação parte do lugar antigo e faz o arco por cima
+      const quadros = Array.from({ length: 17 }, (_, n) => { const p = n / 16;
+        return { transform: `translate(${dx * (1 - p)}px, ${dy * (1 - p) - h * Math.sin(Math.PI * p)}px)` }; });
+      Palco.animar(el, quadros, { duracao: .8, atraso: k * .12, easing: "cubic-bezier(.45,0,.35,1)" });
+    });
+  },
+
+  BRILHO_NORMAL: "0 0 8px 2px rgba(163,219,247,.85), 0 0 22px 6px rgba(163,219,247,.45)",
+  BRILHO_FORTE: "0 0 12px 4px rgba(255,255,255,.95), 0 0 34px 12px rgba(163,219,247,.75)",
+  // pulso com brilho (cresce e volta)
+  pulsar(idx, dur = .7) {
+    const els = this.els();
+    idx.forEach(i => els[i] && Palco.animar(els[i], [
+      { scale: 1, boxShadow: this.BRILHO_NORMAL }, { scale: 1.7, boxShadow: this.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: this.BRILHO_NORMAL }
+    ], { duracao: dur, easing: "ease-in-out", fill: "none" }));
+  },
+  // 32,2s: pulso com brilho na estrutura toda (o Cl da direita e os 7 elétrons)
+  pulsarEstrutura() {
+    this.pulsar([0, 1, 2, 3, 4, 5, 6], .9);
+    const q = Cena71.quantum, m = Cena71.m; if (!q || !m) return;
+    const s = m.userData.est;
+    q.animar(s, "h0", 1.15, .36); q.animar(s, "h0", 1, .54, .36);
+    q.animar(s, "brilhoH", 1, .36); q.animar(s, "brilhoH", 0, .54, .36);
+  },
+  // crescem com brilho e ficam assim (ligar = false: voltam ao normal)
+  crescer(idx, ligar = true, esc = 1.45) {
+    const els = this.els();
+    idx.forEach(i => {
+      const el = els[i]; if (!el) return;
+      const atual = getComputedStyle(el), de = { scale: atual.scale === "none" ? "1" : atual.scale, boxShadow: atual.boxShadow };
+      Palco.animar(el, [de, ligar ? { scale: esc, boxShadow: this.BRILHO_FORTE } : { scale: 1, boxShadow: this.BRILHO_NORMAL }],
+        { duracao: .45, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out" });
+    });
   }
 };
 
