@@ -916,7 +916,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v42 · 01/10/2026</span>
+    <span class="versao" id="versao">v43 · 01/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2967,7 +2967,8 @@ const Quantico = {
     // ---- roteiro: animações no relógio da cena (congelam junto com o áudio) ----
     const tweens = [], pulsos = [];
     // anima obj[chave] até "para" em "dur" segundos (com atraso opcional)
-    estado.animar = (obj, chave, para, dur, atraso = 0) => tweens.push({ obj, chave, para, dur, t0: estado.t + atraso, de: null });
+    // curva (opcional): função 0→1 no lugar da suave (ex.: um tranco que passa do ponto e volta)
+    estado.animar = (obj, chave, para, dur, atraso = 0, curva) => tweens.push({ obj, chave, para, dur, t0: estado.t + atraso, de: null, curva });
     // pulso com brilho numa molécula
     estado.pulsar = (m, dur = .6, atraso = 0) => pulsos.push({ m, dur, t0: estado.t + atraso });
     // posição da molécula na tela (px, relativo à cena)
@@ -2995,6 +2996,13 @@ const Quantico = {
       const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: tam, map: mapaFaisca, color: cor, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
       pts.renderOrder = 11; cena.add(pts);
       faiscas.push({ pts, vel, origem: origem.clone(), dur, t0: estado.t + atraso });
+    };
+    // clarão: um estalo de luz que cresce e some depressa (a ligação arrebentando)
+    const claroes = [];
+    estado.clarao = (origem, { tam = 3, dur = .35, cor = 0xFFFFFF } = {}) => {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: mapaFaisca, color: cor, transparent: true, opacity: 0, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
+      s.position.copy(origem); s.renderOrder = 12; s.scale.setScalar(.01); cena.add(s);
+      claroes.push({ s, tam, dur, t0: estado.t });
     };
     // estouro: a molécula incha, some, e solta faíscas do lugar onde estava
     estado.estourar = (m, atraso = 0) => {
@@ -3035,7 +3043,7 @@ const Quantico = {
         const w = tweens[i]; if (t < w.t0) continue;
         if (w.de === null) { w.de = w.obj[w.chave] ?? 0; if (w.aoComecar) w.aoComecar(); }
         const p = Math.min((t - w.t0) / w.dur, 1);
-        w.obj[w.chave] = w.de + (w.para - w.de) * suave(p);
+        w.obj[w.chave] = w.de + (w.para - w.de) * (w.curva || suave)(p);
         if (p >= 1) tweens.splice(i, 1);
       }
       moleculas.forEach(m => { m.userData.est.pulso = 0; });
@@ -3061,7 +3069,7 @@ const Quantico = {
         }
         m.scale.setScalar((e > 0 ? saida(e) : 0) * (1 + .22 * s.pulso) * (1 + .7 * (s.estouro || 0)));
         u.O.scale.setScalar(u.rO * s.escalaO);
-        u.nuvem.material.opacity = (.55 + .12 * Math.sin(t * 2.1 + u.fase) + .9 * s.pulso) * s.opac;   // nuvem eletrônica "respirando"
+        u.nuvem.material.opacity = (.55 + .12 * Math.sin(t * 2.1 + u.fase) + .9 * s.pulso) * s.opac * (s.nuvem ?? 1);   // nuvem eletrônica "respirando"
         u.mats.forEach(x => { x.opacity = s.opac; x.emissiveIntensity = .55 * s.pulso; x.depthWrite = s.opac > .95; });
         // separa: os átomos se afastam um do outro, ao longo da ligação
         const sep = s.separa || 0;
@@ -3105,6 +3113,12 @@ const Quantico = {
         fa.vel.forEach((v, k) => a.setXYZ(k, fa.origem.x + v.x * d, fa.origem.y + v.y * d, fa.origem.z + v.z * d));
         a.needsUpdate = true;
         fa.pts.material.opacity = 1 - p * p;
+      }
+      for (let i = claroes.length - 1; i >= 0; i--) {
+        const c = claroes[i], p = (t - c.t0) / c.dur;
+        if (p >= 1) { cena.remove(c.s); c.s.material.dispose(); claroes.splice(i, 1); continue; }
+        c.s.scale.setScalar(c.tam * (1 - Math.pow(1 - p, 3)));
+        c.s.material.opacity = p < .15 ? p / .15 : 1 - (p - .15) / .85;
       }
       poeira.material.opacity = .4 + .15 * Math.sin(t * 1.3);
       poeira.rotation.y = t * .01;
@@ -3909,14 +3923,22 @@ const Cena71 = {
     q.destacar(this.m, 2, { f, giros: 1 });
   },
 
-  // 21s: os átomos se separam, a ligação se quebra e o símbolo Cl aparece dentro de cada bola
+  // 21s: a ligação arrebenta — estalo de luz, faíscas, tranco da tela; os átomos são arremessados para os lados
+  // (passam do ponto e voltam), crescem 20%, o brilho do meio some e o símbolo Cl aparece dentro de cada bola
   separar() {
     const q = this.quantum, m = this.m; if (!q || !m) return;
     const s = m.userData.est, u = m.userData;
-    q.animar(s, "separa", .85, 1);
-    q.animar(s, "quebra", 1, .6);
+    const tranco = p => 1 + 2.70158 * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2);   // sai rápido, passa do ponto e volta
+    q.animar(s, "separa", .95, .7, 0, tranco);
+    q.animar(s, "quebra", 1, .22, 0, p => 1 - Math.pow(1 - p, 3));   // as metades da ligação chicoteiam para dentro dos átomos
+    q.animar(s, "escalaO", 1.2, .5); q.animar(s, "escalaH", 1.2, .5);
+    q.animar(s, "nuvem", 0, .3);
     m.updateMatrixWorld();
-    q.faiscas(m.localToWorld(u.baseO.clone().add(u.baseH[0]).multiplyScalar(.5)), { cor: 0xFFFFFF, qtd: 14, forca: 2.2, dur: .5, tam: .16 });
+    const meio = m.localToWorld(u.baseO.clone().add(u.baseH[0]).multiplyScalar(.5));
+    q.clarao(meio, { tam: 3.2, dur: .4 });
+    q.faiscas(meio, { cor: 0xFFFFFF, qtd: 26, forca: 5.5, dur: .6, tam: .2 });
+    q.faiscas(meio, { cor: 0xB8FF8A, qtd: 18, forca: 3.5, dur: .75, tam: .16 });
+    document.getElementById("palco").animate([0, -9, 8, -6, 4, -2, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 380, easing: "ease-out" });
     q.rotular(m);
     q.animar(s, "rotO", 1, .8, .2); q.animar(s, "rotH", 1, .8, .2);
   }
