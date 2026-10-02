@@ -447,6 +447,7 @@
     font-family: var(--display); font-weight: 800; line-height: 1.2; letter-spacing: -.01em; font-size: clamp(1.05rem, 2.3vmin + .5rem, 1.75rem); }
   .c77-texto.em-cima { translate: -50% -100%; }
   .c77-texto .c77-linha { display: block; }   /* "(ou isolados)" inteiro na linha de baixo */
+  .c77-texto .c77-silaba { display: inline-block; transform-origin: 50% 70%; }   /* "Co" e "valente" crescem (inline-block: só assim o "scale" pega) */
   .c77-texto.isolado { color: #C9A7FF; text-shadow: 0 0 20px rgba(167,123,255,.55); }
   .c77-texto.ligante, .c77-texto.covalente { color: #6EE7A0; text-shadow: 0 0 20px rgba(110,231,160,.55); }
   /* fim do áudio 7.5: o aluno arrasta um Cl até o outro; ao encaixar, a ligação com o par de elétrons dentro */
@@ -968,7 +969,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v58 · 02/10/2026</span>
+    <span class="versao" id="versao">v59 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2278,7 +2279,11 @@ const NARRACOES = [
       { tempo: 33.8, acao: () => Cena77.texto("ligante", "Pares de elétrons ligantes", 1.2) },     // termina em 35s
       { tempo: 37,   acao: () => Cena77.normal() },                                               // tudo volta ao normal; os textos saem
       { tempo: 39,   acao: () => Cena77.pulsar(["frente"], "ligante") },                          // pulsada no par compartilhado
-      { tempo: 42,   acao: () => Cena77.texto("covalente", "Ligação Covalente", 1.6) }            // termina em 43,6s
+      // "Co" e "valente" em trechos próprios, para crescerem separados
+      { tempo: 42,   acao: () => Cena77.texto("covalente", [{ texto: "Ligação " }, { classe: "c77-silaba c77-co", texto: "Co" },
+                                                            { classe: "c77-silaba c77-valente", texto: "valente" }], 1.6) },   // termina em 43,6s
+      { tempo: 45,   acao: () => Cena77.silaba(".c77-co") },                                       // "Co" cresce
+      { tempo: 49,   acao: () => { Cena77.silaba(".c77-co", false); Cena77.silaba(".c77-valente"); } }   // "Co" volta; "valente" cresce
     ] }
 ];
 
@@ -4637,6 +4642,14 @@ const Cena77 = {
     if (!cima) this.esconderStatus(true);   // embaixo mora o "Molécula estável": sai enquanto este estiver na tela
     Palco.adicionar(`<p class="c77-texto ${tipo}${cima ? " em-cima" : ""}" style="top:${y}px"></p>`);
     Palco.digitar(Palco.el.lastElementChild, frase, dur, { cursor: false });
+  },
+  // um pedaço de "Covalente" cresce 30% com brilho (ligar = false: volta). A margem abre espaço dos lados,
+  // para o pedaço que cresce não encostar no vizinho
+  silaba(sel, ligar = true) {
+    const el = this.$(".c77-texto.covalente " + sel); if (!el) return;
+    const normal = { scale: "1", marginInline: "0em", textShadow: "0 0 0 rgba(110,231,160,0)" };
+    const grande = { scale: "1.3", marginInline: el.textContent.length > 2 ? ".55em" : ".12em", textShadow: "0 0 24px rgba(110,231,160,.9)" };
+    Palco.animar(el, ligar ? [normal, grande] : [grande, normal], { duracao: .45, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out" });
   },
   esconderStatus(esconder) {
     const st = this.$(".c75-status"); if (!st) return;
