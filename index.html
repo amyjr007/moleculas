@@ -942,7 +942,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v51 · 02/10/2026</span>
+    <span class="versao" id="versao">v52 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2210,19 +2210,23 @@ const NARRACOES = [
     inicio: () => { Cena71.montarSeparados(); Cena74.montarLewis("A"); },   // pela navegação rápida: o fim da 7.4
     eventos: [
       { tempo: 0,    acao: () => Cena74.crescer([6], false) },              // o isolado do Cl da esquerda (grande desde a 7.4) volta ao normal
-      { tempo: 0.8,  acao: () => Cena74.pulsarAtomo("B") },                 // pulso no Cl da direita
-      { tempo: 3,    acao: () => Cena74.mostrar(4.1, "B") },                // 7 elétrons em cima, em sequência (até 4,1s)
-      { tempo: 5.9,  acao: () => Cena74.saltar([0, 1], "cima", "B") },
-      { tempo: 7.1,  acao: () => Cena74.saltar([2, 3], "fora", "B") },      // do lado de fora (direita)
-      { tempo: 8.4,  acao: () => Cena74.saltar([4, 5], "baixo", "B") },
-      { tempo: 10.5, acao: () => Cena74.crescer([6], true, 1.7, "B") },     // o que falta cresce e brilha
-      { tempo: 13.9, acao: () => { Cena74.saltar([6], "frente", "B"); Cena74.crescer([6], false, 1, "B"); } },  // salta para a frente, um pouco abaixo do meio
-      { tempo: 18,   acao: () => ["A", "B"].forEach(c => Cena74.crescer([0, 1, 2, 3, 4, 5, 6], true, 1.45, c, false)) },  // todos crescem, sem brilho a mais
-      { tempo: 19,   acao: () => ["A", "B"].forEach(c => Cena74.crescer([0, 1, 2, 3, 4, 5, 6], false, 1, c)) },
-      { tempo: 20.8, acao: () => ["A", "B"].forEach(c => Cena74.crescer([6], true, 1.7, c)) },               // os dois isolados crescem
-      { tempo: 22,   acao: () => ["A", "B"].forEach(c => Cena74.crescer([6], false, 1, c)) }
+      { tempo: 1,    acao: () => Cena74.pulsarAtomo("B") },                 // pulso no Cl da direita
+      { tempo: 3,    acao: () => Cena74.mostrar(4.2, "B") },                // 7 elétrons espalhados em cima, em sequência (até 4,2s)
+      // Regra de Hund de novo: um elétron em cada lado, depois os pares
+      { tempo: 5.9,  acao: () => Cena74.saltar([0], "cima1", "B") },        // um em cima
+      { tempo: 6.9,  acao: () => Cena74.saltar([1], "fora1", "B") },        // um do lado direito (o de fora)
+      { tempo: 7.8,  acao: () => Cena74.saltar([2], "baixo1", "B") },       // um embaixo
+      { tempo: 8.7,  acao: () => Cena74.saltar([6], "frente", "B") },       // o da frente: à esquerda, um pouco abaixo do meio
+      { tempo: 12,   acao: () => Cena74.emparelhar(3, 0, "cima", "B") },    // os pares: em cima,
+      { tempo: 13,   acao: () => Cena74.emparelhar(4, 1, "fora", "B") },    // à direita
+      { tempo: 14,   acao: () => Cena74.emparelhar(5, 2, "baixo", "B") },   // e embaixo
+      { tempo: 17,   acao: () => { Cena74.pulsarAtomo("A"); Cena74.pulsarAtomo("B"); } },               // pulso nos dois Cl
+      { tempo: 17.9, acao: () => ["A", "B"].forEach(c => Cena74.crescer([0, 1, 2, 3, 4, 5, 6], true, 1.45, c)) },  // os 7 de cada átomo crescem
+      { tempo: 20.5, acao: () => ["A", "B"].forEach(c => { Cena74.crescer([0, 1, 2, 3, 4, 5], false, 1, c); Cena74.crescer([6], true, 1.7, c); }) }  // voltam; crescem os isolados
     ],
-    aoFim: () => { ui.semPlay(true); Cena75.liberar(); } },  // sem play: o aluno arrasta um Cl até o outro (o encaixe traz a 7.6)
+    // fim: "Regra de Hund" sai em fade, os isolados voltam ao normal e o play some:
+    // o aluno arrasta um Cl até o outro (o encaixe traz a 7.6)
+    aoFim: () => { Cena74.tirarHund(); ["A", "B"].forEach(c => Cena74.crescer([6], false, 1, c)); ui.semPlay(true); Cena75.liberar(); } },
   // toca só depois do encaixe dos dois Cl (o áudio ainda vai ser gravado)
   { id: "dialogo7_6", titulo: "A ligação do Cl₂", src: "audio/audio_moleculas_7.6.mp3", oculta: true,
     eventos: [] }
@@ -4158,6 +4162,10 @@ const Cena74 = {
     const y = e ? parseFloat(e.style.top) + e.offsetWidth * 1.8 : P.clientHeight * .25;
     Palco.adicionar(`<p class="c74-hund" style="top:${y}px"></p>`);
     Palco.digitar(this.$(".c74-hund"), "Regra de Hund", 1);
+  },
+  tirarHund() {
+    const el = this.$(".c74-hund"); if (!el) return;
+    Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .8, easing: "ease-in" }).finished.then(() => el.remove(), () => {});
   },
 
   // o conjunto já montado em volta do símbolo, sem animação (para quem chega pela navegação rápida)
