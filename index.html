@@ -415,7 +415,7 @@
   .c71-titulo .fam { transform-origin: 0% 60%; }
   /* áudio 7.4: os 7 elétrons de valência do cloro (bolinhas brilhosas sobre a cena 3D) */
   .c74-eletrons { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
-  .c74-e { position: absolute; left: 0; top: 0; width: clamp(12px, 1.6vmin + 6px, 18px); aspect-ratio: 1; border-radius: 50%; translate: -50% -50%;
+  .c74-e { position: absolute; left: 0; top: 0; width: clamp(9.6px, 1.28vmin + 4.8px, 14.4px); aspect-ratio: 1; border-radius: 50%; translate: -50% -50%;
     background: radial-gradient(circle at 35% 35%, #fff 0%, #D3EFFC 35%, #6FC0EA 100%);
     box-shadow: 0 0 0 0 rgba(163,219,247,0), 0 0 0 0 rgba(163,219,247,0); }
   /* só o elétron isolado (o que vai fazer a ligação) tem brilho em volta */
@@ -939,7 +939,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v48 · 02/10/2026</span>
+    <span class="versao" id="versao">v49 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3995,11 +3995,16 @@ const Cena71 = {
   // 21s: a ligação arrebenta — estalo de luz, faíscas, tranco da tela; os átomos são arremessados para os lados
   // (passam do ponto e voltam), crescem 44% (1,2 × 1,2), o brilho do meio some e o símbolo Cl aparece dentro de cada bola
   ESCALA_SEPARADOS: 1.44,
-  // quanto cada átomo se afasta do centro: .95 (unidades da cena) + 1px na tela, cada um para o seu lado
+  // quanto cada átomo se afasta, cada um para o seu lado: o dobro de (.95 unidade da cena + 1px na tela).
+  // Em tela estreita (celular em pé) o afastamento para antes, para os elétrons de fora caberem na tela.
   separaFinal(m) {
-    const q = this.quantum, c = (m.userData.est.para || m.position).clone();
-    const pxPorUnidade = Math.abs(q.naTela(c.clone().add(new THREE.Vector3(1, 0, 0))).x - q.naTela(c).x) || 1;
-    return .95 + 1 / pxPorUnidade;
+    const q = this.quantum, u = m.userData, c = (u.est.para || m.position).clone();
+    const ppu = Math.abs(q.naTela(c.clone().add(new THREE.Vector3(1, 0, 0))).x - q.naTela(c).x) || 1;   // px por unidade
+    const W = Palco.el.clientWidth, e = (document.querySelector(".c74-e") || { offsetWidth: 13 }).offsetWidth || 13;
+    const R = u.rO * this.ESCALA_SEPARADOS * ppu, g = R + Math.max(8, R * .22) + e / 2;   // as mesmas medidas de Cena74.medidas
+    const meio = u.baseH[0].distanceTo(u.baseO) / 2;                                       // do centro da molécula até cada átomo
+    const maximo = (W / 2 - g - e - 10) / ppu - meio;
+    return Math.min(2 * (.95 + 1 / ppu), maximo);
   },
   separar() {
     const q = this.quantum, m = this.m; if (!q || !m) return;
@@ -4238,16 +4243,7 @@ const Cena75 = {
     if (!perto) return;
     e.target.setPointerCapture(e.pointerId);
     this.arrastando = { set: perto.set, ultimo: [x, y], centro: [perto.A.x, perto.A.y], pega: [x - perto.A.x, y - perto.A.y] };
-    this.$(".c75-arrasto").classList.add("pegando");
-    // logo no começo do arrasto, o outro átomo vai para o meio da tela, à espera
-    const outro = perto.set === "A" ? "B" : "A";
-    if (this.centrado !== outro) {
-      this.centrado = outro;
-      const O = Cena74.atomo(outro), P = Palco.el, s = Cena71.m.userData.est, [kx, ky] = this.chave(outro);
-      const dx = P.clientWidth / 2 - O.x, dy = P.clientHeight / 2 - O.y;
-      Cena71.quantum.animar(s, kx, s[kx] + dx / this.ppu, .6);
-      Cena71.quantum.animar(s, ky, s[ky] - dy / this.ppu, .6);
-    }
+    this.$(".c75-arrasto").classList.add("pegando");   // o outro átomo fica parado, à espera do encaixe
   },
   mover(e) {
     const a = this.arrastando; if (!a || this.encaixado) return;
@@ -4269,10 +4265,10 @@ const Cena75 = {
     this.arrastando = null;
     const z = this.$(".c75-arrasto"); if (z) z.classList.remove("pegando");
   },
-  // onde o arrastado se encaixa: a 2g do centro da tela (os dois elétrons da frente ficam um em cima do outro)
+  // onde o arrastado se encaixa: a 2g do outro átomo, na mesma altura (os dois elétrons da frente ficam um em cima do outro)
   alvo(set) {
-    const P = Palco.el, A = Cena74.atomo(set), { g } = Cena74.medidas(A);
-    return [P.clientWidth / 2 + (set === "A" ? -2 * g : 2 * g), P.clientHeight / 2];
+    const O = Cena74.atomo(set === "A" ? "B" : "A"), { g } = Cena74.medidas(O);
+    return [O.x + (set === "A" ? -2 * g : 2 * g), O.y];
   },
 
   // encaixou: os átomos se prendem, brilho verde, ligação com o par de elétrons dentro, confetes, fanfarra e o áudio 7.6
@@ -4300,11 +4296,16 @@ const Cena75 = {
     ["brilhoO", "brilhoH"].forEach(b => { q.animar(s, b, 1.2, .3, .2); q.animar(s, b, 0, .8, .5); });
     Confete.soltar({ de: "cantos" });
     Confete.soltar({ de: "topo" });
-    const som = new Audio("audio/funfare.mp3"); som.play().catch(() => {});
-    const indice = NARRACOES.findIndex(n => n.id === "dialogo7_5"), cena = this.$(".c71-quantico");
-    new Promise(r => { som.addEventListener("ended", r, { once: true }); som.addEventListener("error", r, { once: true }); setTimeout(r, 15000); }).then(() => {
-      if (Player.indice !== indice || !cena.isConnected) return;   // saiu da cena no meio da festa
-      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo7_6"), true);
+    // fanfarra mais baixa: o áudio 7.6 começa junto, no encaixe
+    const som = new Audio("audio/funfare.mp3"); som.volume = .35; som.play().catch(() => {});
+    Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo7_6"), true);
+    // a molécula pronta vai para o meio da tela (os dois átomos juntos; elétrons e ligação acompanham)
+    const O = Cena74.atomo(a.set === "A" ? "B" : "A"), P = Palco.el;
+    const mx = P.clientWidth / 2 - (O.x + alvo[0]) / 2, my = P.clientHeight / 2 - (O.y + alvo[1]) / 2;
+    ["A", "B"].forEach(set => {
+      const [cx, cy] = this.chave(set), extraX = set === a.set ? (alvo[0] - a.centro[0]) / this.ppu : 0, extraY = set === a.set ? -(alvo[1] - a.centro[1]) / this.ppu : 0;
+      q.animar(s, cx, s[cx] + extraX + mx / this.ppu, .9, .35);
+      q.animar(s, cy, s[cy] + extraY - my / this.ppu, .9, .35);
     });
   },
   // o bastão da ligação vai da beira de um átomo à do outro e é alto o bastante para o par de elétrons
