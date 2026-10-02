@@ -446,6 +446,7 @@
   .c77-texto { position: absolute; left: 50%; translate: -50% 0; width: min(94%, 34ch); margin: 0; text-align: center; z-index: 3; pointer-events: none;
     font-family: var(--display); font-weight: 800; line-height: 1.2; letter-spacing: -.01em; font-size: clamp(1.05rem, 2.3vmin + .5rem, 1.75rem); }
   .c77-texto.em-cima { translate: -50% -100%; }
+  .c77-texto .c77-linha { display: block; }   /* "(ou isolados)" inteiro na linha de baixo */
   .c77-texto.isolado { color: #C9A7FF; text-shadow: 0 0 20px rgba(167,123,255,.55); }
   .c77-texto.ligante, .c77-texto.covalente { color: #6EE7A0; text-shadow: 0 0 20px rgba(110,231,160,.55); }
   /* fim do áudio 7.5: o aluno arrasta um Cl até o outro; ao encaixar, a ligação com o par de elétrons dentro */
@@ -967,7 +968,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v57 · 02/10/2026</span>
+    <span class="versao" id="versao">v58 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2271,7 +2272,8 @@ const NARRACOES = [
       { tempo: 22,   acao: () => { Cena77.realcar(["cima"], "isolado", false); Cena77.realcar(["fora"], "isolado"); } },   // os dos lados
       { tempo: 23,   acao: () => { Cena77.realcar(["fora"], "isolado", false); Cena77.pulsar(["baixo"], "isolado"); } },   // e os de baixo, numa pulsada
       { tempo: 25.5, acao: () => { Cena77.realcar(["cima", "fora", "baixo"], "isolado");                // os 6 pares isolados
-                                   Cena77.texto("isolado", "Pares de elétrons não ligantes (ou isolados)", 3.5); } },   // termina em 29s
+                                   Cena77.texto("isolado", [{ texto: "Pares de elétrons não ligantes " }, { classe: "c77-linha", texto: "(ou isolados)" }], 3.5); } },   // termina em 29s
+      { tempo: 29,   acao: () => Cena77.realcar(["cima", "fora", "baixo"], "isolado", false) },   // os isolados voltam ao normal (o texto fica)
       { tempo: 31,   acao: () => Cena77.realcar(["frente"], "ligante") },                         // o par compartilhado
       { tempo: 33.8, acao: () => Cena77.texto("ligante", "Pares de elétrons ligantes", 1.2) },     // termina em 35s
       { tempo: 37,   acao: () => Cena77.normal() },                                               // tudo volta ao normal; os textos saem
