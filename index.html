@@ -437,6 +437,15 @@
     border: 2.5px dashed rgba(255,194,75,.9); box-shadow: 0 0 18px rgba(255,194,75,.25), inset 0 0 18px rgba(255,194,75,.12); }
   .c76-octeto span { position: absolute; left: 50%; bottom: 100%; translate: -50% -.35em; white-space: nowrap;
     font-family: var(--display); font-weight: 800; font-size: clamp(1rem, 2vmin + .5rem, 1.6rem); color: var(--ambar); text-shadow: 0 0 16px rgba(255,194,75,.55); }
+  /* áudio 7.7: os pares em destaque mudam de cor — não ligantes (isolados) em lilás, ligante em verde —
+     e o nome de cada um vem escrito na mesma cor */
+  .c74-e.cor-isolado { background: radial-gradient(circle at 35% 35%, #fff 0%, #E6D9FF 35%, #A77BFF 100%); }
+  .c74-e.cor-ligante { background: radial-gradient(circle at 35% 35%, #fff 0%, #CFF8DF 35%, #3FCB7E 100%); }
+  .c77-texto { position: absolute; left: 50%; translate: -50% 0; width: min(94%, 34ch); margin: 0; text-align: center; z-index: 3; pointer-events: none;
+    font-family: var(--display); font-weight: 800; line-height: 1.2; letter-spacing: -.01em; font-size: clamp(1.05rem, 2.3vmin + .5rem, 1.75rem); }
+  .c77-texto.em-cima { translate: -50% -100%; }
+  .c77-texto.isolado { color: #C9A7FF; text-shadow: 0 0 20px rgba(167,123,255,.55); }
+  .c77-texto.ligante, .c77-texto.covalente { color: #6EE7A0; text-shadow: 0 0 20px rgba(110,231,160,.55); }
   /* fim do áudio 7.5: o aluno arrasta um Cl até o outro; ao encaixar, a ligação com o par de elétrons dentro */
   .c75-arrasto { position: absolute; inset: 0; z-index: 4; cursor: grab; touch-action: none; }
   .c75-arrasto.pegando { cursor: grabbing; }
@@ -956,7 +965,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v55 · 02/10/2026</span>
+    <span class="versao" id="versao">v56 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2244,11 +2253,29 @@ const NARRACOES = [
   // toca só depois do encaixe dos dois Cl (o áudio ainda vai ser gravado)
   { id: "dialogo7_6", titulo: "A ligação do Cl₂", src: "audio/audio_moleculas_7.6.mp3", oculta: true,
     eventos: [
-      { tempo: 8.2,  acao: () => Cena76.circulo("A") },                              // círculo tracejado no Cl da esquerda: "8 elétrons"
-      { tempo: 10,   acao: () => { Cena76.tirar("A"); Cena76.circulo("B"); } },      // agora no da direita
       { tempo: 12.8, acao: () => Cena76.elipse(true) }                               // a elipse com o par compartilhado cresce
     ],
-    aoFim: () => { Cena76.elipse(false); Cena76.tirar("B"); } },                     // tudo volta ao normal
+    aoFim: () => Cena76.elipse(false) },                                             // e volta ao normal
+  // os pares de elétrons do Cl₂: o octeto de cada Cl, os pares não ligantes e o par ligante
+  { id: "dialogo7_7", titulo: "Pares ligantes e não ligantes", src: "audio/audio_moleculas_7.7.mp3",
+    inicio: () => Cena75.montarPronta(),                   // pela navegação rápida: a molécula de Cl₂ já formada
+    eventos: [
+      { tempo: 7,    acao: () => Cena76.circulo("A") },                                // círculo tracejado no Cl da esquerda: "8 elétrons"
+      { tempo: 11,   acao: () => { Cena76.tirar("A"); Cena76.circulo("B"); } },        // agora no da direita
+      { tempo: 16,   acao: () => Cena76.tirar("B") },
+      { tempo: 17,   acao: () => Cena77.realcar(["cima", "fora", "baixo"], "isolado") },          // os pares isolados crescem
+      { tempo: 19,   acao: () => Cena77.realcar(["cima", "fora", "baixo"], "isolado", false) },
+      { tempo: 21,   acao: () => Cena77.realcar(["cima"], "isolado") },                           // os de cima,
+      { tempo: 22,   acao: () => { Cena77.realcar(["cima"], "isolado", false); Cena77.realcar(["fora"], "isolado"); } },   // os dos lados
+      { tempo: 23,   acao: () => { Cena77.realcar(["fora"], "isolado", false); Cena77.pulsar(["baixo"], "isolado"); } },   // e os de baixo, numa pulsada
+      { tempo: 25.5, acao: () => { Cena77.realcar(["cima", "fora", "baixo"], "isolado");                // os 6 pares isolados
+                                   Cena77.texto("isolado", "Pares de elétrons não ligantes (ou isolados)", 3.5); } },   // termina em 29s
+      { tempo: 31,   acao: () => Cena77.realcar(["frente"], "ligante") },                         // o par compartilhado
+      { tempo: 33.8, acao: () => Cena77.texto("ligante", "Pares de elétrons ligantes", 1.2) },     // termina em 35s
+      { tempo: 37,   acao: () => Cena77.normal() },                                               // tudo volta ao normal; os textos saem
+      { tempo: 39,   acao: () => Cena77.pulsar(["frente"], "ligante") },                          // pulsada no par compartilhado
+      { tempo: 42,   acao: () => Cena77.texto("covalente", "Ligação Covalente", 1.6) }            // termina em 43,6s
+    ] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -4224,6 +4251,7 @@ const Cena74 = {
       const dx = de[0] - para[0], dy = de[1] - para[1], h = Math.max(70, Math.hypot(dx, dy) * .45);
       this.pos(el, para);   // já no destino; a animação parte do lugar antigo e faz o arco por cima
       el.dataset.preso = "1";   // agora é do átomo: treme com ele
+      el.dataset.lado = lado.replace("1", "");   // em que lado do símbolo ele está (cima, fora, baixo, frente)
       const quadros = Array.from({ length: 17 }, (_, n) => { const p = n / 16;
         return { transform: `translate(${dx * (1 - p)}px, ${dy * (1 - p) - h * Math.sin(Math.PI * p)}px)` }; });
       Palco.animar(el, quadros, { duracao: .8, atraso: k * .12, easing: "cubic-bezier(.45,0,.35,1)" });
@@ -4253,23 +4281,27 @@ const Cena74 = {
   },
 
   // o conjunto já montado em volta do símbolo, sem animação (para quem chega pela navegação rápida)
+  // devolve uma promessa que se cumpre quando os elétrons já estão no lugar
   montarLewis(set = "A") {
-    if (this.$(`.c74-eletrons[data-set="${set}"]`)) return;
+    if (this.$(`.c74-eletrons[data-set="${set}"]`)) return Promise.resolve();
     this.novoConjunto(set);
     const els = this.els(set), caixa = this.$(".c74-eletrons[data-set='" + set + "']");
     caixa.style.visibility = "hidden";
     // a cena 3D acabou de ser montada e a molécula ainda está crescendo (entrada): espera ela ficar
     // no tamanho certo, com os átomos no lugar, antes de medir
     const inicio = performance.now();
-    const colocar = () => {
-      const m = Cena71.m;
-      if (!caixa.isConnected) return;
-      if ((!m || Math.abs(m.scale.x - 1) > .002) && performance.now() - inicio < 3000) { requestAnimationFrame(colocar); return; }
-      [["cima", 0], ["cima", 1], ["fora", 0], ["fora", 1], ["baixo", 0], ["baixo", 1], ["frente", 0]]
-        .forEach(([lado, k], i) => { const p = this.destino(lado, k, set); if (p) this.pos(els[i], p); els[i].dataset.preso = "1"; });
-      caixa.style.visibility = "";
-    };
-    requestAnimationFrame(() => requestAnimationFrame(colocar));
+    return new Promise(pronto => {
+      const colocar = () => {
+        const m = Cena71.m;
+        if (!caixa.isConnected) return;
+        if ((!m || Math.abs(m.scale.x - 1) > .002) && performance.now() - inicio < 3000) { requestAnimationFrame(colocar); return; }
+        [["cima", 0], ["cima", 1], ["fora", 0], ["fora", 1], ["baixo", 0], ["baixo", 1], ["frente", 0]]
+          .forEach(([lado, k], i) => { const p = this.destino(lado, k, set); if (p) this.pos(els[i], p); els[i].dataset.preso = "1"; els[i].dataset.lado = lado; });
+        caixa.style.visibility = "";
+        pronto();
+      };
+      requestAnimationFrame(() => requestAnimationFrame(colocar));
+    });
   },
 
   // brilho de repouso: só o isolado brilha; os outros, sem brilho (sombra zerada, para a animação ter de onde partir)
@@ -4322,8 +4354,26 @@ const Cena75 = {
   ativo: false,
   PUXAO: 34,          // px de arrasto para romper a ligação (um roçar no átomo não desmancha a molécula)
 
-  // fim do áudio 7.5: os átomos passam a poder ser arrastados
-  liberar() {
+  // a molécula de Cl₂ já formada, no meio da tela (para quem chega à 7.7 pela navegação rápida).
+  // Vindo do play (7.6), ela já está no palco e nada muda.
+  async montarPronta() {
+    if (this.ligado && this.$(".c75-ligacao")) return;
+    Cena71.montarSeparados();
+    await Promise.all([Cena74.montarLewis("A"), Cena74.montarLewis("B")]);
+    if (!this.$(".c71-quantico")) return;
+    this.liberar(false);
+    // os dois átomos já juntos no meio da tela, à distância da ligação (2g)
+    const s = Cena71.m.userData.est, P = Palco.el, A = Cena74.atomo("A"), B = Cena74.atomo("B"), { g } = Cena74.medidas(A);
+    s.offOx += (P.clientWidth / 2 - g - A.x) / this.ppu; s.offOy -= (P.clientHeight / 2 - A.y) / this.ppu;
+    s.offHx += (P.clientWidth / 2 + g - B.x) / this.ppu; s.offHy -= (P.clientHeight / 2 - B.y) / this.ppu;
+    Object.assign(s, { instO: 0, instH: 0 });
+    this.ligado = true; this.armado = false; this.festejou = true;
+    this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", `<div class="c75-ligacao"></div>`);
+    this.status("estavel");
+  },
+
+  // fim do áudio 7.5: os átomos passam a poder ser arrastados (convite: os dois dão uma pulsada)
+  liberar(convite = true) {
     const q = Cena71.quantum, m = Cena71.m; if (!q || !m || this.$(".c75-arrasto")) return;
     const s = m.userData.est;
     Object.assign(s, { offOx: s.offOx || 0, offOy: s.offOy || 0, offHx: s.offHx || 0, offHy: s.offHy || 0 });
@@ -4336,8 +4386,7 @@ const Cena75 = {
     zona.addEventListener("pointermove", e => this.mover(e));
     zona.addEventListener("pointerup", () => this.soltar());
     zona.addEventListener("pointercancel", () => this.soltar());
-    // convite: os dois átomos dão uma pulsada
-    Cena74.pulsarAtomo("A"); Cena74.pulsarAtomo("B");
+    if (convite) { Cena74.pulsarAtomo("A"); Cena74.pulsarAtomo("B"); }
   },
 
   // os elétrons acompanham o seu átomo (a distância de cada um até o centro do átomo é guardada agora)
@@ -4532,6 +4581,65 @@ const Cena76 = {
       : [{ scale: "1.3 1.3", boxShadow: "0 0 34px rgba(110,231,160,.9)" }, { scale: "1 1", boxShadow: "0 0 18px rgba(110,231,160,.45)" }],
       { duracao: .5, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out" });
     ["A", "B"].forEach(set => Cena74.crescer([6], ligar, 1.5, set));
+  }
+};
+
+/* ---------- Cenas da narração 7.7: pares ligantes e não ligantes ----------
+   Os pares em destaque crescem e mudam de cor, e o nome deles vem na mesma cor:
+   não ligantes (isolados) em lilás, em cima da molécula; o ligante (compartilhado) em verde, embaixo. */
+const Cena77 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  COR: {
+    isolado: "0 0 10px 3px rgba(201,167,255,.95), 0 0 26px 8px rgba(167,123,255,.55)",
+    ligante: "0 0 10px 3px rgba(150,245,190,.95), 0 0 26px 8px rgba(110,231,160,.55)"
+  },
+  // os elétrons dos dois Cl que estão nesses lados do símbolo (cima, fora, baixo, frente)
+  els(lados) { return [...Palco.el.querySelectorAll(".c74-e[data-lado]")].filter(el => lados.includes(el.dataset.lado)); },
+  escala(el) { const v = getComputedStyle(el).scale; return v === "none" ? "1" : v; },
+  // crescem e mudam de cor (ligar = false: voltam ao normal)
+  realcar(lados, tipo, ligar = true, esc = 1.45) {
+    if (!Cena75.ligado) return;
+    this.els(lados).forEach(el => {
+      el.classList.toggle("cor-" + tipo, ligar);
+      if (ligar) el.dataset.realce = tipo; else delete el.dataset.realce;
+      const de = { scale: this.escala(el), boxShadow: getComputedStyle(el).boxShadow };
+      Palco.animar(el, [de, ligar ? { scale: esc, boxShadow: this.COR[tipo] } : { scale: 1, boxShadow: Cena74.normal(el) }],
+        { duracao: .45, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out" });
+    });
+  },
+  // cresce e já desce, como uma pulsada, na cor do tipo
+  pulsar(lados, tipo, dur = .8) {
+    if (!Cena75.ligado) return;
+    this.els(lados).forEach(el => {
+      el.classList.add("cor-" + tipo);
+      Palco.animar(el, [{ scale: 1, boxShadow: Cena74.normal(el) }, { scale: 1.6, boxShadow: this.COR[tipo], offset: .4 }, { scale: 1, boxShadow: Cena74.normal(el) }],
+        { duracao: dur, easing: "ease-in-out" }).finished.then(() => {
+          if (el.dataset.realce !== tipo) el.classList.remove("cor-" + tipo);   // se entrou um destaque no meio da pulsada, a cor fica
+        }, () => {});
+    });
+  },
+  // o nome, digitado na cor do destaque: o ligante embaixo da molécula; os não ligantes (e depois a "Ligação Covalente") em cima
+  texto(tipo, frase, dur) {
+    if (!Cena75.ligado || this.$(`.c77-texto.${tipo}`)) return;
+    const A = Cena74.atomo("A"); if (!A) return;
+    const me = Cena74.medidas(A), cima = tipo !== "ligante";
+    const y = cima ? A.y - me.g - me.e - 12 : A.y + me.g + me.e + 14;
+    if (!cima) this.esconderStatus(true);   // embaixo mora o "Molécula estável": sai enquanto este estiver na tela
+    Palco.adicionar(`<p class="c77-texto ${tipo}${cima ? " em-cima" : ""}" style="top:${y}px"></p>`);
+    Palco.digitar(Palco.el.lastElementChild, frase, dur, { cursor: false });
+  },
+  esconderStatus(esconder) {
+    const st = this.$(".c75-status"); if (!st) return;
+    Palco.animar(st, [{ opacity: getComputedStyle(st).opacity }, { opacity: esconder ? 0 : 1 }], { duracao: .5 });
+  },
+  // 37s: os pares voltam ao normal e os textos saem em fade
+  normal() {
+    this.realcar(["cima", "fora", "baixo"], "isolado", false);
+    this.realcar(["frente"], "ligante", false);
+    Palco.el.querySelectorAll(".c77-texto.isolado, .c77-texto.ligante").forEach(t => {
+      Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => t.remove(), () => {});
+    });
+    this.esconderStatus(false);   // "Molécula estável" volta
   }
 };
 
