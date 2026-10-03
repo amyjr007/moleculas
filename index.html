@@ -1002,7 +1002,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v69 · 03/10/2026</span>
+    <span class="versao" id="versao">v70 · 03/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3518,6 +3518,7 @@ const Cena4 = {
       { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
     caixa.addEventListener("click", e => {
       const b = e.target.closest(".c4-op"); if (!b || caixa.classList.contains("respondido")) return;
+      Player.calar();   // respondeu com a narração ainda falando: ela para na hora
       b.dataset.certa === "1" ? this.acertou(b) : this.errou(b);
     });
   },
@@ -4219,6 +4220,7 @@ const Cena71 = {
       { duracao: .45, atraso: .25 + i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
     caixa.addEventListener("click", e => {
       const b = e.target.closest(".c4-op"); if (!b || caixa.classList.contains("respondido")) return;
+      Player.calar();   // respondeu com a narração ainda falando: ela para na hora
       b.dataset.certa === "1" ? this.acertou(b) : this.errou(b);
     });
   },
@@ -4581,7 +4583,7 @@ const Cena75 = {
   // a molécula de Cl₂ já formada, no meio da tela (para quem chega à 7.7 pela navegação rápida).
   // Vindo do play (7.6), ela já está no palco e nada muda.
   async montarPronta() {
-    if (this.ligado && this.$(".c75-ligacao")) return;
+    if (this.ligado && this.$(".c75-ligacao:not(.saindo)")) return;
     Cena71.montarSeparados();
     await Promise.all([Cena74.montarLewis("A"), Cena74.montarLewis("B")]);
     if (!this.$(".c71-quantico")) return;
@@ -4602,8 +4604,8 @@ const Cena75 = {
   },
   // o texto de estado sai em fade
   tirarStatus() {
-    const st = this.$(".c75-status"); if (!st) return;
-    st.classList.remove("c75-status");
+    const st = this.$(".c75-status:not(.saindo)"); if (!st) return;
+    st.classList.add("saindo");   // (sem tirar a classe: o texto perderia a posição e piscaria no canto durante o fade)
     Palco.animar(st, [{ opacity: getComputedStyle(st).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => st.remove(), () => {});
   },
 
@@ -4780,8 +4782,8 @@ const Cena75 = {
   // o estado dos dois Cl, escrito embaixo deles: "instavel" ("Átomos Instáveis", âmbar e tremendo) ou "estavel"
   // ("Molécula estável", já pronto). digitar: escrito letra a letra (na quebra do áudio 7.3)
   status(tipo, { digitar = false } = {}) {
-    const velho = this.$(".c75-status");
-    if (velho) { velho.classList.remove("c75-status"); Palco.animar(velho, [{ opacity: 1 }, { opacity: 0 }], { duracao: .35 }).finished.then(() => velho.remove(), () => {}); }
+    const velho = this.$(".c75-status:not(.saindo)");
+    if (velho) { velho.classList.add("saindo"); Palco.animar(velho, [{ opacity: 1 }, { opacity: 0 }], { duracao: .35 }).finished.then(() => velho.remove(), () => {}); }
     const q = Cena71.quantum, m = Cena71.m; if (!q || !m) return;
     // a altura: logo abaixo dos elétrons de baixo, medida no centro da molécula (onde os átomos ficam)
     const c = (m.userData.est.para || m.position).clone(), caixa = this.$(".c71-quantico").getBoundingClientRect(), P = Palco.el.getBoundingClientRect();
@@ -4807,8 +4809,8 @@ const Cena75 = {
     q.clarao(meio, { tam: 2.6, dur: .35 });
     q.faiscas(meio, { cor: 0xFFFFFF, qtd: 20, forca: 4.5, dur: .55, tam: .18 });
     document.getElementById("palco").animate([0, -6, 5, -3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 300, easing: "ease-out" });
-    Palco.el.querySelectorAll(".c75-ligacao").forEach(lig => {
-      lig.classList.remove("c75-ligacao"); lig.classList.add("c75-ligacao-saindo");
+    Palco.el.querySelectorAll(".c75-ligacao:not(.saindo)").forEach(lig => {
+      lig.classList.add("saindo");
       Palco.animar(lig, [{ opacity: 1, scale: "1 1" }, { opacity: 0, scale: ".2 1.3" }], { duracao: .25, easing: "ease-in" }).finished.then(() => lig.remove(), () => {});
     });
   },
@@ -4911,7 +4913,7 @@ const Cena77 = {
     Palco.animar(el, ligar ? [normal, grande] : [grande, normal], { duracao: .45, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out" });
   },
   esconderStatus(esconder) {
-    const st = this.$(".c75-status"); if (!st) return;
+    const st = this.$(".c75-status:not(.saindo)"); if (!st) return;
     Palco.animar(st, [{ opacity: getComputedStyle(st).opacity }, { opacity: esconder ? 0 : 1 }], { duracao: .5 });
   },
   // 37s: os pares voltam ao normal e os textos saem em fade
@@ -5097,10 +5099,10 @@ const Cena83 = {
   // depois(): o que acontece no toque (ex.: um elétron sai da fileira)
   tocar(lado, depois) {
     const p = this.ponto(lado); if (!p) return;
-    let mao = this.$(".c83-mao");
+    let mao = this.$(".c83-mao:not(.saindo)");
     if (!mao) {
       Palco.adicionar(`<div class="c83-mao" style="left:${p[0] + 40}px;top:${p[1] + 50}px">${this.MAO}</div>`);
-      mao = this.$(".c83-mao");
+      mao = this.$(".c83-mao:not(.saindo)");
       Palco.animar(mao, [{ opacity: 0 }, { opacity: 1 }], { duracao: .25, fill: "forwards" });
     }
     const de = [parseFloat(mao.style.left), parseFloat(mao.style.top)];
@@ -5117,8 +5119,9 @@ const Cena83 = {
       }, () => {});
   },
   tirarMao() {
-    const mao = this.$(".c83-mao"); if (!mao) return;
-    mao.classList.remove("c83-mao");
+    // (marca como "saindo" em vez de tirar a classe: sem ela a mão perdia o tamanho e piscava gigante no fade)
+    const mao = this.$(".c83-mao:not(.saindo)"); if (!mao) return;
+    mao.classList.add("saindo");
     Palco.animar(mao, [{ opacity: 1 }, { opacity: 0 }], { duracao: .35 }).finished.then(() => mao.remove(), () => {});
   },
   // toca num lado do O da esquerda e um elétron sai da fileira de cima para lá (sozinho no meio do lado)
@@ -5379,9 +5382,11 @@ function criarFonte(narracao) {
   if (narracao.src) {
     const a = new Audio(narracao.src);
     a.preload = "auto";
-    // pausa/retomada vinda de fora (fone, teclas de mídia, tela de bloqueio)
-    a.addEventListener("pause", () => { if (!a.ended && Player.fonte === a) Player.pausar(); });
-    a.addEventListener("play", () => { if (Player.fonte === a) Player.tocar(); });
+    // pausa/retomada vinda de fora (fone, teclas de mídia, tela de bloqueio). Só vale o que contradiz o estado do
+    // player: o "pause"/"play" que ele mesmo mandou chega aqui depois e não pode ser respondido (virava um pingue-pongue
+    // de play/pause sem fim quando um play era interrompido)
+    a.addEventListener("pause", () => { if (!a.ended && Player.fonte === a && Player.tocando) Player.pausar(); });
+    a.addEventListener("play", () => { if (Player.fonte === a && !Player.tocando) Player.tocar(); });
     return a;
   }
   // Simulação: mesmo "formato" de um elemento <audio>
@@ -5425,7 +5430,11 @@ const Player = {
 
   tocar() {
     if (!this.fonte) return;
-    if (this.fonte.paused) this.fonte.play().catch(() => { this.pausar(); });
+    this.tocando = true;
+    const f = this.fonte;
+    // play recusado (ex.: o navegador bloqueou o som): volta ao estado pausado. Um play só interrompido
+    // (AbortError: veio uma pausa ou outra narração antes dele começar) não é erro e não mexe em nada
+    if (f.paused) f.play().catch(e => { if (e && e.name === "AbortError") return; if (this.fonte === f) this.pausar(); });
     Palco.retomar();
     this.acompanhar();
     ui.atualizarBotao(true);
@@ -5433,6 +5442,7 @@ const Player = {
 
   pausar() {
     if (!this.fonte) return;
+    this.tocando = false;
     if (!this.fonte.paused) this.fonte.pause();
     Palco.pausar();
     cancelAnimationFrame(this.loop);
@@ -5442,6 +5452,7 @@ const Player = {
   parar() {
     const f = this.fonte;
     this.fonte = null;               // solta a fonte antes, para os eventos de "pause" dela serem ignorados
+    this.tocando = false;
     if (f) { f.pause(); f.currentTime = 0; }
     cancelAnimationFrame(this.loop);
     ui.atualizarBotao(false);
@@ -5485,11 +5496,25 @@ const Player = {
 
   aoTerminar() {
     if (this.fonte && !this.fonte.src) { this.fonte.paused = true; this.fonte.ended = true; }
+    this.tocando = false;
     ui.atualizarBotao(false);
     this.terminou = true;
     const n = NARRACOES[this.indice];
     if (n.aoFim) try { n.aoFim(Palco); } catch (e) { console.error(e); }   // ex.: quiz no fim da narração
     if (this.seguirAoFim) { this.seguirAoFim = false; this.seguirSozinho(); }
+  },
+
+  // o aluno respondeu ao quiz com a narração ainda falando: ela se cala na hora (o que vem depois — a festa e a
+  // próxima narração, ou a correção — é de quem chamou). O palco não pausa: o destaque da resposta e a festa seguem.
+  calar() {
+    const f = this.fonte;
+    if (!f || f.paused || f.ended) return;
+    this.fonte = null;   // solta a fonte antes: o "pause" dela não pausa o palco
+    this.tocando = false;
+    f.pause();
+    cancelAnimationFrame(this.loop);
+    ui.atualizarBotao(false);
+    ui.semPlay(true);    // sem play enquanto isso: quem leva adiante é a resposta
   },
 
   // a próxima narração da sequência entra sozinha, sem o play (ex.: ao entrar no cilindro de gás).
@@ -5515,6 +5540,7 @@ const Player = {
       this.irPara(prox, prox !== this.indice);   // segue a história: a cena continua no palco
       return;
     }
+    if (!this.fonte) return;   // a narração foi calada por uma resposta do quiz: quem segue é a resposta
     this.fonte.paused ? this.tocar() : this.pausar();
   },
 
