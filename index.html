@@ -980,7 +980,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v61 · 02/10/2026</span>
+    <span class="versao" id="versao">v62 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2286,7 +2286,8 @@ const NARRACOES = [
       { tempo: 23,   acao: () => { Cena77.realcar(["fora"], "isolado", false); Cena77.pulsar(["baixo"], "isolado"); } },   // e os de baixo, numa pulsada
       { tempo: 25.5, acao: () => { Cena77.realcar(["cima", "fora", "baixo"], "isolado");                // os 6 pares isolados
                                    Cena77.texto("isolado", [{ texto: "Pares de elétrons não ligantes " }, { classe: "c77-linha", texto: "(ou isolados)" }], 3.5); } },   // termina em 29s
-      { tempo: 29,   acao: () => Cena77.realcar(["cima", "fora", "baixo"], "isolado", false) },   // os isolados voltam ao normal (o texto fica)
+      // os isolados voltam ao tamanho normal, sem brilho, mas ficam lilás (a cor do texto) até o texto sumir, aos 37s
+      { tempo: 29,   acao: () => Cena77.realcar(["cima", "fora", "baixo"], "isolado", false, 1, { manterCor: true }) },
       { tempo: 31,   acao: () => Cena77.realcar(["frente"], "ligante") },                         // o par compartilhado
       { tempo: 33.8, acao: () => Cena77.texto("ligante", "Pares de elétrons ligantes", 1.2) },     // termina em 35s
       { tempo: 37,   acao: () => Cena77.normal() },                                               // tudo volta ao normal; os textos saem
@@ -4699,10 +4700,11 @@ const Cena77 = {
   els(lados) { return [...Palco.el.querySelectorAll(".c74-e[data-lado]")].filter(el => lados.includes(el.dataset.lado)); },
   escala(el) { const v = getComputedStyle(el).scale; return v === "none" ? "1" : v; },
   // crescem e mudam de cor (ligar = false: voltam ao normal)
-  realcar(lados, tipo, ligar = true, esc = 1.45) {
+  // manterCor: volta ao tamanho e ao brilho normais, mas continua na cor do tipo (enquanto o nome dele estiver na tela)
+  realcar(lados, tipo, ligar = true, esc = 1.45, { manterCor = false } = {}) {
     if (!Cena75.ligado) return;
     this.els(lados).forEach(el => {
-      el.classList.toggle("cor-" + tipo, ligar);
+      el.classList.toggle("cor-" + tipo, ligar || manterCor);
       if (ligar) el.dataset.realce = tipo; else delete el.dataset.realce;
       const de = { scale: this.escala(el), boxShadow: getComputedStyle(el).boxShadow };
       Palco.animar(el, [de, ligar ? { scale: esc, boxShadow: this.COR[tipo] } : { scale: 1, boxShadow: Cena74.normal(el) }],
