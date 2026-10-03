@@ -980,7 +980,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v62 · 02/10/2026</span>
+    <span class="versao" id="versao">v63 · 02/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2270,7 +2270,9 @@ const NARRACOES = [
     eventos: [
       { tempo: 12.8, acao: () => Cena76.elipse(true) }                               // a elipse com o par compartilhado cresce
     ],
-    aoFim: () => { Cena76.elipse(false); Cena75.tirarStatus(); } },                  // volta ao normal; "Molécula estável" sai em fade
+    // volta ao normal; "Molécula estável" sai em fade e não volta mais: a molécula fica travada
+    // (refazer a ligação com o dedo escreveria o texto de novo)
+    aoFim: () => { Cena76.elipse(false); Cena75.tirarStatus(); Cena75.travar(); } },
   // os pares de elétrons do Cl₂: o octeto de cada Cl, os pares não ligantes e o par ligante
   { id: "dialogo7_7", titulo: "Pares ligantes e não ligantes", src: "audio/audio_moleculas_7.7.mp3",
     inicio: () => Cena75.montarPronta().then(() => Cena75.travar()),   // pela navegação rápida: a molécula de Cl₂ já formada
