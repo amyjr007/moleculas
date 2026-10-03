@@ -461,6 +461,14 @@
   .c77-texto .c77-silaba { display: inline-block; transform-origin: 50% 70%; }   /* "Co" e "valente" crescem (inline-block: só assim o "scale" pega) */
   .c77-texto.isolado { color: #C9A7FF; text-shadow: 0 0 20px rgba(167,123,255,.55); }
   .c77-texto.ligante, .c77-texto.covalente { color: #6EE7A0; text-shadow: 0 0 20px rgba(110,231,160,.55); }
+  /* áudio 8.3: a mãozinha que toca nos lados do átomo, o círculo do toque e o anel da conquista */
+  .c83-mao { position: absolute; z-index: 5; pointer-events: none; width: clamp(34px, 4.5vmin + 16px, 54px);
+    translate: -46% -4%; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }   /* a ponta do dedo fica no ponto */
+  .c83-mao svg { display: block; width: 100%; height: auto; }
+  .c83-toque { position: absolute; z-index: 4; pointer-events: none; width: 46px; height: 46px; translate: -50% -50%; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,.9); box-shadow: 0 0 14px rgba(163,219,247,.8); }
+  .c83-anel { position: absolute; z-index: 4; pointer-events: none; translate: -50% -50%; border-radius: 50%;
+    border: 3px solid #6EE7A0; box-shadow: 0 0 28px rgba(110,231,160,.85), inset 0 0 22px rgba(110,231,160,.45); }
   /* fim do áudio 7.5: o aluno arrasta um Cl até o outro; ao encaixar, a ligação com o par de elétrons dentro */
   .c75-arrasto { position: absolute; inset: 0; z-index: 4; cursor: grab; touch-action: none; }
   .c75-arrasto.pegando { cursor: grabbing; }
@@ -985,7 +993,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v66 · 02/10/2026</span>
+    <span class="versao" id="versao">v67 · 03/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2350,7 +2358,32 @@ const NARRACOES = [
       { tempo: 3,    acao: () => Cena71.tirarPergunta() },         // a pergunta e as alternativas somem em fade (como na 7.3)
       { tempo: 6,    acao: () => Cena82.centralizar() }            // a que sobrou vai girando para o meio (até 7s), do tamanho dos cloros
     ],
-    aoFim: () => Cena82.liberar() }                                // um puxão num átomo rompe a ligação dupla
+    aoFim: () => Cena82.liberar() },                               // um puxão num átomo rompe a ligação dupla (e a 8.3 entra sozinha)
+  // os elétrons de valência do oxigênio (família 6A): 6 em cada um
+  { id: "dialogo8_3", titulo: "Oxigênio: 6 elétrons de valência", src: "audio/audio_moleculas_8.3.mp3",
+    inicio: () => Cena71.montarSeparados("oxigenio"),              // pela navegação rápida: os dois O separados no meio da tela
+    eventos: [
+      { tempo: 7,    acao: () => Cena71.pulsarTitulo(".fam") },                                   // "Família 6A" pulsa
+      { tempo: 9,    acao: () => Cena74.mostrar(10.5, "A", { qtd: 6, isolado: false }) },        // 6 na fileira de cima,
+      { tempo: 10.5, acao: () => Cena74.mostrar(12, "B", { qtd: 6, isolado: false, embaixo: true }) },   // 6 na de baixo (até 12s)
+      // a mãozinha mostra que dá para tocar nos quatro lados do O da esquerda (até 28s)
+      { tempo: 24,   acao: () => Cena83.tocar("cima") },
+      { tempo: 25,   acao: () => Cena83.tocar("fora") },                                          // o lado esquerdo
+      { tempo: 26,   acao: () => Cena83.tocar("baixo") },
+      { tempo: 27,   acao: () => Cena83.tocar("frente") },                                        // o lado direito
+      { tempo: 28,   acao: () => Cena83.tirarMao() },
+      { tempo: 34.9, acao: () => Cena71.pulsarTitulo(".fam") },                                   // "Família 6A" pulsa de novo
+      { tempo: 36,   acao: () => Cena74.crescer([0, 1, 2, 3, 4, 5], true, 1.2, "A") },           // os 6 da fileira de cima brilham
+      { tempo: 37.8, acao: () => Cena74.crescer([0, 1, 2, 3, 4, 5], false, 1, "A") },
+      // a mãozinha coloca os elétrons no O da esquerda: um em cada lado, depois os pares
+      { tempo: 41,   acao: () => Cena83.colocar("cima", 0) },
+      { tempo: 41.9, acao: () => Cena83.colocar("fora", 1) },                                     // à esquerda
+      { tempo: 43,   acao: () => Cena83.colocar("baixo", 2) },
+      { tempo: 44,   acao: () => Cena83.colocar("frente", 3) },                                   // à direita
+      { tempo: 46.7, acao: () => Cena83.emparelhar("cima", 4, 0) },                               // emparelha em cima
+      { tempo: 48,   acao: () => Cena83.emparelhar("fora", 5, 1) },                               // e à esquerda
+      { tempo: 49,   acao: () => Cena83.conquista() }                                             // conquista no O da esquerda
+    ] }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -3968,11 +4001,12 @@ const Cena71 = {
   GASES: {
     // simbolo: as opções da pergunta (X, X₂, X₃) · exemplo: o rótulo da face do cilindro
     // pergunta: [a narração da pergunta, a da resposta, que toca depois do acerto]
-    cloro: { simbolo: "Cl", exemplo: "Exemplo 01", pergunta: ["dialogo7_2", "dialogo7_3"],
+    // entrada: a narração em que o cilindro aparece (tocar nele leva sozinho à seguinte)
+    cloro: { simbolo: "Cl", exemplo: "Exemplo 01", pergunta: ["dialogo7_2", "dialogo7_3"], entrada: "dialogo7_1",
              nome: "CLORO", aria: "cloro", titulo: '<span class="c71-nome">Cloro</span> <span class="fam">– Família 7A</span>',
              corpo: ["#0d2205", "#23500c", "#4f8f1c", "#8cc63f", "#c3ec84", "#6aa82a", "#3b7014", "#1c3d08", "#0b1d04"],
              pe: ["#081603", "#2c5a10", "#6c9a44", "#244a0c", "#071302"], filete: "#d8f5a8" },
-    oxigenio: { simbolo: "O", exemplo: "Exemplo 02", pergunta: ["dialogo8_1", "dialogo8_2"],
+    oxigenio: { simbolo: "O", exemplo: "Exemplo 02", pergunta: ["dialogo8_1", "dialogo8_2"], entrada: "dialogo8",
              nome: "OXIGÊNIO", aria: "oxigênio", titulo: '<span class="c71-nome">Oxigênio</span> <span class="fam">– Família 6A</span>',
              corpo: ["#06122b", "#0f2a5c", "#1f56a8", "#4b8fe0", "#9cc8ff", "#3a7ad0", "#1b4a90", "#0c2654", "#050f24"],
              pe: ["#040b1c", "#143468", "#4f78b8", "#102a58", "#030918"], filete: "#cfe3ff" }
@@ -4111,7 +4145,8 @@ const Cena71 = {
       // o "Exemplo 0N" estava no lugar do título: sai em fade
       const ex = this.$(".c71-exemplo");
       if (ex) Palco.animar(ex, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => ex.remove(), () => {});
-      if (tipo === "oxigenio") Cena8.entrou();
+      // tocou no cilindro durante (ou depois) da narração que o apresenta (7.1 / 8): a próxima (a pergunta) entra sozinha
+      if (NARRACOES[Player.indice] && NARRACOES[Player.indice].id === this.GASES[tipo].entrada) Player.seguirSozinho();
     }, () => {});
   },
 
@@ -4305,10 +4340,19 @@ const Cena71 = {
     Palco.animar(el, ligar ? [normal, grande] : [grande, normal], { duracao: .45, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out" });
   },
 
-  // tela final da 7.3 (para quem chega à 7.4 pela navegação rápida): os dois Cl separados no meio da tela
-  montarSeparados() {
+  // pulsada com brilho numa parte do título (cresce e volta)
+  pulsarTitulo(sel) {
+    const el = this.$(".c71-titulo " + sel); if (!el) return;
+    const normal = { transform: "scale(1)", textShadow: "0 0 0 rgba(255,194,75,0)" };
+    Palco.animar(el, [normal, { transform: "scale(1.2)", textShadow: "0 0 24px rgba(255,194,75,.75)", offset: .4 }, normal],
+      { duracao: .8, easing: "ease-in-out", fill: "none" });
+  },
+
+  // tela final da 7.3 (para quem chega à 7.4 pela navegação rápida): os dois Cl separados no meio da tela.
+  // tipo "oxigenio": os dois O separados (o fim da 8.2, para quem chega à 8.3)
+  montarSeparados(tipo = "cloro") {
     if (this.m && this.m.userData.est.quebra >= 1 && this.$(".c71-quantico.ativo")) return;
-    this.montarFinal();
+    this.montarFinal(tipo);
     const q = this.quantum; if (!q) return;
     const caixa = this.$(".c71-quantico"), cx = caixa.clientWidth / 2, cy = caixa.clientHeight / 2;
     const dist = m => { const p = q.naTela(m.position); return Math.hypot(p.x - cx, p.y - cy); };
@@ -4318,8 +4362,9 @@ const Cena71 = {
     q.destacar(m, 0, { f: (P.top + P.height / 2 - cr.top) / cr.height });
     q.rotular(m);
     this.tremerEletrons();
-    Cena75.status("instavel");
-    Object.assign(m.userData.est, { semToque: true, instO: 1, instH: 1, separa: this.separaFinal(m), quebra: 1, nuvem: 0, escalaO: this.ESCALA_SEPARADOS, escalaH: this.ESCALA_SEPARADOS, rotO: 1, rotH: 1 });
+    if (tipo === "cloro") Cena75.status("instavel");
+    const esc = this.escalaSeparados(m);
+    Object.assign(m.userData.est, { semToque: true, instO: 1, instH: 1, separa: this.separaFinal(m), quebra: 1, nuvem: 0, escalaO: esc, escalaH: esc, rotO: 1, rotH: 1 });
   }
 };
 
@@ -4358,24 +4403,28 @@ const Cena74 = {
     const { g, acima } = this.medidas(A), s = this.medidas(A).s * (k ? 1 : -1), lad = set === "A" ? 1 : -1;   // lad: para onde é a "frente"
     return { cima: [A.x + s, A.y - g], fora: [A.x - lad * g, A.y + s], baixo: [A.x + s, A.y + g], frente: [A.x + lad * g, A.y - lad * acima],
              // um elétron sozinho no meio do lado (Regra de Hund: primeiro um em cada lado, depois os pares)
-             cima1: [A.x, A.y - g], fora1: [A.x - lad * g, A.y], baixo1: [A.x, A.y + g] }[lado];
+             cima1: [A.x, A.y - g], fora1: [A.x - lad * g, A.y], baixo1: [A.x, A.y + g], frente1: [A.x + lad * g, A.y] }[lado];
   },
   pos(el, [x, y]) { el.style.left = `${x}px`; el.style.top = `${y}px`; },
-  novoConjunto(set) {
-    Palco.adicionar(`<div class="c74-eletrons" data-set="${set}">${'<span class="c74-e"></span>'.repeat(6)}<span class="c74-e isolado"></span></div>`);
+  // qtd: quantos elétrons de valência (7 no cloro, 6 no oxigênio) · isolado: se o último é o elétron sozinho, com brilho (cloro)
+  novoConjunto(set, qtd = 7, isolado = true) {
+    const n = isolado ? qtd - 1 : qtd;
+    Palco.adicionar(`<div class="c74-eletrons" data-set="${set}">${'<span class="c74-e"></span>'.repeat(n)}${isolado ? '<span class="c74-e isolado"></span>' : ""}</div>`);
   },
 
-  // 7 elétrons aparecem logo abaixo do título, um depois do outro, até o tempo "ate" do áudio
-  mostrar(ate = 6, set = "A") {
+  // os elétrons aparecem numa fileira, um depois do outro, até o tempo "ate" do áudio.
+  // Por padrão, 7 logo abaixo do título; embaixo: a fileira de baixo da tela (perto da base)
+  mostrar(ate = 6, set = "A", { qtd = 7, isolado = true, embaixo = false } = {}) {
     if (this.$(`.c74-eletrons[data-set="${set}"]`)) return;
-    this.novoConjunto(set);
+    this.novoConjunto(set, qtd, isolado);
     const P = Palco.el, els = this.els(set), e = els[0].offsetWidth, passo = e * 2.6, t = this.$(".c71-titulo");
-    const y = t ? t.getBoundingClientRect().bottom - P.getBoundingClientRect().top + e * 1.6 : P.clientHeight * .2;
+    const y = embaixo ? P.clientHeight * .82
+      : t ? t.getBoundingClientRect().bottom - P.getBoundingClientRect().top + e * 1.6 : P.clientHeight * .2;
     const agora = Player.fonte ? Player.fonte.currentTime : ate, total = Math.max(ate - agora - .4, 0);
     els.forEach((el, i) => {
-      this.pos(el, [P.clientWidth / 2 + (i - 3) * passo, y]);
+      this.pos(el, [P.clientWidth / 2 + (i - (els.length - 1) / 2) * passo, y]);
       Palco.animar(el, [{ opacity: 0, scale: 0 }, { opacity: 1, scale: 1.5, offset: .6 }, { opacity: 1, scale: 1 }],
-        { duracao: .4, atraso: i * total / 6, easing: "ease-out" });
+        { duracao: .4, atraso: i * total / Math.max(els.length - 1, 1), easing: "ease-out" });
     });
   },
 
@@ -4897,11 +4946,6 @@ const Cena8 = {
     Cena71.preparar("oxigenio");
     Cena71.girar();
   },
-  // tocou no cilindro e chegou ao mundo quântico do O₂: o play volta se houver uma próxima narração
-  entrou() {
-    const i = Player.indice, prox = NARRACOES.findIndex((n, k) => k > i && !n.oculta);
-    if (prox >= 0) ui.semPlay(false);
-  }
 };
 
 /* ---------- Cenas da narração 8.2: a resposta (O₂) ----------
@@ -4954,7 +4998,74 @@ const Cena82 = {
   separar() {
     const z = this.$(".c75-arrasto"); if (z) z.remove();
     Cena71.separar({ status: false, faisca: 0xFF9A8A });
-    Cena8.entrou();   // o play volta se houver uma próxima narração
+    // passado o estalo (1,2s), a narração 8.3 entra sozinha (a espera é do palco: para na pausa)
+    const q = Cena71.$(".c71-quantico");
+    Palco.animar(q, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.2, fill: "none" }).finished.then(() => {
+      if (q.isConnected && NARRACOES[Player.indice].id === "dialogo8_2") Player.seguirSozinho();
+    }, () => {});
+  }
+};
+
+/* ---------- Cenas da narração 8.3: os 6 elétrons de valência de cada oxigênio ----------
+   Duas fileiras de 6 elétrons (em cima: os do O da esquerda; embaixo: os do O da direita). Uma mãozinha
+   mostra que dá para tocar nos quatro lados do O da esquerda e depois coloca os elétrons dele, um a um:
+   primeiro um em cada lado (Regra de Hund), depois os pares. No fim, o efeito de conquista. */
+const Cena83 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  MAO: `<svg viewBox="0 0 48 62" aria-hidden="true">
+      <path d="M17 30 V8 a5.5 5.5 0 0 1 11 0 V26 l2-1.2 a5 5 0 0 1 7.5 2.6 l1.6-.9 a5 5 0 0 1 7.4 3.4 V44 c0 9.5 -7.5 16 -17 16 h-4
+               c-6.5 0 -11 -3.2 -14.5 -8.6 L3.6 40.2 a5 5 0 0 1 8.4-5.4 Z"
+            fill="#FFF7E8" stroke="#1B2A40" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M28 26 v9 M37.6 27.6 v8 M23 47 h8" stroke="#1B2A40" stroke-width="2" stroke-linecap="round" fill="none" opacity=".55"/>
+    </svg>`,
+  // o ponto de cada lado do O da esquerda (onde ficam os elétrons)
+  ponto(lado) { return Cena74.destino(lado + "1", 0, "A"); },
+  // a mãozinha vai até o lado e toca nele: um círculo se abre onde tocou, e o aparelho vibra.
+  // depois(): o que acontece no toque (ex.: um elétron sai da fileira)
+  tocar(lado, depois) {
+    const p = this.ponto(lado); if (!p) return;
+    let mao = this.$(".c83-mao");
+    if (!mao) {
+      Palco.adicionar(`<div class="c83-mao" style="left:${p[0] + 40}px;top:${p[1] + 50}px">${this.MAO}</div>`);
+      mao = this.$(".c83-mao");
+      Palco.animar(mao, [{ opacity: 0 }, { opacity: 1 }], { duracao: .25, fill: "forwards" });
+    }
+    const de = [parseFloat(mao.style.left), parseFloat(mao.style.top)];
+    mao.style.left = `${p[0]}px`; mao.style.top = `${p[1]}px`;
+    Palco.animar(mao, [{ transform: `translate(${de[0] - p[0]}px, ${de[1] - p[1]}px)` }, { transform: "translate(0px, 0px)", offset: .7 },
+                       { transform: "translate(0px, 0px) scale(.85)", offset: .85 }, { transform: "translate(0px, 0px)" }],
+      { duracao: .5, easing: "ease-out", fill: "none" }).finished.then(() => {
+        if (!mao.isConnected) return;
+        Palco.adicionar(`<div class="c83-toque" style="left:${p[0]}px;top:${p[1]}px"></div>`);
+        const t = Palco.el.lastElementChild;
+        Palco.animar(t, [{ scale: .2, opacity: 1 }, { scale: 1.7, opacity: 0 }], { duracao: .6, easing: "ease-out" }).finished.then(() => t.remove(), () => {});
+        Vibra.tocar("toqueEletron");
+        if (depois) depois();
+      }, () => {});
+  },
+  tirarMao() {
+    const mao = this.$(".c83-mao"); if (!mao) return;
+    mao.classList.remove("c83-mao");
+    Palco.animar(mao, [{ opacity: 1 }, { opacity: 0 }], { duracao: .35 }).finished.then(() => mao.remove(), () => {});
+  },
+  // toca num lado do O da esquerda e um elétron sai da fileira de cima para lá (sozinho no meio do lado)
+  colocar(lado, i) { this.tocar(lado, () => Cena74.saltar([i], lado + "1", "A")); },
+  // toca num lado e um elétron sai da fileira e emparelha com o que já estava ali
+  emparelhar(lado, novo, existente) { this.tocar(lado, () => Cena74.emparelhar(novo, existente, lado, "A")); },
+  // 49s: conquista — o O da esquerda brilha, um anel verde se abre em volta dele e os elétrons pulsam em verde
+  conquista() {
+    this.tirarMao();
+    const A = Cena74.atomo("A"); if (!A) return;
+    const me = Cena74.medidas(A), r = me.g + me.e * 1.4;
+    Palco.adicionar(`<div class="c83-anel" style="left:${A.x}px;top:${A.y}px;width:${2 * r}px;height:${2 * r}px"></div>`);
+    const anel = Palco.el.lastElementChild;
+    Palco.animar(anel, [{ scale: .6, opacity: 0 }, { scale: 1, opacity: 1, offset: .35 }, { scale: 1.5, opacity: 0 }], { duracao: 1.3, easing: "ease-out" })
+      .finished.then(() => anel.remove(), () => {});
+    Cena74.els("A").filter(el => el.dataset.preso).forEach(el => Palco.animar(el, [
+      { scale: 1, boxShadow: Cena74.normal(el) }, { scale: 1.6, boxShadow: Cena77.COR.ligante, offset: .4 }, { scale: 1, boxShadow: Cena74.normal(el) }
+    ], { duracao: 1, easing: "ease-in-out", fill: "none" }));
+    Cena74.pulsarAtomo("A", 1.1);
+    Vibra.tocar("conquista");
   }
 };
 
@@ -5028,7 +5139,9 @@ const Vibra = {
     cilindroOxigenio: [15, 25, 15, 60, 30, 25, 30, 60, 90],   // o zoom para dentro do cilindro de O₂
     toqueOxigenio:    [10, 25, 10],                           // tocar numa molécula de O₂
     oxigenioCerta:    [25, 25, 25, 60, 25, 25, 25, 60, 160],   // O₂: dois pares de batidas e uma longa
-    oxigenioErrada:   [80, 40, 80, 40, 80]
+    oxigenioErrada:   [80, 40, 80, 40, 80],
+    toqueEletron:     18,                                      // a mãozinha toca num lado do átomo (áudio 8.3)
+    conquista:        [20, 40, 20, 40, 220]                    // o O da esquerda com os seus elétrons (áudio 8.3)
   },
   tocar(nome) {
     const p = typeof nome === "string" ? this.PADROES[nome] : nome;
@@ -5121,6 +5234,7 @@ const Player = {
     this.fonte = criarFonte(n);
     this.disparados = new Set();
     ui.modoQuiz(false); ui.semPlay(false);
+    this.seguirAoFim = false;
     if (continuar) Palco.pausado = false; else Palco.reiniciar();
     ui.progresso(0);
     if (n.inicio) n.inicio(Palco);      // cena de antes do play
@@ -5193,6 +5307,17 @@ const Player = {
     this.terminou = true;
     const n = NARRACOES[this.indice];
     if (n.aoFim) try { n.aoFim(Palco); } catch (e) { console.error(e); }   // ex.: quiz no fim da narração
+    if (this.seguirAoFim) { this.seguirAoFim = false; this.seguirSozinho(); }
+  },
+
+  // a próxima narração da sequência entra sozinha, sem o play (ex.: ao entrar no cilindro de gás).
+  // Se a de agora ainda está tocando, espera ela acabar.
+  seguirSozinho() {
+    if (!this.terminou) { this.seguirAoFim = true; return; }
+    const prox = NARRACOES.findIndex((n, i) => i > this.indice && !n.oculta);
+    if (prox < 0) return;
+    this.terminou = false;
+    this.irPara(prox, true);   // segue a história: a cena continua no palco
   },
 
   // Botão play: 1º clique = dialogo0; depois alterna pausa;
