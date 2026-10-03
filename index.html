@@ -467,6 +467,15 @@
   .c83-mao svg { display: block; width: 100%; height: auto; }
   .c83-toque { position: absolute; z-index: 4; pointer-events: none; width: 46px; height: 46px; translate: -50% -50%; border-radius: 50%;
     border: 3px solid rgba(255,255,255,.9); box-shadow: 0 0 14px rgba(163,219,247,.8); }
+  /* fim do áudio 8.3: a área de toque para montar o O da direita, e o clarão vermelho do toque fora da regra */
+  .c84-toques { position: absolute; inset: 0; z-index: 4; cursor: pointer; touch-action: manipulation; }
+  .c84-erro { position: absolute; z-index: 4; pointer-events: none; translate: -50% -50%; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,70,70,.35) 0%, rgba(255,70,70,.12) 55%, rgba(255,70,70,0) 75%); box-shadow: 0 0 30px rgba(255,60,60,.6); }
+  .c72-pergunta { max-width: 92%; margin-inline: auto; }
+  /* o aviso do toque fora da regra: vermelho-coral, tremendo como o "Átomos Instáveis" */
+  .c84-aviso { position: absolute; left: 0; right: 0; margin: 0; text-align: center; z-index: 5; pointer-events: none;
+    font-family: var(--display); font-weight: 800; letter-spacing: -.01em; font-size: clamp(1.1rem, 2.5vmin + .5rem, 1.9rem);
+    color: var(--coral); text-shadow: 0 0 20px rgba(255,122,102,.6); animation: c75Treme .26s linear infinite; }
   .c83-anel { position: absolute; z-index: 4; pointer-events: none; translate: -50% -50%; border-radius: 50%;
     border: 3px solid #6EE7A0; box-shadow: 0 0 28px rgba(110,231,160,.85), inset 0 0 22px rgba(110,231,160,.45); }
   /* fim do áudio 7.5: o aluno arrasta um Cl até o outro; ao encaixar, a ligação com o par de elétrons dentro */
@@ -993,7 +1002,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v67 · 03/10/2026</span>
+    <span class="versao" id="versao">v68 · 03/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2383,7 +2392,25 @@ const NARRACOES = [
       { tempo: 46.7, acao: () => Cena83.emparelhar("cima", 4, 0) },                               // emparelha em cima
       { tempo: 48,   acao: () => Cena83.emparelhar("fora", 5, 1) },                               // e à esquerda
       { tempo: 49,   acao: () => Cena83.conquista() }                                             // conquista no O da esquerda
-    ] }
+    ],
+    aoFim: () => Cena84.liberar() },                               // o aluno monta o O da direita tocando nos lados (e a 8.4 entra sozinha)
+  // quantos elétrons faltam para o octeto de cada O
+  { id: "dialogo8_4", titulo: "Quantos elétrons faltam?", src: "audio/audio_moleculas_8.4.mp3",
+    inicio: () => Cena84.montar(),                                 // pela navegação rápida: os dois O com os seus elétrons
+    eventos: [
+      { tempo: 9,    acao: () => Cena71.pergunta("oxigenio", {
+          texto: "Quantos elétrons faltam pra cada oxigênio completar seu octeto?",
+          opcoes: [["1", 0], ["2", 1], ["3", 0]], de: "dialogo8_4", para: "dialogo8_5" }) }
+    ],
+    aoFim: () => ui.semPlay(true) },                               // o play some: quem leva ao áudio 8.5 é a resposta certa
+  // resposta: toca só depois do acerto (não aparece na navegação rápida). No fim, o aluno junta os dois O
+  { id: "dialogo8_5", titulo: "Resposta: 2 elétrons", src: "audio/audio_moleculas_8.5.mp3", oculta: true,
+    inicio: () => Cena84.montar(),
+    eventos: [
+      { tempo: 1,    acao: () => Cena71.tirarPergunta() }          // a pergunta e as alternativas somem em fade
+    ],
+    // sem play: o aluno arrasta um O até o outro; o elétron sozinho de baixo vai para a frente conforme eles se aproximam
+    aoFim: () => { ui.semPlay(true); Cena75.liberar(true, "oxigenio"); } }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -4167,17 +4194,18 @@ const Cena71 = {
 
   // "Qual a fórmula desse gás?" e três opções (X, X₂, X₃), na parte de baixo da tela — áudio 7.2 (cloro) e 8.1 (oxigênio).
   // O acerto leva à narração da resposta (7.3 / 8.2).
-  pergunta(tipo = "cloro") {
+  // outra: { texto, opcoes: [[html, certa], ...], de, para } — uma pergunta diferente da fórmula, com o mesmo jeito e a mesma festa
+  pergunta(tipo = "cloro", outra = null) {
     if (this.$(".c72-quiz")) return;
     const g = this.GASES[tipo], x = g.simbolo;
-    this.perg = { tipo, de: g.pergunta[0], para: g.pergunta[1] };
+    const texto = outra ? outra.texto : "Qual a fórmula desse gás?";
+    const opcoes = outra ? outra.opcoes : [[x, 0], [`${x}<sub>2</sub>`, 1], [`${x}<sub>3</sub>`, 0]];
+    this.perg = { tipo, de: outra ? outra.de : g.pergunta[0], para: outra ? outra.para : g.pergunta[1] };
     Palco.adicionar(`
       <div class="c72-quiz">
-        <p class="c72-pergunta">Qual a fórmula desse gás?</p>
-        <div class="c4-opcoes" role="group" aria-label="Qual a fórmula desse gás?">
-          <button class="c4-op" data-certa="0">${x}</button>
-          <button class="c4-op" data-certa="1">${x}<sub>2</sub></button>
-          <button class="c4-op" data-certa="0">${x}<sub>3</sub></button>
+        <p class="c72-pergunta">${texto}</p>
+        <div class="c4-opcoes" role="group" aria-label="${texto}">
+          ${opcoes.map(([html, certa]) => `<button class="c4-op" data-certa="${certa}">${html}</button>`).join("")}
         </div>
       </div>`);
     const caixa = this.$(".c72-quiz .c4-opcoes");
@@ -4469,10 +4497,14 @@ const Cena74 = {
   },
 
   // o conjunto já montado em volta do símbolo, sem animação (para quem chega pela navegação rápida)
-  // devolve uma promessa que se cumpre quando os elétrons já estão no lugar
-  montarLewis(set = "A") {
+  // devolve uma promessa que se cumpre quando os elétrons já estão no lugar.
+  // oxigenio: 6 elétrons — pares em cima e do lado de fora, sozinhos embaixo e na frente (como ficam no fim da 8.3)
+  LEWIS_CL: [["cima", 0], ["cima", 1], ["fora", 0], ["fora", 1], ["baixo", 0], ["baixo", 1], ["frente", 0]],
+  LEWIS_O: [["cima", 0], ["cima", 1], ["fora", 0], ["fora", 1], ["baixo1", 0], ["frente1", 0]],
+  montarLewis(set = "A", { oxigenio = false } = {}) {
     if (this.$(`.c74-eletrons[data-set="${set}"]`)) return Promise.resolve();
-    this.novoConjunto(set);
+    if (oxigenio) this.novoConjunto(set, 6, false); else this.novoConjunto(set);
+    const lewis = oxigenio ? this.LEWIS_O : this.LEWIS_CL;
     const els = this.els(set), caixa = this.$(".c74-eletrons[data-set='" + set + "']");
     caixa.style.visibility = "hidden";
     // a cena 3D acabou de ser montada e a molécula ainda está crescendo (entrada): espera ela ficar
@@ -4483,8 +4515,7 @@ const Cena74 = {
         const m = Cena71.m;
         if (!caixa.isConnected) return;
         if ((!m || Math.abs(m.scale.x - 1) > .002) && performance.now() - inicio < 3000) { requestAnimationFrame(colocar); return; }
-        [["cima", 0], ["cima", 1], ["fora", 0], ["fora", 1], ["baixo", 0], ["baixo", 1], ["frente", 0]]
-          .forEach(([lado, k], i) => { const p = this.destino(lado, k, set); if (p) this.pos(els[i], p); els[i].dataset.preso = "1"; els[i].dataset.lado = lado; });
+        lewis.forEach(([lado, k], i) => { const p = this.destino(lado, k, set); if (p) this.pos(els[i], p); els[i].dataset.preso = "1"; els[i].dataset.lado = lado.replace("1", ""); });
         caixa.style.visibility = "";
         pronto();
       };
@@ -4571,12 +4602,16 @@ const Cena75 = {
     Palco.animar(st, [{ opacity: getComputedStyle(st).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => st.remove(), () => {});
   },
 
-  // fim do áudio 7.5: os átomos passam a poder ser arrastados (convite: os dois dão uma pulsada)
-  liberar(convite = true) {
+  // fim do áudio 7.5 (cloro) ou 8.5 (oxigênio): os átomos passam a poder ser arrastados (convite: os dois dão uma pulsada).
+  // No oxigênio a ligação é dupla: dois pares no meio, e o elétron sozinho de baixo vai para a frente conforme os átomos se aproximam
+  liberar(convite = true, tipo = "cloro") {
     const q = Cena71.quantum, m = Cena71.m; if (!q || !m || this.$(".c75-arrasto")) return;
     const s = m.userData.est;
+    this.tipo = tipo; this.proxima = tipo === "oxigenio" ? "dialogo8_6" : "dialogo7_6";
     Object.assign(s, { offOx: s.offOx || 0, offOy: s.offOy || 0, offHx: s.offHx || 0, offHy: s.offHy || 0 });
     this.ppu = Math.abs(q.naTela(s.para.clone().add(new THREE.Vector3(1, 0, 0))).x - q.naTela(s.para).x) || 1;   // px por unidade da cena
+    const A0 = Cena74.atomo("A"), B0 = Cena74.atomo("B");
+    this.dIni = Math.hypot(B0.x - A0.x, B0.y - A0.y);   // a distância de partida (aproximação 0)
     this.seguir();
     Palco.adicionar(`<div class="c75-arrasto" aria-label="Arraste um átomo de cloro até o outro"></div>`);
     const zona = this.$(".c75-arrasto");
@@ -4592,12 +4627,18 @@ const Cena75 = {
   seguir() {
     const sets = ["A", "B"].map(set => {
       const A = Cena74.atomo(set);
-      return { set, els: Cena74.els(set).map(el => ({ el, dx: parseFloat(el.style.left) - A.x, dy: parseFloat(el.style.top) - A.y })) };
+      return { set, els: Cena74.els(set).map(el => ({ el, dx: parseFloat(el.style.left) - A.x, dy: parseFloat(el.style.top) - A.y,
+        // oxigênio: o sozinho da frente e o de baixo se mexem com a aproximação (ver movel)
+        mov: this.tipo === "oxigenio" && el.dataset.preso && ["frente", "baixo"].includes(el.dataset.lado) ? el.dataset.lado : null })) };
     });
     const passo = () => {
       if (!Palco.el.contains(this.$(".c71-quantico"))) return;
-      sets.forEach(({ set, els }) => { const A = Cena74.atomo(set); if (A) els.forEach(o => Cena74.pos(o.el, [A.x + o.dx, A.y + o.dy])); });
-      const lig = this.$(".c75-ligacao"); if (lig) this.posicionarLigacao(lig);
+      const k = this.tipo === "oxigenio" ? this.aproximacao() : 0;
+      sets.forEach(({ set, els }) => {
+        const A = Cena74.atomo(set); if (!A) return;
+        els.forEach(o => { const [dx, dy] = o.mov ? this.movel(set, o.mov, k, A) : [o.dx, o.dy]; Cena74.pos(o.el, [A.x + dx, A.y + dy]); });
+      });
+      Palco.el.querySelectorAll(".c75-ligacao").forEach(lig => this.posicionarLigacao(lig));
       Palco.el.querySelectorAll(".c76-octeto").forEach(c => Cena76.posicionar(c));
       const tr = this.$(".c78-traco"); if (tr) Cena78.posicionar(tr);
       requestAnimationFrame(passo);
@@ -4605,6 +4646,24 @@ const Cena75 = {
     requestAnimationFrame(passo);
   },
 
+  // quanto os átomos já se aproximaram: 0 na distância de partida, 1 na distância da ligação
+  aproximacao() {
+    const A = Cena74.atomo("A"), B = Cena74.atomo("B"); if (!A || !B) return 0;
+    const d = Math.hypot(B.x - A.x, B.y - A.y), fim = this.distLig(A);
+    return Math.min(Math.max((this.dIni - d) / Math.max(this.dIni - fim, 1), 0), 1);
+  },
+  // oxigênio: onde fica (em relação ao centro do átomo) o elétron sozinho, com a aproximação k (0 → 1).
+  // O da frente sobe um pouco (abre espaço); o de baixo dá a volta pelo átomo até a frente, logo abaixo dele.
+  // Juntos, os dois viram a metade de cada átomo dos dois pares da ligação dupla.
+  movel(set, lado, k, A) {
+    const { g, s } = Cena74.medidas(A), lad = set === "A" ? 1 : -1, suave = k * k * (3 - 2 * k);
+    if (lado === "frente") return [lad * g, -s * suave];
+    const a0 = Math.PI / 2, a1 = Math.atan2(s, g), ang = a0 + (a1 - a0) * suave, r = g + (Math.hypot(g, s) - g) * suave;
+    return [lad * r * Math.cos(ang), r * Math.sin(ang)];
+  },
+  // a distância entre os centros na ligação: no cloro, 2g (o par fica um em cima do outro);
+  // no oxigênio, um pouco mais, para os dois pares caberem lado a lado no meio
+  distLig(A) { const { g, e } = Cena74.medidas(A); return this.tipo === "oxigenio" ? 2 * g + e * 1.25 : 2 * g; },
   ponto(e) { const P = Palco.el.getBoundingClientRect(); return [e.clientX - P.left, e.clientY - P.top]; },
   chave(set) { return set === "A" ? ["offOx", "offOy"] : ["offHx", "offHy"]; },
   raioEncaixe(set) { return Math.max(28, Cena74.atomo(set).R * .8); },
@@ -4638,7 +4697,7 @@ const Cena75 = {
     let nx = Math.min(Math.max(x - a.pega[0], cr.left - P.left + R), cr.right - P.left - R);   // pega: onde o dedo pegou no átomo
     let ny = Math.min(Math.max(y - a.pega[1], cr.top - P.top + R), cr.bottom - P.top - R);
     // matéria não atravessa matéria: o átomo esbarra no outro (na distância da ligação) e desliza pela borda
-    const O = Cena74.atomo(a.set === "A" ? "B" : "A"), min = 2 * Cena74.medidas(O).g;
+    const O = Cena74.atomo(a.set === "A" ? "B" : "A"), min = this.distLig(O);
     let vx = nx - O.x, vy = ny - O.y, L = Math.hypot(vx, vy);
     const encosta = L < min;
     if (encosta) { if (L < .01) { vx = a.set === "A" ? -1 : 1; vy = 0; L = 1; } nx = O.x + vx / L * min; ny = O.y + vy / L * min; }
@@ -4660,8 +4719,8 @@ const Cena75 = {
   },
   // onde o arrastado se encaixa: a 2g do outro átomo, na mesma altura (os dois elétrons da frente ficam um em cima do outro)
   alvo(set) {
-    const O = Cena74.atomo(set === "A" ? "B" : "A"), { g } = Cena74.medidas(O);
-    return [O.x + (set === "A" ? -2 * g : 2 * g), O.y];
+    const O = Cena74.atomo(set === "A" ? "B" : "A"), d = this.distLig(O);
+    return [O.x + (set === "A" ? -d : d), O.y];
   },
 
   // encaixou: os átomos se prendem, brilho verde, ligação com o par de elétrons dentro e a molécula vai ao centro.
@@ -4674,14 +4733,18 @@ const Cena75 = {
     this.status("estavel");                                   // "Átomos Instáveis" sai; "Molécula estável" entra pronto
     const q = Cena71.quantum, s = Cena71.m.userData.est, alvo = this.alvo(a.set);
     // a ligação: um bastão transparente entre os dois átomos, com o par de elétrons dentro
-    const velha = this.$(".c75-ligacao"); if (velha) velha.remove();
-    this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", `<div class="c75-ligacao"></div>`);
-    const lig = this.$(".c75-ligacao");
-    this.posicionarLigacao(lig);
-    Palco.animar(lig, [{ opacity: 0, scale: ".4 1" }, { opacity: 1, scale: "1 1" }], { duracao: .5, atraso: .2, easing: "cubic-bezier(.3,1.4,.5,1)" });
-    // os dois elétrons do par brilham juntos
-    [Cena74.els("A")[6], Cena74.els("B")[6]].forEach(el => el && Palco.animar(el, [
-      { scale: 1, boxShadow: Cena74.BRILHO_ISOLADO }, { scale: 1.6, boxShadow: Cena74.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: Cena74.BRILHO_ISOLADO }
+    Palco.el.querySelectorAll(".c75-ligacao").forEach(l => l.remove());
+    // no oxigênio, dois bastões (ligação dupla): um para cada par
+    const pares = this.tipo === "oxigenio" ? ["0", "1"] : [""];
+    this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", pares.map(p => `<div class="c75-ligacao" data-par="${p}"></div>`).join(""));
+    Palco.el.querySelectorAll(".c75-ligacao").forEach(lig => {
+      this.posicionarLigacao(lig);
+      Palco.animar(lig, [{ opacity: 0, scale: ".4 1" }, { opacity: 1, scale: "1 1" }], { duracao: .5, atraso: .2, easing: "cubic-bezier(.3,1.4,.5,1)" });
+    });
+    // os elétrons dos pares compartilhados brilham juntos
+    const doMeio = this.tipo === "oxigenio" ? '.c74-e[data-lado="frente"], .c74-e[data-lado="baixo"]' : '.c74-e[data-lado="frente"]';
+    Palco.el.querySelectorAll(doMeio).forEach(el => Palco.animar(el, [
+      { scale: 1, boxShadow: Cena74.normal(el) }, { scale: 1.6, boxShadow: Cena74.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: Cena74.normal(el) }
     ], { duracao: .9, atraso: .25, fill: "none" }));
     // brilho verde de conquista
     Palco.adicionar(`<div class="c4-verde"></div>`);
@@ -4692,9 +4755,10 @@ const Cena75 = {
       this.festejou = true;
       Confete.soltar({ de: "cantos" });
       Confete.soltar({ de: "topo" });
-      // fanfarra mais baixa: o áudio 7.6 começa junto, no encaixe
+      // fanfarra mais baixa: a narração seguinte (7.6 no cloro) começa junto, no encaixe
       const som = new Audio("audio/funfare.mp3"); som.volume = .35; som.play().catch(() => {});
-      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo7_6"), true);
+      const prox = NARRACOES.findIndex(n => n.id === this.proxima);
+      if (prox >= 0) { Player.terminou = false; Player.irPara(prox, true); }
     }
     // os átomos se prendem no lugar exato e a molécula pronta vai para o meio da tela (elétrons e ligação acompanham)
     const O = Cena74.atomo(a.set === "A" ? "B" : "A"), P = Palco.el;
@@ -4717,7 +4781,7 @@ const Cena75 = {
     // a altura: logo abaixo dos elétrons de baixo, medida no centro da molécula (onde os átomos ficam)
     const c = (m.userData.est.para || m.position).clone(), caixa = this.$(".c71-quantico").getBoundingClientRect(), P = Palco.el.getBoundingClientRect();
     const ppu = Math.abs(q.naTela(c.clone().add(new THREE.Vector3(1, 0, 0))).x - q.naTela(c).x) || 1;
-    const R = m.userData.rO * Cena71.ESCALA_SEPARADOS * ppu, y = caixa.top - P.top + q.naTela(c).y + R * 1.22 + 34;
+    const R = m.userData.rO * Cena71.escalaSeparados(m) * ppu, y = caixa.top - P.top + q.naTela(c).y + R * 1.22 + 34;
     Palco.adicionar(`<p class="c75-status ${tipo}" style="top:${y}px"></p>`);
     const el = Palco.el.lastElementChild, texto = tipo === "instavel" ? "Átomos Instáveis" : "Molécula estável";
     if (digitar) Palco.digitar(el, texto, 1.2, { cursor: false });
@@ -4738,14 +4802,18 @@ const Cena75 = {
     q.clarao(meio, { tam: 2.6, dur: .35 });
     q.faiscas(meio, { cor: 0xFFFFFF, qtd: 20, forca: 4.5, dur: .55, tam: .18 });
     document.getElementById("palco").animate([0, -6, 5, -3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 300, easing: "ease-out" });
-    const lig = this.$(".c75-ligacao");
-    if (lig) Palco.animar(lig, [{ opacity: 1, scale: "1 1" }, { opacity: 0, scale: ".2 1.3" }], { duracao: .25, easing: "ease-in" }).finished.then(() => lig.remove(), () => {});
+    Palco.el.querySelectorAll(".c75-ligacao").forEach(lig => {
+      lig.classList.remove("c75-ligacao"); lig.classList.add("c75-ligacao-saindo");
+      Palco.animar(lig, [{ opacity: 1, scale: "1 1" }, { opacity: 0, scale: ".2 1.3" }], { duracao: .25, easing: "ease-in" }).finished.then(() => lig.remove(), () => {});
+    });
   },
   // o bastão da ligação vai da beira de um átomo à do outro e é alto o bastante para o par de elétrons
   posicionarLigacao(lig) {
     const A = Cena74.atomo("A"), B = Cena74.atomo("B"); if (!A || !B) return;
-    const { e, acima } = Cena74.medidas(A), x1 = A.x + A.R * .7, x2 = B.x - B.R * .7, h = 2 * acima + e * 1.7;
-    Object.assign(lig.style, { left: `${x1}px`, top: `${(A.y + B.y) / 2 - h / 2}px`, width: `${Math.max(x2 - x1, 0)}px`, height: `${h}px` });
+    const { e, acima, s } = Cena74.medidas(A), x1 = A.x + A.R * .7, x2 = B.x - B.R * .7, cy = (A.y + B.y) / 2;
+    // oxigênio: um bastão para cada par (o de cima e o de baixo); cloro: um só, com o par um em cima do outro
+    const par = lig.dataset.par, h = par ? e * 1.8 : 2 * acima + e * 1.7, y = par ? cy + (par === "1" ? s : -s) : cy;
+    Object.assign(lig.style, { left: `${x1}px`, top: `${y - h / 2}px`, width: `${Math.max(x2 - x1, 0)}px`, height: `${h}px` });
   }
 };
 
@@ -5052,20 +5120,110 @@ const Cena83 = {
   colocar(lado, i) { this.tocar(lado, () => Cena74.saltar([i], lado + "1", "A")); },
   // toca num lado e um elétron sai da fileira e emparelha com o que já estava ali
   emparelhar(lado, novo, existente) { this.tocar(lado, () => Cena74.emparelhar(novo, existente, lado, "A")); },
-  // 49s: conquista — o O da esquerda brilha, um anel verde se abre em volta dele e os elétrons pulsam em verde
-  conquista() {
+  // 49s: conquista — o O (da esquerda, "A", ou da direita, "B") brilha, um anel verde se abre em volta dele e os elétrons pulsam em verde
+  conquista(set = "A") {
     this.tirarMao();
-    const A = Cena74.atomo("A"); if (!A) return;
+    const A = Cena74.atomo(set); if (!A) return;
     const me = Cena74.medidas(A), r = me.g + me.e * 1.4;
     Palco.adicionar(`<div class="c83-anel" style="left:${A.x}px;top:${A.y}px;width:${2 * r}px;height:${2 * r}px"></div>`);
     const anel = Palco.el.lastElementChild;
     Palco.animar(anel, [{ scale: .6, opacity: 0 }, { scale: 1, opacity: 1, offset: .35 }, { scale: 1.5, opacity: 0 }], { duracao: 1.3, easing: "ease-out" })
       .finished.then(() => anel.remove(), () => {});
-    Cena74.els("A").filter(el => el.dataset.preso).forEach(el => Palco.animar(el, [
+    Cena74.els(set).filter(el => el.dataset.preso).forEach(el => Palco.animar(el, [
       { scale: 1, boxShadow: Cena74.normal(el) }, { scale: 1.6, boxShadow: Cena77.COR.ligante, offset: .4 }, { scale: 1, boxShadow: Cena74.normal(el) }
     ], { duracao: 1, easing: "ease-in-out", fill: "none" }));
-    Cena74.pulsarAtomo("A", 1.1);
+    Cena74.pulsarAtomo(set, 1.1);
     Vibra.tocar("conquista");
+  }
+};
+
+/* ---------- Fim da narração 8.3: o aluno monta o O da direita ----------
+   Cada toque num lado do O da direita traz um elétron da fileira de baixo. Vale a Regra de Hund:
+   primeiro um em cada lado; depois, os pares — em cima e do lado de fora (direita), como no O da esquerda.
+   Toque fora da regra: o átomo treme em vermelho, o aparelho vibra e nenhum elétron sai da fileira.
+   Com os 6 no lugar: conquista, e a narração 8.4 entra sozinha. */
+const Cena84 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  liberar() {
+    if (this.$(".c84-toques") || !Cena71.m) return;
+    this.lados = { cima: 0, fora: 0, baixo: 0, frente: 0 };
+    this.n = 0;   // quantos já saíram da fileira
+    ui.semPlay(true);   // o play some: a próxima narração vem quando o O da direita estiver pronto
+    Palco.adicionar(`<div class="c84-toques" aria-label="Toque nos lados do oxigênio da direita para colocar os elétrons"></div>`);
+    this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    Cena74.pulsarAtomo("B");   // convite: o O da direita dá uma pulsada
+  },
+  // qual lado do O da direita foi tocado (ou nenhum, se o toque foi longe dele)
+  lado(x, y) {
+    const B = Cena74.atomo("B"); if (!B) return null;
+    const { g, e } = Cena74.medidas(B), dx = x - B.x, dy = y - B.y;
+    if (Math.hypot(dx, dy) > g + e * 2.2) return null;
+    if (Math.abs(dy) > Math.abs(dx)) return dy < 0 ? "cima" : "baixo";
+    return dx > 0 ? "fora" : "frente";   // no O da direita, a "frente" (virada para o outro O) é a esquerda
+  },
+  toque(e) {
+    if (Palco.pausado) return;
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top, lado = this.lado(x, y);
+    if (!lado) return;
+    this.circulo(x, y, "");
+    const n = this.n, L = this.lados;
+    // Regra de Hund: os 4 primeiros vão um em cada lado vazio; os 2 últimos emparelham em cima e do lado de fora
+    const pode = n < 4 ? L[lado] === 0 : (["cima", "fora"].includes(lado) && L[lado] === 1);
+    if (!pode) return this.erro();
+    Vibra.tocar("toqueEletron");
+    if (n < 4) Cena74.saltar([n], lado + "1", "B");
+    else Cena74.emparelhar(n, Cena74.els("B").findIndex(el => el.dataset.lado === lado), lado, "B");
+    L[lado]++; this.n++;
+    if (this.n === 6) this.pronto();
+  },
+  // o círculo que se abre onde tocou ("erro": vermelho)
+  circulo(x, y, cls) {
+    Palco.adicionar(`<div class="c83-toque ${cls}" style="left:${x}px;top:${y}px"></div>`);
+    const t = Palco.el.lastElementChild;
+    Palco.animar(t, [{ scale: .2, opacity: 1 }, { scale: 1.7, opacity: 0 }], { duracao: .6, easing: "ease-out" }).finished.then(() => t.remove(), () => {});
+  },
+  // toque fora da regra: o O da direita treme forte, com um clarão vermelho em volta, e o aparelho vibra
+  erro() {
+    const q = Cena71.quantum, s = Cena71.m.userData.est, B = Cena74.atomo("B");
+    q.animar(s, "instH", 2.6, .1); q.animar(s, "instH", 1, .45, .3);
+    if (B) {
+      const { g } = Cena74.medidas(B);
+      Palco.adicionar(`<div class="c84-erro" style="left:${B.x}px;top:${B.y}px;width:${2 * g}px;height:${2 * g}px"></div>`);
+      const r = Palco.el.lastElementChild;
+      Palco.animar(r, [{ opacity: 0, scale: .8 }, { opacity: 1, scale: 1, offset: .3 }, { opacity: 0, scale: 1.15 }], { duracao: .6 }).finished.then(() => r.remove(), () => {});
+    }
+    Vibra.tocar("toqueErrado");
+    this.aviso();
+  },
+  // "Lembre-se da Regra de Hund": aparece embaixo dos átomos, tremendo, e some sozinho (um novo erro recomeça a contagem)
+  aviso() {
+    let av = this.$(".c84-aviso");
+    if (!av) {
+      const B = Cena74.atomo("B"); if (!B) return;
+      const { g, e } = Cena74.medidas(B);
+      Palco.adicionar(`<p class="c84-aviso" style="top:${B.y + g + e * 2.2}px">Lembre-se da Regra de Hund</p>`);
+      av = this.$(".c84-aviso");
+    }
+    av.getAnimations().forEach(a => a.cancel());
+    Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: .08 }, { opacity: 1, offset: .82 }, { opacity: 0 }], { duracao: 2.6, easing: "linear" })
+      .finished.then(() => av.remove(), () => {});
+  },
+  // os 6 no lugar: conquista no O da direita e, passado o efeito, a narração 8.4
+  pronto() {
+    const z = this.$(".c84-toques"); if (z) z.remove();
+    const q = Cena71.$(".c71-quantico");
+    Palco.animar(q, [{ opacity: 1 }, { opacity: 1 }], { duracao: .85, fill: "none" }).finished.then(() => {
+      if (!q.isConnected) return;
+      Cena83.conquista("B");
+      Palco.animar(q, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.4, fill: "none" }).finished.then(() => {
+        if (q.isConnected && NARRACOES[Player.indice].id === "dialogo8_3") Player.seguirSozinho();
+      }, () => {});
+    }, () => {});
+  },
+  // os dois O já com os seus elétrons (para quem chega à 8.4 ou à 8.5 pela navegação rápida)
+  async montar() {
+    Cena71.montarSeparados("oxigenio");
+    await Promise.all([Cena74.montarLewis("A", { oxigenio: true }), Cena74.montarLewis("B", { oxigenio: true })]);
   }
 };
 
@@ -5141,7 +5299,8 @@ const Vibra = {
     oxigenioCerta:    [25, 25, 25, 60, 25, 25, 25, 60, 160],   // O₂: dois pares de batidas e uma longa
     oxigenioErrada:   [80, 40, 80, 40, 80],
     toqueEletron:     18,                                      // a mãozinha toca num lado do átomo (áudio 8.3)
-    conquista:        [20, 40, 20, 40, 220]                    // o O da esquerda com os seus elétrons (áudio 8.3)
+    conquista:        [20, 40, 20, 40, 220],                   // o O da esquerda com os seus elétrons (áudio 8.3)
+    toqueErrado:      [70, 40, 70]                             // toque fora da Regra de Hund ao montar o O da direita
   },
   tocar(nome) {
     const p = typeof nome === "string" ? this.PADROES[nome] : nome;
