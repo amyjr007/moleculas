@@ -1002,7 +1002,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v68 · 03/10/2026</span>
+    <span class="versao" id="versao">v69 · 03/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2398,6 +2398,8 @@ const NARRACOES = [
   { id: "dialogo8_4", titulo: "Quantos elétrons faltam?", src: "audio/audio_moleculas_8.4.mp3",
     inicio: () => Cena84.montar(),                                 // pela navegação rápida: os dois O com os seus elétrons
     eventos: [
+      { tempo: 5,    acao: () => Cena83.destacarTodos() },            // os 6 elétrons de cada O crescem e brilham
+      { tempo: 6.7,  acao: () => Cena83.destacarTodos(false) },       // e voltam ao normal (os sozinhos com o seu brilho)
       { tempo: 9,    acao: () => Cena71.pergunta("oxigenio", {
           texto: "Quantos elétrons faltam pra cada oxigênio completar seu octeto?",
           opcoes: [["1", 0], ["2", 1], ["3", 0]], de: "dialogo8_4", para: "dialogo8_5" }) }
@@ -2407,7 +2409,8 @@ const NARRACOES = [
   { id: "dialogo8_5", titulo: "Resposta: 2 elétrons", src: "audio/audio_moleculas_8.5.mp3", oculta: true,
     inicio: () => Cena84.montar(),
     eventos: [
-      { tempo: 1,    acao: () => Cena71.tirarPergunta() }          // a pergunta e as alternativas somem em fade
+      { tempo: 1,    acao: () => Cena71.tirarPergunta() },         // a pergunta e as alternativas somem em fade
+      { tempo: 5.5,  acao: () => Cena83.piscarSolitarios() }       // o brilho dos elétrons sozinhos pisca 3 vezes
     ],
     // sem play: o aluno arrasta um O até o outro; o elétron sozinho de baixo vai para a frente conforme eles se aproximam
     aoFim: () => { ui.semPlay(true); Cena75.liberar(true, "oxigenio"); } }
@@ -3155,8 +3158,8 @@ const Quantico = {
     const B = new THREE.Mesh(geo.esfera, m2); B.scale.setScalar(r); B.position.set(d / 2, 0, 0); grupo.add(B);
     const b1 = new THREE.Mesh(geo.bastao, mL), b2 = new THREE.Mesh(geo.bastao, mL); grupo.add(b1); grupo.add(b2);
     const nuvem = new THREE.Sprite(mats.nuvem.clone()); nuvem.scale.setScalar(4.2); grupo.add(nuvem);
-    // halo vermelho de alerta (átomo instável, depois de separado), como no cloro
-    const halos = [A, B].map(at => { const h = new THREE.Sprite(mats.halo.clone()); h.scale.setScalar(3.4); h.visible = false; at.add(h); return h; });
+    // instável (depois de separado), o O só treme: sem o halo vermelho do cloro (a lista vazia liga o tremor sem halo)
+    const halos = [];
     const est = { escalaO: 1, escalaH: 1, h0: 1, h1: 1, opac: 1, rotH: 0, rotO: 0, mov: 0, fixa: false, pulso: 0, separa: 0, quebra: 0 };
     grupo.userData = { O: A, Hs: [B], bastoes: [b1], duplo: { b: b2, afasta: .17 }, halos, nuvem, alvos: [A, B, b1, b2], rO: r, rH: r, mats: [m1, m2, mL], est,
                        baseO: A.position.clone(), baseH: [B.position.clone()], letras: { O: "O", H: "O", corO: "#FFFFFF", corH: "#FFFFFF" } };
@@ -3386,8 +3389,10 @@ const Quantico = {
             at.position.x += jx * forca / pxUn; at.position.y -= jy * forca / pxUn;
             estado.tremor[k] = [jx * forca, jy * forca];
             const halo = u.halos[i], brilho = .5 - .5 * Math.cos(2 * Math.PI * t / 1.1);   // pulsa em 1,1s
-            halo.visible = inst > .01;
-            halo.material.opacity = inst * (.3 + .45 * brilho) * s.opac;
+            if (halo) {
+              halo.visible = inst > .01;
+              halo.material.opacity = inst * (.3 + .45 * brilho) * s.opac;
+            }
           });
         }
         if (u.acao) {
@@ -5120,9 +5125,26 @@ const Cena83 = {
   colocar(lado, i) { this.tocar(lado, () => Cena74.saltar([i], lado + "1", "A")); },
   // toca num lado e um elétron sai da fileira e emparelha com o que já estava ali
   emparelhar(lado, novo, existente) { this.tocar(lado, () => Cena74.emparelhar(novo, existente, lado, "A")); },
+  // os elétrons sozinhos do O (o de baixo e o da frente) ganham o brilho de "vai ser compartilhado" (a classe "isolado")
+  marcarSolitarios(set) {
+    Cena74.els(set).filter(el => el.dataset.preso && ["baixo", "frente"].includes(el.dataset.lado) && !el.classList.contains("isolado")).forEach(el => {
+      el.classList.add("isolado");
+      Palco.animar(el, [{ boxShadow: Cena74.SEM_BRILHO }, { boxShadow: Cena74.BRILHO_ISOLADO }], { duracao: .6, fill: "none" });
+    });
+  },
+  // os 6 elétrons de cada O crescem com brilho (ligar = false: voltam ao normal; os sozinhos mantêm o brilho deles)
+  destacarTodos(ligar = true) {
+    ["A", "B"].forEach(set => Cena74.crescer(Cena74.els(set).map((el, i) => el.dataset.preso ? i : -1).filter(i => i >= 0), ligar, 1.45, set));
+  },
+  // o brilho dos elétrons sozinhos pisca 3 vezes
+  piscarSolitarios() {
+    Palco.el.querySelectorAll(".c74-e.isolado").forEach(el => Palco.animar(el, [0, 1, 2, 3, 4, 5, 6].map(k => ({
+      boxShadow: k % 2 ? Cena74.BRILHO_FORTE : Cena74.BRILHO_ISOLADO, scale: k % 2 ? 1.3 : 1 })), { duracao: 1.6, easing: "ease-in-out", fill: "none" }));
+  },
   // 49s: conquista — o O (da esquerda, "A", ou da direita, "B") brilha, um anel verde se abre em volta dele e os elétrons pulsam em verde
   conquista(set = "A") {
     this.tirarMao();
+    this.marcarSolitarios(set);
     const A = Cena74.atomo(set); if (!A) return;
     const me = Cena74.medidas(A), r = me.g + me.e * 1.4;
     Palco.adicionar(`<div class="c83-anel" style="left:${A.x}px;top:${A.y}px;width:${2 * r}px;height:${2 * r}px"></div>`);
@@ -5224,6 +5246,7 @@ const Cena84 = {
   async montar() {
     Cena71.montarSeparados("oxigenio");
     await Promise.all([Cena74.montarLewis("A", { oxigenio: true }), Cena74.montarLewis("B", { oxigenio: true })]);
+    Cena83.marcarSolitarios("A"); Cena83.marcarSolitarios("B");
   }
 };
 
