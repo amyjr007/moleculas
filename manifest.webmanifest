@@ -3,6 +3,7 @@
   "short_name": "Moléculas",
   "description": "Audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.",
   "lang": "pt-BR",
+  "id": "./?app=moleculas",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
