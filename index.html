@@ -472,6 +472,20 @@
   .c84-erro { position: absolute; z-index: 4; pointer-events: none; translate: -50% -50%; border-radius: 50%;
     background: radial-gradient(circle, rgba(255,70,70,.35) 0%, rgba(255,70,70,.12) 55%, rgba(255,70,70,0) 75%); box-shadow: 0 0 30px rgba(255,60,60,.6); }
   .c72-pergunta { max-width: 92%; margin-inline: auto; }
+  .c72-pergunta sub { font-size: .65em; vertical-align: -.2em; }
+  /* alternativas com frases (ex.: "Duas ligações simples"): letra menor, e o texto pode quebrar */
+  .c72-quiz.longas .c4-opcoes { flex-wrap: wrap; justify-content: center; max-width: 94%; }
+  .c72-quiz.longas .c4-op { min-width: 0; padding: .55em .85em; font-size: clamp(.92rem, 1.5vmin + .55rem, 1.25rem); line-height: 1.15; max-width: 32vw; }
+  /* áudio 8.6: as moléculas em fórmula de traços (Cl₂ em cima do O₂, OCl₂ embaixo) */
+  .c86-formula { position: absolute; left: 50%; translate: -50% 0; margin: 0; z-index: 3; pointer-events: none; text-align: center;
+    width: clamp(150px, 24vmin + 60px, 250px); }
+  .c86-formula svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .c86-formula figcaption { font-family: var(--display); font-weight: 800; letter-spacing: -.01em; font-size: clamp(.95rem, 1.8vmin + .5rem, 1.45rem); white-space: nowrap; }
+  .c86-cl2 { translate: -50% -100%; }                                     /* fica em cima do O₂: a base do desenho no ponto */
+  .c86-cl2 figcaption { color: #7BE36B; text-shadow: 0 0 16px rgba(123,227,107,.5); margin-bottom: .2em; }   /* a cor do cloro */
+  .c86-ocl2 { width: clamp(190px, 30vmin + 80px, 330px); }
+  .c86-ocl2 figcaption { color: var(--celeste); font-size: clamp(.9rem, 1.5vmin + .5rem, 1.2rem); }
+  .c86-ocl2 figcaption sub { font-size: .65em; vertical-align: -.2em; }
   /* o aviso do toque fora da regra: vermelho-coral, tremendo como o "Átomos Instáveis" */
   .c84-aviso { position: absolute; left: 0; right: 0; margin: 0; text-align: center; z-index: 5; pointer-events: none;
     font-family: var(--display); font-weight: 800; letter-spacing: -.01em; font-size: clamp(1.1rem, 2.5vmin + .5rem, 1.9rem);
@@ -1002,7 +1016,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v70 · 03/10/2026</span>
+    <span class="versao" id="versao">v71 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2413,7 +2427,25 @@ const NARRACOES = [
       { tempo: 5.5,  acao: () => Cena83.piscarSolitarios() }       // o brilho dos elétrons sozinhos pisca 3 vezes
     ],
     // sem play: o aluno arrasta um O até o outro; o elétron sozinho de baixo vai para a frente conforme eles se aproximam
-    aoFim: () => { ui.semPlay(true); Cena75.liberar(true, "oxigenio"); } }
+    aoFim: () => { ui.semPlay(true); Cena75.liberar(true, "oxigenio"); } },
+  // a ligação dupla do O₂ (entra sozinha quando a molécula formada chega ao meio da tela)
+  { id: "dialogo8_6", titulo: "A ligação dupla do O₂", src: "audio/audio_moleculas_8.6.mp3",
+    inicio: () => Cena75.montarPronta("oxigenio").then(() => Cena75.travar()),   // pela navegação rápida: o O₂ já formado
+    eventos: [
+      { tempo: 0,    acao: () => Cena75.travar() },                                     // a molécula não se desfaz mais com o dedo
+      { tempo: 12,   acao: () => Cena76.circulo("A") },                                 // círculo "8 elétrons" no O da esquerda
+      { tempo: 15.6, acao: () => { Cena76.tirar("A"); Cena76.circulo("B"); } },         // e no da direita, ao mesmo tempo
+      { tempo: 20,   acao: () => { Cena75.tirarStatus(); Cena76.tirar("B"); } },        // "Molécula estável" sai em fade (e o círculo)
+      { tempo: 24.9, acao: () => { Cena77.realcar(["cima", "fora"], "isolado");         // os pares não ligantes em roxo
+                                   Cena77.texto("isolado", "Pares de elétrons não ligantes", 0); } },   // já pronto, sem digitar
+      { tempo: 30.5, acao: () => Cena77.realcar(["frente", "baixo"], "ligante") },      // os dois pares ligantes
+      { tempo: 35,   acao: () => Cena77.texto("ligante", "Dois pares de elétrons ligantes simultaneamente", 2) },   // até 37s
+      { tempo: 42.5, acao: () => { Cena77.normal(); Cena86.tracos(); } },               // textos saem; os pares viram dois traços
+      { tempo: 45,   acao: () => Cena86.cloro() },                                      // Cl₂ em traços, em cima: "Ligação covalente simples"
+      { tempo: 49,   acao: () => Cena86.pulsarTracos() },                               // duas pulsadas nos traços do O₂
+      { tempo: 54,   acao: () => Cena86.ocl2() }                                        // OCl₂ embaixo e o quiz
+    ],
+    aoFim: () => ui.semPlay(true) }                                                     // o play some: segue quem acertar o quiz
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -4208,9 +4240,9 @@ const Cena71 = {
     const opcoes = outra ? outra.opcoes : [[x, 0], [`${x}<sub>2</sub>`, 1], [`${x}<sub>3</sub>`, 0]];
     this.perg = { tipo, de: outra ? outra.de : g.pergunta[0], para: outra ? outra.para : g.pergunta[1] };
     Palco.adicionar(`
-      <div class="c72-quiz">
+      <div class="c72-quiz${opcoes.some(([h]) => h.replace(/<[^>]+>/g, "").length > 8) ? " longas" : ""}">
         <p class="c72-pergunta">${texto}</p>
-        <div class="c4-opcoes" role="group" aria-label="${texto}">
+        <div class="c4-opcoes" role="group" aria-label="${texto.replace(/<[^>]+>/g, "")}">
           ${opcoes.map(([html, certa]) => `<button class="c4-op" data-certa="${certa}">${html}</button>`).join("")}
         </div>
       </div>`);
@@ -4250,7 +4282,8 @@ const Cena71 = {
     const indice = NARRACOES.findIndex(n => n.id === perg.de), cena = this.$(".c72-quiz");
     Promise.all(sons.map(fim)).then(() => {
       if (Player.indice !== indice || !cena.isConnected) return;   // saiu da cena no meio da festa
-      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === perg.para), true);
+      const prox = NARRACOES.findIndex(n => n.id === perg.para);
+      if (prox >= 0) { Player.terminou = false; Player.irPara(prox, true); }   // (a resposta pode ainda não ter áudio)
     });
   },
 
@@ -4582,20 +4615,23 @@ const Cena75 = {
 
   // a molécula de Cl₂ já formada, no meio da tela (para quem chega à 7.7 pela navegação rápida).
   // Vindo do play (7.6), ela já está no palco e nada muda.
-  async montarPronta() {
+  // tipo "oxigenio": a molécula de O₂ (ligação dupla) já formada, para quem chega à 8.6 — com o "Molécula estável"
+  async montarPronta(tipo = "cloro") {
     if (this.ligado && this.$(".c75-ligacao:not(.saindo)")) return;
-    Cena71.montarSeparados();
-    await Promise.all([Cena74.montarLewis("A"), Cena74.montarLewis("B")]);
+    if (tipo === "oxigenio") await Cena84.montar();
+    else { Cena71.montarSeparados(); await Promise.all([Cena74.montarLewis("A"), Cena74.montarLewis("B")]); }
     if (!this.$(".c71-quantico")) return;
-    this.liberar(false);
-    // os dois átomos já juntos no meio da tela, à distância da ligação (2g)
-    const s = Cena71.m.userData.est, P = Palco.el, A = Cena74.atomo("A"), B = Cena74.atomo("B"), { g } = Cena74.medidas(A);
-    s.offOx += (P.clientWidth / 2 - g - A.x) / this.ppu; s.offOy -= (P.clientHeight / 2 - A.y) / this.ppu;
-    s.offHx += (P.clientWidth / 2 + g - B.x) / this.ppu; s.offHy -= (P.clientHeight / 2 - B.y) / this.ppu;
+    this.liberar(false, tipo);
+    // os dois átomos já juntos no meio da tela, à distância da ligação
+    const s = Cena71.m.userData.est, P = Palco.el, A = Cena74.atomo("A"), B = Cena74.atomo("B"), meia = this.distLig(A) / 2;
+    s.offOx += (P.clientWidth / 2 - meia - A.x) / this.ppu; s.offOy -= (P.clientHeight / 2 - A.y) / this.ppu;
+    s.offHx += (P.clientWidth / 2 + meia - B.x) / this.ppu; s.offHy -= (P.clientHeight / 2 - B.y) / this.ppu;
     Object.assign(s, { instO: 0, instH: 0 });
     this.ligado = true; this.armado = false; this.festejou = true;
-    this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", `<div class="c75-ligacao"></div>`);
-    this.tirarStatus();   // como no fim da 7.6: sem "Molécula estável" na tela
+    const pares = tipo === "oxigenio" ? ["0", "1"] : [""];
+    this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", pares.map(p => `<div class="c75-ligacao" data-par="${p}"></div>`).join(""));
+    if (tipo === "oxigenio") this.status("estavel");
+    else this.tirarStatus();   // como no fim da 7.6: sem "Molécula estável" na tela
   },
   // da 7.8 em diante a molécula fica presa: os átomos não podem mais ser arrastados (nem a ligação rompida)
   travar() {
@@ -4648,6 +4684,7 @@ const Cena75 = {
       Palco.el.querySelectorAll(".c75-ligacao").forEach(lig => this.posicionarLigacao(lig));
       Palco.el.querySelectorAll(".c76-octeto").forEach(c => Cena76.posicionar(c));
       const tr = this.$(".c78-traco"); if (tr) Cena78.posicionar(tr);
+      Palco.el.querySelectorAll(".c86-traco").forEach(t => Cena86.posicionar(t));
       requestAnimationFrame(passo);
     };
     requestAnimationFrame(passo);
@@ -4765,7 +4802,13 @@ const Cena75 = {
       // fanfarra mais baixa: a narração seguinte (7.6 no cloro) começa junto, no encaixe
       const som = new Audio("audio/funfare.mp3"); som.volume = .35; som.play().catch(() => {});
       const prox = NARRACOES.findIndex(n => n.id === this.proxima);
-      if (prox >= 0) { Player.terminou = false; Player.irPara(prox, true); }
+      if (prox >= 0 && this.tipo === "oxigenio") {
+        // no O₂ a narração (8.6) espera a molécula chegar ao meio da tela (a ida leva 1,25s)
+        const q = Cena71.$(".c71-quantico");
+        Palco.animar(q, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.35, fill: "none" }).finished.then(() => {
+          if (q.isConnected && this.ligado) { Player.terminou = false; Player.irPara(prox, true); }
+        }, () => {});
+      } else if (prox >= 0) { Player.terminou = false; Player.irPara(prox, true); }
     }
     // os átomos se prendem no lugar exato e a molécula pronta vai para o meio da tela (elétrons e ligação acompanham)
     const O = Cena74.atomo(a.set === "A" ? "B" : "A"), P = Palco.el;
@@ -4845,7 +4888,7 @@ const Cena76 = {
   posicionar(c) {
     const set = c.dataset.set; if (!set) return;
     const A = Cena74.atomo(set); if (!A) return;
-    const me = Cena74.medidas(A), r = Math.hypot(me.g, me.acima) + me.e * 1.1;
+    const me = Cena74.medidas(A), r = Math.hypot(me.g, Math.max(me.acima, me.s)) + me.e * 1.1;
     Object.assign(c.style, { left: `${A.x}px`, top: `${A.y}px`, width: `${2 * r}px`, height: `${2 * r}px` });
   },
   // a elipse da ligação e o par compartilhado crescem com brilho (ligar = false: voltam ao normal)
@@ -4895,6 +4938,7 @@ const Cena77 = {
     });
   },
   // o nome, digitado na cor do destaque: o ligante embaixo da molécula; os não ligantes (e depois a "Ligação Covalente") em cima
+  // dur = 0: o texto entra já pronto, em fade (sem digitação)
   texto(tipo, frase, dur) {
     if (!Cena75.ligado || this.$(`.c77-texto.${tipo}`)) return;
     const A = Cena74.atomo("A"); if (!A) return;
@@ -4902,7 +4946,9 @@ const Cena77 = {
     const y = cima ? A.y - me.g - me.e - 12 : A.y + me.g + me.e + 14;
     if (!cima) this.esconderStatus(true);   // embaixo mora o "Molécula estável": sai enquanto este estiver na tela
     Palco.adicionar(`<p class="c77-texto ${tipo}${cima ? " em-cima" : ""}" style="top:${y}px"></p>`);
-    Palco.digitar(Palco.el.lastElementChild, frase, dur, { cursor: false });
+    const el = Palco.el.lastElementChild;
+    if (dur) Palco.digitar(el, frase, dur, { cursor: false });
+    else { Palco.letras(el, frase); Palco.animar(el, [{ opacity: 0 }, { opacity: 1 }], { duracao: .5 }); }
   },
   // um pedaço de "Covalente" cresce 30% com brilho (ligar = false: volta). A margem abre espaço dos lados,
   // para o pedaço que cresce não encostar no vizinho
@@ -5250,6 +5296,111 @@ const Cena84 = {
     Cena71.montarSeparados("oxigenio");
     await Promise.all([Cena74.montarLewis("A", { oxigenio: true }), Cena74.montarLewis("B", { oxigenio: true })]);
     Cena83.marcarSolitarios("A"); Cena83.marcarSolitarios("B");
+  }
+};
+
+/* ---------- Cenas da narração 8.6: a ligação dupla do O₂ ----------
+   Os dois pares compartilhados viram dois traços (O=O), como o par do Cl₂ virou um. Em cima aparece o Cl₂
+   em fórmula de traços ("Ligação covalente simples"); embaixo, o OCl₂, com a pergunta das ligações do oxigênio. */
+const Cena86 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  // cada traço vai da beira de um O à do outro, na altura do seu par (o de cima e o de baixo)
+  posicionar(tr) {
+    const A = Cena74.atomo("A"), B = Cena74.atomo("B"); if (!A || !B) return;
+    const { e, s } = Cena74.medidas(A), x1 = A.x + A.R * .8, x2 = B.x - B.R * .8, h = Math.max(5, e * .42);
+    const y = (A.y + B.y) / 2 + (tr.dataset.par === "1" ? s : -s);
+    Object.assign(tr.style, { left: `${x1}px`, top: `${y - h / 2}px`, width: `${Math.max(x2 - x1, 0)}px`, height: `${h}px` });
+  },
+  // 42,5s: cada par se recolhe no seu meio e vira um traço (as elipses em volta somem) — o efeito do Cl₂, duas vezes
+  tracos() {
+    if (!Cena75.ligado || this.$(".c86-traco")) return;
+    const A = Cena74.atomo("A"), B = Cena74.atomo("B"), cx = (A.x + B.x) / 2, cy = (A.y + B.y) / 2;
+    Palco.el.querySelectorAll('.c74-e[data-lado="frente"], .c74-e[data-lado="baixo"]').forEach(el => {
+      const y = parseFloat(el.style.top), meioY = y < cy ? cy - Cena74.medidas(A).s : cy + Cena74.medidas(A).s;
+      Palco.animar(el, [{ transform: "translate(0px, 0px)", opacity: 1 }, { transform: `translate(${cx - parseFloat(el.style.left)}px, ${meioY - y}px)`, opacity: 0 }],
+        { duracao: .5, easing: "ease-in" });
+    });
+    Palco.el.querySelectorAll(".c75-ligacao").forEach(l => Palco.animar(l, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }));
+    Palco.adicionar(`<div class="c78-traco c86-traco" data-par="0"></div><div class="c78-traco c86-traco" data-par="1"></div>`);
+    Palco.el.querySelectorAll(".c86-traco").forEach(tr => {
+      this.posicionar(tr);
+      Palco.animar(tr, [{ scale: "0 1", opacity: 0 }, { scale: "1.15 1", opacity: 1, offset: .7 }, { scale: "1 1", opacity: 1 }],
+        { duracao: .6, atraso: .35, easing: "ease-out" });
+    });
+  },
+  // 49s: duas pulsadas com brilho nos dois traços
+  pulsarTracos() {
+    Palco.el.querySelectorAll(".c86-traco").forEach(tr => Palco.animar(tr, [0, 1, 2, 3, 4].map(k => ({
+      scale: k % 2 ? "1.12 2.4" : "1 1", boxShadow: k % 2 ? "0 0 26px rgba(255,255,255,.95)" : "0 0 10px rgba(163,219,247,.6)" })),
+      { duracao: 1.4, easing: "ease-in-out", fill: "none" }));
+  },
+
+  // desenhos em fórmula de traços (SVG): átomos com símbolo, traços das ligações e os pares isolados em pontinhos
+  COR: { Cl: ["#7BE36B", "#1C5E14"], O: ["#FF6B6B", "#7A0A0A"] },
+  desenho({ largura, atomos, ligacoes }) {
+    const r = 17, d = r + 9, ab = 5.5;   // raio do átomo, distância dos pontinhos, meia abertura do par
+    const ponto = (x, y) => `<circle cx="${x}" cy="${y}" r="3.1" fill="#D3EFFC"/>`;
+    const par = (x, y, lado) => ({ cima: [[x - ab, y - d], [x + ab, y - d]], baixo: [[x - ab, y + d], [x + ab, y + d]],
+      esq: [[x - d, y - ab], [x - d, y + ab]], dir: [[x + d, y - ab], [x + d, y + ab]] }[lado]).map(([a, b]) => ponto(a, b)).join("");
+    return `<svg viewBox="0 0 ${largura} 72" aria-hidden="true">
+      ${ligacoes.map(([i, j]) => `<line x1="${atomos[i].x + r + 2}" y1="36" x2="${atomos[j].x - r - 2}" y2="36" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`).join("")}
+      ${atomos.map(a => `<circle cx="${a.x}" cy="36" r="${r}" fill="${this.COR[a.s][0]}" stroke="${this.COR[a.s][1]}" stroke-width="1.5"/>
+        <text x="${a.x}" y="41.5" text-anchor="middle" font-size="${a.s.length > 1 ? 14 : 16}" font-weight="800" fill="#0A1322" font-family="Bricolage Grotesque, sans-serif">${a.s}</text>
+        ${a.pares.map(l => par(a.x, 36, l)).join("")}`).join("")}
+    </svg>`;
+  },
+  // 45s: o Cl₂ em fórmula de traços, acima do O₂, com "Ligação covalente simples" (na cor do cloro) em cima
+  cloro() {
+    if (this.$(".c86-cl2")) return;
+    const A = Cena74.atomo("A"); if (!A) return;
+    const { g, e } = Cena74.medidas(A), y = A.y - g - e * 1.4;   // a base do desenho, logo acima dos elétrons de cima do O₂
+    const svg = this.desenho({ largura: 190, atomos: [{ x: 55, s: "Cl", pares: ["cima", "esq", "baixo"] }, { x: 135, s: "Cl", pares: ["cima", "dir", "baixo"] }], ligacoes: [[0, 1]] });
+    Palco.adicionar(`<figure class="c86-formula c86-cl2" style="top:${y}px"><figcaption>Ligação covalente simples</figcaption>${svg}</figure>`);
+    Palco.animar(this.$(".c86-cl2"), [{ opacity: 0 }, { opacity: 1 }], { duracao: .8, easing: "ease-out" });
+  },
+  // 54s: o OCl₂ em fórmula de traços, embaixo do O₂, e a pergunta das ligações do oxigênio
+  ocl2() {
+    if (this.$(".c86-ocl2")) return;
+    const A = Cena74.atomo("A"); if (!A) return;
+    const { g, e } = Cena74.medidas(A), y = A.y + g + e * 1.4;
+    const svg = this.desenho({ largura: 270, atomos: [{ x: 50, s: "Cl", pares: ["cima", "esq", "baixo"] }, { x: 135, s: "O", pares: ["cima", "baixo"] },
+      { x: 220, s: "Cl", pares: ["cima", "dir", "baixo"] }], ligacoes: [[0, 1], [1, 2]] });
+    Palco.adicionar(`<figure class="c86-formula c86-ocl2" style="top:${y}px;opacity:0">${svg}<figcaption>OCl<sub>2</sub></figcaption></figure>`);
+    Cena71.pergunta("oxigenio", {
+      texto: "Que ligações o oxigênio faz no OCl<sub>2</sub>?",
+      opcoes: [["Uma ligação dupla", 0], ["Duas ligações simples", 1], ["Nenhuma", 0]], de: "dialogo8_6", para: "dialogo8_7" });
+    this.arrumar();
+    const oc = this.$(".c86-ocl2"); oc.style.opacity = "";
+    Palco.animar(oc, [{ opacity: 0 }, { opacity: 1 }], { duracao: .8, easing: "ease-out" });
+  },
+  // com o quiz embaixo, os três (Cl₂, O₂ e OCl₂) sobem para caber entre o título e a pergunta, um embaixo do outro.
+  // Se não couberem (tela baixa), os dois desenhos encolhem.
+  arrumar() {
+    const P = Palco.el.getBoundingClientRect(), t = this.$(".c71-titulo"), quiz = this.$(".c72-quiz");
+    const cl2 = this.$(".c86-cl2"), oc = this.$(".c86-ocl2"), A = Cena74.atomo("A"), B = Cena74.atomo("B");
+    if (!t || !quiz || !oc || !A || !B) return;
+    const topo = t.getBoundingClientRect().bottom - P.top + 6, base = quiz.getBoundingClientRect().top - P.top - 6, folga = 8;
+    const { g, e } = Cena74.medidas(A), hO2 = 2 * (g + e * .9);
+    let hCl = cl2 ? cl2.offsetHeight : 0, hOc = oc.offsetHeight;
+    const livre = base - topo - hO2 - folga * 2;
+    // não cabe: os desenhos encolhem na mesma proporção. Em algumas rodadas, medindo de novo — a legenda
+    // de cada um não encolhe junto com o desenho
+    for (let k = 0; k < 4 && hCl + hOc > livre; k++) {
+      const f = Math.max(livre / (hCl + hOc), .5);
+      [cl2, oc].forEach(el => { if (el) el.style.width = `${el.offsetWidth * f}px`; });
+      hCl = cl2 ? cl2.offsetHeight : 0; hOc = oc.offsetHeight;
+    }
+    // o O₂ (e os elétrons e traços, que o acompanham) desce ou sobe até o seu lugar na pilha
+    const cyNovo = topo + hCl + folga + hO2 / 2, cy = (A.y + B.y) / 2, dy = cyNovo - cy;
+    const q = Cena71.quantum, s = Cena71.m.userData.est, ppu = Cena75.ppu || 1;
+    ["offOy", "offHy"].forEach(k => q.animar(s, k, s[k] - dy / ppu, .6));
+    const mover = (el, topoNovo) => {
+      const antes = parseFloat(el.style.top);
+      el.style.top = `${topoNovo}px`;
+      Palco.animar(el, [{ transform: `translateY(${antes - topoNovo}px)` }, { transform: "translateY(0px)" }], { duracao: .6, easing: "ease-in-out", fill: "none" });
+    };
+    if (cl2) mover(cl2, topo + hCl);                // (o desenho do Cl₂ é ancorado pela base)
+    mover(oc, cyNovo + hO2 / 2 + folga);
   }
 };
 
