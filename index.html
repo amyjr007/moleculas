@@ -1034,7 +1034,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v82 · 04/10/2026</span>
+    <span class="versao" id="versao">v83 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -5785,6 +5785,7 @@ const Cena10 = {
   // as alternativas da questão (sem repetir o texto da pergunta: ele já está na tela)
   opcoes(opcoes, de, para) {
     Cena71.pergunta("nitrogenio", { texto: "", opcoes, de, para });
+    const q = this.$(".c72-quiz"); if (q) q.classList.add("longas");   // no resumo, as alternativas são palavras: o estilo compacto cabe sempre
   }
 };
 
