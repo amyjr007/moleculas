@@ -1042,7 +1042,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v84 · 04/10/2026</span>
+    <span class="versao" id="versao">v85 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2593,7 +2593,8 @@ const NARRACOES = [
       { tempo: 12,   acao: () => Cena77.texto("tripla", "Ligação covalente tripla", 1.7) }   // digitado até 13,7s
     ] },
   // o Resumo Interativo: volta do mundo quântico e o cubo traz a tela do resumo
-  { id: "dialogo10", titulo: "Resumo Interativo", src: "audio/audio_moleculas_10.mp3",
+  // (fora da navegação rápida: o resumo entra nela pelas suas três partes — 35, 36 e 37)
+  { id: "dialogo10", titulo: "Resumo Interativo", src: "audio/audio_moleculas_10.mp3", semNav: true,
     // pela navegação rápida: parte do N₂ formado (em traços), no mundo quântico
     inicio: () => Cena75.montarPronta("nitrogenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); Cena86.tracos(); }),
     eventos: [
@@ -2602,7 +2603,8 @@ const NARRACOES = [
     ],
     aoFim: () => Cena10.botoes() },                                // "Vamo sim!" / "Por favor!": os dois levam à 1ª questão
   // 1ª questão do resumo
-  { id: "dialogo10_1", titulo: "Resumo: questão 1", src: "audio/audio_moleculas_10.1.mp3",
+  // as três partes do resumo na navegação rápida: 35 (10.1 a 10.7), 36 (10.8 a 10.11) e 37 (10.12)
+  { id: "dialogo10_1", titulo: "Resumo interativo", num: 35, src: "audio/audio_moleculas_10.1.mp3",
     inicio: () => Cena10.montar(),
     eventos: [
       { tempo: 4.4,  acao: () => Cena10.questao("Segundo Lewis, os átomos se ligam pra adquirir...?", 2.6) }
@@ -2632,11 +2634,16 @@ const NARRACOES = [
       () => [[Cena10.FIG.O3(), 1], [Cena10.FIG.CO2(), 0], [Cena10.FIG.N2(), 0]], true]
   ].map(([n, inicio, dur, texto, opcoes, imagens], k) => {
     const id = "dialogo" + n.replace(".", "_"), prox = "dialogo10_" + (k + 3);
-    return { id, titulo: "Resumo: questão " + (k + 2), src: `audio/audio_moleculas_${n}.mp3`,
+    const parte = n === "10.8" ? { titulo: "Sobre Moléculas", num: 36 } : { titulo: "Resumo: questão " + (k + 2), semNav: true };
+    return { id, ...parte, src: `audio/audio_moleculas_${n}.mp3`,
       inicio: () => Cena10.montar(),
       eventos: [{ tempo: inicio, acao: () => Cena10.questao(texto, dur) }],
       aoFim: () => { ui.semPlay(true); Cena10.opcoes(typeof opcoes === "function" ? opcoes() : opcoes, id, prox, { imagens }); } };
-  })
+  }),
+  // 3ª parte do resumo: a estrutura de Lewis (os eventos virão depois)
+  { id: "dialogo10_12", titulo: "Estrutura de Lewis", num: 37, src: "audio/audio_moleculas_10.12.mp3",
+    inicio: () => Cena10.montar(),
+    eventos: [] }
 
 ];
 
@@ -6239,10 +6246,11 @@ const veu = document.getElementById("veu");
 const sumario = document.getElementById("sumario");
 
 function montarSumario() {
-  sumario.innerHTML = NARRACOES.map((n, i) => n.oculta ? "" : `
+  // semNav: fica fora da lista (mas toca normalmente na sequência) · num: o número mostrado na lista
+  sumario.innerHTML = NARRACOES.map((n, i) => n.oculta || n.semNav ? "" : `
     <li>
       <button class="item-sumario" data-indice="${i}">
-        <span class="num">${i + 1}</span>
+        <span class="num">${n.num || i + 1}</span>
         <span class="item-texto">${n.titulo}</span>
       </button>
     </li>`).join("");
