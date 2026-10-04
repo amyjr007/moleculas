@@ -1022,7 +1022,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v72 · 04/10/2026</span>
+    <span class="versao" id="versao">v73 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2440,6 +2440,7 @@ const NARRACOES = [
     inicio: () => Cena75.montarPronta("oxigenio").then(() => Cena75.travar()),   // pela navegação rápida: o O₂ já formado
     eventos: [
       { tempo: 0,    acao: () => Cena75.travar() },                                     // a molécula não se desfaz mais com o dedo
+      { tempo: 4,    acao: () => Cena75.tirarStatus() },                                // "Molécula estável" sai em fade
       // os pares do O da esquerda, um de cada vez: em cima, à esquerda e os dois compartilhados
       { tempo: 11.9, acao: () => Cena86.brilhar("cima", "A") },
       { tempo: 12.5, acao: () => { Cena86.brilhar("cima", "A", false); Cena86.brilhar("fora", "A"); } },
@@ -2472,7 +2473,16 @@ const NARRACOES = [
       { tempo: 12,   acao: () => { Cena86.crescerTraco("0", false); Cena86.crescerTraco("1", false); Cena86.cloro(); } },   // o Cl₂, com a seta
       { tempo: 15,   acao: () => { Cena86.crescerTraco("0"); Cena86.crescerTraco("1"); } },   // os dois traços do O₂ crescem
       { tempo: 16,   acao: () => Cena86.crescerTexto() }                                // "Ligação covalente dupla" cresce
-    ] }
+    ] },
+  // o gás nitrogênio (exemplo 03): de volta ao cilindro, e o cubo traz o cilindro de N₂ — como no áudio 8
+  { id: "dialogo9", titulo: "O gás nitrogênio", src: "audio/audio_moleculas_9.mp3",
+    // pela navegação rápida: parte do O₂ formado (em traços), no mundo quântico
+    inicio: () => Cena75.montarPronta("oxigenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); Cena86.tracos(); }),
+    eventos: [
+      { tempo: 3,    acao: () => Cena8.sair() },                   // zoom out: do mundo quântico de volta ao cilindro de oxigênio (1,5s)
+      { tempo: 5,    acao: () => Cena8.girar("nitrogenio") }       // a tela vira um cubo: o cilindro de gás nitrogênio ("Exemplo 03")
+    ],
+    aoFim: () => ui.semPlay(true) }                                // sem play: tocar no cilindro leva às moléculas de N₂
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -3119,7 +3129,7 @@ const Copo = {
 
 /* ---------- Mundo quântico: moléculas de água flutuando, que respondem ao toque ---------- */
 const Quantico = {
-  CORES: { O: 0xFF0D0D, H: 0xFFFFFF, Cl: 0x1FF01F, ligacao: 0xC8C8C8, nuvem: 0xA3DBF7 },   // Cl: verde do padrão CPK
+  CORES: { O: 0xFF0D0D, H: 0xFFFFFF, Cl: 0x1FF01F, N: 0x3050F8, ligacao: 0xC8C8C8, nuvem: 0xA3DBF7 },   // Cl: verde e N: azul do padrão CPK
 
   textura(paradas) {
     const c = document.createElement("canvas"); c.width = c.height = 128;
@@ -3153,7 +3163,7 @@ const Quantico = {
   },
   // bastão do O até cada H, acompanhando a posição dos átomos
   // duplo: o 2º bastão da ligação dupla (O₂) — os dois andam lado a lado, afastados do eixo
-  alinharBastoes({ O, Hs, bastoes, duplo }) {
+  alinharBastoes({ O, Hs, bastoes, duplo, triplo }) {
     const y = new THREE.Vector3(0, 1, 0);
     bastoes.forEach((b, i) => {
       const dir = Hs[i].position.clone().sub(O.position), comp = dir.length();
@@ -3165,6 +3175,7 @@ const Quantico = {
       const b = bastoes[0], dir = Hs[0].position.clone().sub(O.position).normalize();
       const lado = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 0, 1)).normalize().multiplyScalar(duplo.afasta);
       duplo.b.position.copy(b.position).add(lado); duplo.b.scale.copy(b.scale); duplo.b.quaternion.copy(b.quaternion);
+      if (triplo) { triplo.position.copy(b.position); triplo.scale.copy(b.scale); triplo.quaternion.copy(b.quaternion); }   // o do meio, no eixo
       b.position.sub(lado);
     }
   },
@@ -3226,7 +3237,18 @@ const Quantico = {
     return grupo;
   },
 
-  // molecula: "agua" (padrão), "cloro" ou "oxigenio" · cheia: as moléculas ocupam a caixa toda (sem reservar o alto para textos)
+  // uma molécula de gás nitrogênio (N₂): dois N (azuis) e uma ligação TRIPLA — três bastões lado a lado
+  nitrogenio(mats, geo) {
+    const g = this.oxigenio(mats, geo), u = g.userData;
+    const b3 = new THREE.Mesh(geo.bastao, u.mats[2]); g.add(b3); u.alvos.push(b3);
+    u.duplo.afasta = .24; u.triplo = b3;            // o 1º e o 2º bastão vão para os lados; o 3º fica no eixo
+    [u.O, u.Hs[0]].forEach(a => a.scale.setScalar(.62)); u.rO = u.rH = .62;
+    u.letras = { O: "N", H: "N", corO: "#FFFFFF", corH: "#FFFFFF" };
+    this.alinharBastoes(u);
+    return g;
+  },
+
+  // molecula: "agua" (padrão), "cloro", "oxigenio" ou "nitrogenio" · cheia: as moléculas ocupam a caixa toda (sem reservar o alto para textos)
   montar(caixa, { revelar = false, molecula = "agua", cheia = false } = {}) {
     if (!window.THREE || !caixa) return null;
     let renderer;
@@ -3244,7 +3266,7 @@ const Quantico = {
 
     const mat = cor => new THREE.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
     const mats = {
-      O: mat(molecula === "cloro" ? this.CORES.Cl : this.CORES.O), H: mat(this.CORES.H), ligacao: mat(this.CORES.ligacao),
+      O: mat({ cloro: this.CORES.Cl, nitrogenio: this.CORES.N }[molecula] || this.CORES.O), H: mat(this.CORES.H), ligacao: mat(this.CORES.ligacao),
       nuvem: new THREE.SpriteMaterial({ map: this.textura([[0, "rgba(163,219,247,.55)"], [.45, "rgba(163,219,247,.14)"], [1, "rgba(163,219,247,0)"]]),
                                          transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .35 }),
       // o alerta do átomo instável: o mesmo vermelho-alaranjado do app de Ligações Químicas (qmAlert)
@@ -3277,7 +3299,8 @@ const Quantico = {
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
     const N = camera.aspect < .9 || (cheia && camera.aspect < 1.6) ? 8 : 11;
     for (let i = 0; i < N; i++) {
-      const m = molecula === "cloro" ? this.cloro(mats, geo) : molecula === "oxigenio" ? this.oxigenio(mats, geo) : this.agua(mats, geo);
+      const m = molecula === "cloro" ? this.cloro(mats, geo) : molecula === "oxigenio" ? this.oxigenio(mats, geo)
+              : molecula === "nitrogenio" ? this.nitrogenio(mats, geo) : this.agua(mats, geo);
       let p, tent = 0;
       do { p = new THREE.Vector3((Math.random() * 2 - 1) * area.x, area.yMin + Math.random() * (area.yMax - area.yMin), -3 + Math.random() * 4.5); tent++; }
       while (tent < 80 && moleculas.some(o => o.userData.base.distanceTo(p) < 3));
@@ -3302,7 +3325,7 @@ const Quantico = {
     renderer.domElement.addEventListener("pointerdown", e => {
       if (!estado.visivel || Palco.pausado) return;
       const m = acharMolecula(e); if (!m || m.userData.est.semToque) return;   // semToque: a molécula da aula não reage ao toque
-      Vibra.tocar({ cloro: "toqueCloro", oxigenio: "toqueOxigenio" }[molecula] || "toqueAgua");
+      Vibra.tocar({ cloro: "toqueCloro", oxigenio: "toqueOxigenio", nitrogenio: "toqueNitrogenio" }[molecula] || "toqueAgua");
       const u = m.userData, ant = u.acao && u.acao.nome;
       const nome = nomes.filter(n => n !== ant)[Math.floor(Math.random() * (nomes.length - 1))];
       u.acao = { nome, t0: estado.t, dir: new THREE.Vector3(Math.random() - .5, Math.random() - .5, (Math.random() - .5) * .4).normalize(),
@@ -3477,6 +3500,7 @@ const Quantico = {
           // ligação dupla (O₂) quebrada: os dois bastões somem no estalo
           const inteira = !(s.quebra > 0);
           u.bastoes[0].visible = inteira; u.duplo.b.visible = inteira;
+          if (u.triplo) u.triplo.visible = inteira;
         }
         if (u.rotulos) {
           m.updateMatrixWorld();
@@ -4100,6 +4124,12 @@ const Cena71 = {
              pe: ["#081603", "#2c5a10", "#6c9a44", "#244a0c", "#071302"], filete: "#d8f5a8" },
     oxigenio: { simbolo: "O", exemplo: "Exemplo 02", pergunta: ["dialogo8_1", "dialogo8_2"], entrada: "dialogo8",
              nome: "OXIGÊNIO", aria: "oxigênio", titulo: '<span class="c71-nome">Oxigênio</span> <span class="fam">– Família 6A</span>',
+             // vermelho, como o átomo de O
+             corpo: ["#2a0505", "#5c0f0f", "#a81f1f", "#e04b4b", "#ff9c9c", "#d03a3a", "#901b1b", "#541010", "#240404"],
+             pe: ["#1c0404", "#681414", "#b84f4f", "#581010", "#180303"], filete: "#ffd0d0" },
+    nitrogenio: { simbolo: "N", exemplo: "Exemplo 03", pergunta: ["dialogo9_1", "dialogo9_2"], entrada: "dialogo9",
+             nome: "NITROGÊNIO", aria: "nitrogênio", titulo: '<span class="c71-nome">Nitrogênio</span> <span class="fam">– Família 5A</span>',
+             // azul, como o átomo de N
              corpo: ["#06122b", "#0f2a5c", "#1f56a8", "#4b8fe0", "#9cc8ff", "#3a7ad0", "#1b4a90", "#0c2654", "#050f24"],
              pe: ["#040b1c", "#143468", "#4f78b8", "#102a58", "#030918"], filete: "#cfe3ff" }
   },
@@ -4145,7 +4175,7 @@ const Cena71 = {
       <rect x="23" y="150" width="106" height="14" rx="6" fill="#1b2330" opacity=".9"/>
       <rect x="23" y="158" width="106" height="6" fill="#1b2330" opacity=".9"/>
       <text class="c71-cil-nome" x="76" y="194" font-size="21">GÁS</text>
-      <text class="c71-cil-nome" x="76" y="218" font-size="${g.nome.length > 6 ? 17 : 21}">${g.nome}</text>
+      <text class="c71-cil-nome" x="76" y="218" font-size="${g.nome.length > 8 ? 15 : g.nome.length > 6 ? 17 : 21}">${g.nome}</text>
       <rect x="44" y="62" width="9" height="300" rx="4.5" fill="#fff" opacity=".18"/>
       <rect x="58" y="70" width="3.5" height="290" rx="1.8" fill="#fff" opacity=".1"/>
     </svg>`;
@@ -4209,7 +4239,7 @@ const Cena71 = {
     const cil = this.$(".c71-cilindro"), area = this.$(".c71-area");
     if (!cil || cil.classList.contains("tocado") || this.$(".c71-cubo")) return;
     const tipo = area.dataset.molecula || "cloro";
-    Vibra.tocar(tipo === "oxigenio" ? "cilindroOxigenio" : "cilindro");
+    Vibra.tocar({ oxigenio: "cilindroOxigenio", nitrogenio: "cilindroNitrogenio" }[tipo] || "cilindro");
     cil.classList.add("tocado");
     if (!this.$(".c71-quantico")) this.prepararQuantico();
     area.insertAdjacentHTML("beforeend", `<div class="c3-dash"></div>`);
@@ -5070,8 +5100,9 @@ const Cena8 = {
     const area = this.$(".c71-area"); if (!area || !this.$(".c71-quantico")) return;
     Cena75.travar();
     let cil = area.querySelector(".c71-cilindro");
-    if (!cil) {   // pela navegação rápida o cilindro não estava no palco: entra já "tocado"
-      area.insertAdjacentHTML("afterbegin", `<button type="button" class="c71-cilindro tocado" aria-label="Cilindro de gás cloro" style="visibility:hidden">${Cena71.cilindro("cloro")}</button>`);
+    if (!cil) {   // pela navegação rápida o cilindro não estava no palco: entra já "tocado" (o do gás de agora)
+      const tipo = area.dataset.molecula || "cloro";
+      area.insertAdjacentHTML("afterbegin", `<button type="button" class="c71-cilindro tocado" aria-label="Cilindro de gás ${Cena71.GASES[tipo].aria}" style="visibility:hidden">${Cena71.cilindro(tipo)}</button>`);
       cil = area.querySelector(".c71-cilindro");
     }
     const q = this.$(".c71-quantico");
@@ -5084,17 +5115,18 @@ const Cena8 = {
     if (t) Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => t.classList.add("escondido"), () => {});
     // no pico do clarão: some o mundo quântico (e tudo o que estava em volta da molécula); volta o cilindro
     Palco.animar(cil, [{ opacity: 0 }, { opacity: 0 }], { duracao: .32, fill: "none" }).finished.then(() => {
-      Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c75-status, .c75-arrasto, .c76-octeto, .c77-texto, .c78-traco, .c73-octeto, .c74-hund").forEach(el => el.remove());
+      Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c75-status, .c75-arrasto, .c76-octeto, .c77-texto, .c78-traco, .c73-octeto, .c74-hund, .c86-formula, .c72-quiz, .c84-aviso, .c84-toques, .c83-mao")
+        .forEach(el => el.remove());
       q.remove();
       Cena71.quantum = null; Cena71.m = null;
       cil.style.visibility = "";
       Palco.animar(cil, [{ transform: "scale(5.5)", opacity: 1 }, { transform: "scale(1)", opacity: 1 }], { duracao: 1.18, easing: "cubic-bezier(.2,.7,.3,1)" });
     }, () => {});
   },
-  // 5s: a tela vira um cubo; na face nova, o cilindro de gás oxigênio
-  girar() {
+  // 5s: a tela vira um cubo; na face nova, o cilindro do gás seguinte (oxigênio no áudio 8, nitrogênio no 9)
+  girar(tipo = "oxigenio") {
     if (this.$(".c71-quantico")) this.sair();   // (pela navegação, se o zoom out não tiver acontecido)
-    Cena71.preparar("oxigenio");
+    Cena71.preparar(tipo);
     Cena71.girar();
   },
 };
@@ -5545,6 +5577,9 @@ const Vibra = {
     // oxigênio: gás também, mas de ligação dupla — batidas em pares
     cilindroOxigenio: [15, 25, 15, 60, 30, 25, 30, 60, 90],   // o zoom para dentro do cilindro de O₂
     toqueOxigenio:    [10, 25, 10],                           // tocar numa molécula de O₂
+    // nitrogênio: ligação tripla — batidas em trios
+    cilindroNitrogenio: [12, 25, 12, 25, 12, 60, 30, 25, 30, 25, 30, 60, 100],   // o zoom para dentro do cilindro de N₂
+    toqueNitrogenio:  [8, 22, 8, 22, 8],                      // tocar numa molécula de N₂
     oxigenioCerta:    [25, 25, 25, 60, 25, 25, 25, 60, 160],   // O₂: dois pares de batidas e uma longa
     oxigenioErrada:   [80, 40, 80, 40, 80],
     toqueEletron:     18,                                      // a mãozinha toca num lado do átomo (áudio 8.3)
