@@ -459,6 +459,20 @@
   .c10-questao { position: absolute; left: 50%; top: 40%; translate: -50% -50%; width: min(90%, 24ch); margin: 0; z-index: 3; text-align: center;
     font-family: var(--display); font-weight: 700; line-height: 1.3; color: #fff; font-size: clamp(1.3rem, 3.4vmin + .6rem, 2.5rem); }
   .c72-pergunta:empty { display: none; }
+  /* 10.12: estruturas de Lewis — o nome do elemento, o símbolo no meio, a área de toque, a mensagem e o "Confirmar" */
+  .c1012-sub { position: absolute; left: 0; right: 0; top: 17%; margin: 0; text-align: center; z-index: 3; pointer-events: none;
+    font-family: var(--display); font-weight: 800; letter-spacing: -.01em; color: var(--celeste); font-size: clamp(1.25rem, 3vmin + .55rem, 2.2rem); }
+  .c1012-sub .fam { color: var(--ambar); }
+  .c1012-sim { position: absolute; left: 50%; top: 53%; translate: -50% -50%; z-index: 3; pointer-events: none;
+    font-family: var(--display); font-weight: 800; line-height: 1; color: #fff; font-size: clamp(4rem, 13vmin, 7.5rem); text-shadow: 0 0 24px rgba(163,219,247,.4); }
+  .c1012-toques { position: absolute; inset: 0; z-index: 4; cursor: pointer; touch-action: manipulation; }
+  .c1012-eletrons { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .c1012-e { box-shadow: 0 0 8px 2px rgba(163,219,247,.7); }
+  .c1012-msg { position: absolute; left: 50%; translate: -50% 0; bottom: calc(clamp(18px, 2.5vw, 28px) + 64px); width: min(92%, 44ch); margin: 0; z-index: 5;
+    text-align: center; pointer-events: none; font-family: var(--display); font-weight: 800; font-size: clamp(1rem, 2vmin + .5rem, 1.5rem); color: var(--coral); }
+  .c1012-msg.certo { color: #6EE7A0; }
+  .c1012-ok { position: absolute; left: 50%; translate: -50% 0; bottom: clamp(18px, 2.5vw, 28px); z-index: 5; background: #6EE7A0; }
+  .c1012-ok:disabled { opacity: .45; animation: none; }
   /* resumo: alternativas com figuras, em retângulos; com elas na tela, a questão sobe um pouco */
   .c72-quiz.imagens .c4-opcoes { flex-wrap: nowrap; justify-content: center; max-width: 96%; gap: clamp(8px, 2vw, 16px); }
   .c72-quiz.imagens .c4-op { min-width: 0; width: clamp(96px, 27vw, 200px); padding: .4em; border-radius: 14px; line-height: 1; }
@@ -1042,7 +1056,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v86 · 04/10/2026</span>
+    <span class="versao" id="versao">v87 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2642,8 +2656,12 @@ const NARRACOES = [
   }),
   // 3ª parte do resumo: a estrutura de Lewis (os eventos virão depois)
   { id: "dialogo10_12", titulo: "Quiz de estrutura de Lewis", num: 37, src: "audio/audio_moleculas_10.12.mp3",
-    inicio: () => Cena10.montar(),
-    eventos: [] }
+    inicio: () => { Cena10.montar(); Cena1012.resolvido = false; },
+    eventos: [
+      { tempo: 2,    acao: () => Cena1012.virar() },               // a tela vira de baixo para cima: "Estruturas de Lewis"
+      { tempo: 20.5, acao: () => Cena1012.exemplo("carbono") }     // 1º exemplo: Carbono – Família 4A (4 elétrons)
+    ],
+    aoFim: () => ui.semPlay(true) }                                // sem play: o aluno monta a estrutura e confirma
 
 ];
 
@@ -5856,6 +5874,141 @@ const Cena10 = {
     CO2() { return this.formula("CO<sub>2</sub>", [{ x: 34, s: "O", pares: ["cima", "baixo"] }, { x: 100, s: "C", pares: [] }, { x: 166, s: "O", pares: ["cima", "baixo"] }], [[0, 1, 2], [1, 2, 2]], 200); },
     // O₃: O=O–O (uma dupla e uma simples)
     O3()  { return this.formula("O<sub>3</sub>", [{ x: 34, s: "O", pares: ["cima", "baixo"] }, { x: 100, s: "O", pares: ["cima"] }, { x: 166, s: "O", pares: ["cima", "dir", "baixo"] }], [[0, 1, 2], [1, 2]], 200); }
+  }
+};
+
+/* ---------- Narração 10.12: o quiz de estrutura de Lewis ----------
+   A tela vira de baixo para cima (face de um cubo) e o título passa a "Estruturas de Lewis". Em cada exemplo,
+   o símbolo do elemento fica no meio e os elétrons de valência numa fileira em cima. O aluno toca em volta do
+   símbolo e cada toque leva um elétron da fileira para ONDE ELE TOCOU — a posição é livre. Tocar num elétron já
+   colocado o devolve à fileira. "Confirmar" avalia: cada elétron tem de estar perto do símbolo, e eles têm de
+   ficar distribuídos como manda a Regra de Hund (um em cada lado antes de formar par). */
+const Cena1012 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  // 2s: a tela vira de baixo para cima; a face nova traz o título "Estruturas de Lewis"
+  virar() {
+    if (this.$(".c1012-titulo") || this.$(".c71-cubo")) return;
+    const P = Palco.el, H = P.clientHeight, atuais = [...P.children];
+    Palco.adicionar(`<div class="c71-cubo"><div class="c71-giro">
+        <div class="c71-face f1"></div>
+        <div class="c71-face f2"><h2 class="c0-titulo c1012-titulo" style="top:5%">Estruturas de Lewis</h2></div>
+      </div></div>`);
+    const giro = this.$(".c71-giro"), f1 = this.$(".c71-face.f1"), f2 = this.$(".c71-face.f2");
+    atuais.forEach(c => f1.appendChild(c));
+    f1.style.transform = `translateZ(${H / 2}px)`;
+    f2.style.transform = `rotateX(-90deg) translateZ(${H / 2}px)`;   // a face de baixo
+    const z = `translateZ(${-H / 2}px)`, easing = "cubic-bezier(.65,0,.35,1)";
+    giro.style.transform = z;
+    Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, easing });
+    Palco.animar(f2, [{ filter: "brightness(.35)" }, { filter: "brightness(1)" }], { duracao: 1.2, easing });
+    Palco.animar(giro, [{ transform: `${z} rotateX(0deg)` }, { transform: `${z} rotateX(90deg)` }], { duracao: 1.2, easing })
+      .finished.then(() => {
+        const cubo = this.$(".c71-cubo"); if (!cubo) return;
+        [...f2.children].forEach(c => Palco.el.appendChild(c));
+        cubo.remove();
+      }, () => {});
+  },
+  // pela navegação rápida: a tela das estruturas de Lewis já pronta
+  montar() { if (!this.$(".c1012-titulo")) Palco.mostrar(`<h2 class="c0-titulo c1012-titulo" style="top:5%">Estruturas de Lewis</h2>`); ui.semPlay(true); },
+
+  // os exemplos: símbolo, nome, família, nº de elétrons de valência e os lados em que pode haver par (Regra de Hund)
+  EXEMPLOS: { carbono: { sim: "C", nome: "Carbono", fam: "4A", val: 4 } },
+  // 20,5s: o 1º exemplo — o nome, a fileira de elétrons, o símbolo no meio e o botão "Confirmar"
+  exemplo(chave = "carbono") {
+    if (!this.$(".c1012-titulo")) this.montar();
+    const ex = this.ex = this.EXEMPLOS[chave];
+    Palco.el.querySelectorAll(".c1012-ex").forEach(el => el.remove());
+    Palco.adicionar(`
+      <p class="c1012-ex c1012-sub"><span class="c71-nome">${ex.nome}</span> <span class="fam">– Família ${ex.fam}</span></p>
+      <div class="c1012-ex c1012-sim">${ex.sim}</div>
+      <div class="c1012-ex c1012-toques" aria-label="Toque em volta do símbolo para colocar os elétrons"></div>
+      <div class="c1012-ex c1012-eletrons">${'<span class="c74-e c1012-e"></span>'.repeat(ex.val)}</div>
+      <p class="c1012-ex c1012-msg"></p>
+      <button class="c1012-ex c10-bt c1012-ok">Confirmar</button>`);
+    const P = Palco.el, sub = this.$(".c1012-sub"), els = [...P.querySelectorAll(".c1012-e")];
+    const e = els[0].offsetWidth, passo = e * 2.6, y = sub.offsetTop + sub.offsetHeight + e * 1.8;
+    this.fila = els.map((el, i) => [P.clientWidth / 2 + (i - (els.length - 1) / 2) * passo, y]);
+    els.forEach((el, i) => {
+      el.dataset.casa = i; Cena74.pos(el, this.fila[i]);
+      Palco.animar(el, [{ opacity: 0, scale: 0 }, { opacity: 1, scale: 1.5, offset: .6 }, { opacity: 1, scale: 1 }], { duracao: .4, atraso: i * .15, easing: "ease-out" });
+    });
+    [sub, this.$(".c1012-sim"), this.$(".c1012-ok")].forEach((el, i) =>
+      Palco.animar(el, [{ opacity: 0 }, { opacity: 1 }], { duracao: .6, atraso: i * .15 }));
+    this.$(".c1012-toques").addEventListener("pointerdown", ev => this.toque(ev));
+    this.$(".c1012-ok").addEventListener("click", () => this.confirmar());
+  },
+  centro() {
+    const s = this.$(".c1012-sim"), P = Palco.el.getBoundingClientRect(), b = s.getBoundingClientRect();
+    return { x: b.left - P.left + b.width / 2, y: b.top - P.top + b.height / 2, R: Math.max(b.width, b.height) / 2 };
+  },
+  // leva o elétron até (x, y) num pequeno arco
+  mover(el, [x, y]) {
+    const de = [parseFloat(el.style.left), parseFloat(el.style.top)], dx = de[0] - x, dy = de[1] - y, h = Math.min(60, Math.hypot(dx, dy) * .3);
+    Cena74.pos(el, [x, y]);
+    Palco.animar(el, Array.from({ length: 13 }, (_, n) => { const p = n / 12; return { transform: `translate(${dx * (1 - p)}px, ${dy * (1 - p) - h * Math.sin(Math.PI * p)}px)` }; }),
+      { duracao: .5, easing: "cubic-bezier(.45,0,.35,1)" });
+  },
+  toque(ev) {
+    if (this.resolvido) return;
+    const P = Palco.el.getBoundingClientRect(), x = ev.clientX - P.left, y = ev.clientY - P.top, els = [...Palco.el.querySelectorAll(".c1012-e")];
+    const e = els[0].offsetWidth;
+    // tocou num elétron já colocado: ele volta para a fileira
+    const solto = els.find(el => el.dataset.solto && Math.hypot(parseFloat(el.style.left) - x, parseFloat(el.style.top) - y) < e * 1.3);
+    if (solto) { delete solto.dataset.solto; this.mover(solto, this.fila[+solto.dataset.casa]); Vibra.tocar("pegar"); this.msg(""); return; }
+    // senão, o próximo da fileira vai para onde tocou (só em volta do símbolo, não lá em cima na fileira)
+    const C = this.centro();
+    if (Math.hypot(x - C.x, y - C.y) > C.R * 3.4) return;
+    const el = els.find(el => !el.dataset.solto); if (!el) return;
+    el.dataset.solto = "1"; this.mover(el, [x, y]);
+    Palco.adicionar(`<div class="c83-toque" style="left:${x}px;top:${y}px"></div>`);
+    const t = Palco.el.lastElementChild;
+    Palco.animar(t, [{ scale: .2, opacity: 1 }, { scale: 1.4, opacity: 0 }], { duracao: .5, easing: "ease-out" }).finished.then(() => t.remove(), () => {});
+    Vibra.tocar("toqueEletron"); this.msg("");
+  },
+  // a avaliação: devolve "" se está certo, ou o que corrigir
+  avaliar() {
+    const els = [...Palco.el.querySelectorAll(".c1012-e")], C = this.centro();
+    if (els.some(el => !el.dataset.solto)) return `Use os ${els.length} elétrons de valência`;
+    const lados = { cima: 0, baixo: 0, esq: 0, dir: 0 };
+    for (const el of els) {
+      const dx = parseFloat(el.style.left) - C.x, dy = parseFloat(el.style.top) - C.y, d = Math.hypot(dx, dy);
+      if (d < C.R * .75) return "Os elétrons ficam em volta do símbolo, não em cima dele";
+      if (d > C.R * 2.6) return "Coloque os elétrons mais perto do símbolo";
+      lados[Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "cima" : "baixo") : (dx < 0 ? "esq" : "dir")]++;
+    }
+    const n = els.length, cheios = Object.values(lados);
+    // Regra de Hund: até 4, um por lado; acima de 4, todos os lados com ao menos um e nenhum com mais de dois
+    const ok = n <= 4 ? cheios.every(v => v <= 1) : cheios.every(v => v >= 1 && v <= 2);
+    return ok ? "" : "Lembre-se da Regra de Hund: um elétron em cada lado antes de formar par";
+  },
+  msg(texto, certo = false) {
+    const m = this.$(".c1012-msg"); if (!m) return;
+    m.textContent = texto; m.classList.toggle("certo", certo);
+    if (texto) Palco.animar(m, [{ opacity: 0 }, { opacity: 1 }], { duracao: .3 });
+  },
+  confirmar() {
+    if (this.resolvido) return;
+    const erro = this.avaliar(), sim = this.$(".c1012-sim");
+    if (erro) {
+      this.msg(erro);
+      sim.animate([0, -12, 10, -8, 6, -3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 500, easing: "ease-out" });
+      Palco.adicionar(`<div class="c4-vermelho"></div>`);
+      const v = Palco.el.lastElementChild;
+      v.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }], { duration: 900, easing: "ease-out" }).finished.then(() => v.remove());
+      Vibra.tocar("toqueErrado");
+      return;
+    }
+    // certo: a mesma festa dos quizzes
+    this.resolvido = true;
+    this.msg("Isso! Essa é a estrutura de Lewis do " + this.ex.nome.toLowerCase(), true);
+    this.$(".c1012-ok").disabled = true;
+    Palco.adicionar(`<div class="c4-verde"></div>`);
+    const v = Palco.el.lastElementChild;
+    v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
+    Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+    Palco.el.querySelectorAll(".c1012-e").forEach(el => Palco.animar(el, [{ scale: 1, boxShadow: Cena74.SEM_BRILHO }, { scale: 1.6, boxShadow: Cena77.COR.ligante, offset: .4 }, { scale: 1, boxShadow: Cena74.SEM_BRILHO }], { duracao: .9, fill: "none" }));
+    ["audio/vfx/applause.mp3", "audio/funfare.mp3"].forEach(src => { const a = new Audio(src); a.play().catch(() => {}); });
+    Vibra.tocar("cloroCerta");
   }
 };
 
