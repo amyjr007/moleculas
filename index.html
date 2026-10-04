@@ -459,6 +459,19 @@
   .c10-questao { position: absolute; left: 50%; top: 40%; translate: -50% -50%; width: min(90%, 24ch); margin: 0; z-index: 3; text-align: center;
     font-family: var(--display); font-weight: 700; line-height: 1.3; color: #fff; font-size: clamp(1.3rem, 3.4vmin + .6rem, 2.5rem); }
   .c72-pergunta:empty { display: none; }
+  /* o cartão da nota, no fim do quiz */
+  .c10-cartao { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6; width: min(90%, 30rem);
+    padding: clamp(18px, 3vmin, 30px) clamp(18px, 4vmin, 36px); border-radius: 22px; text-align: center;
+    background: linear-gradient(180deg, rgba(27,42,64,.97), rgba(10,19,34,.97)); border: 2px solid rgba(110,231,160,.55);
+    box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 40px rgba(110,231,160,.18); color: #fff; font-family: var(--display); }
+  .c10-cartao p { margin: 0; }
+  .c10-cartao-tit { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--celeste); font-size: clamp(.9rem, 1.4vmin + .55rem, 1.2rem); }
+  .c10-cartao-nota { font-weight: 800; line-height: 1; color: var(--ambar); font-size: clamp(4rem, 12vmin, 6.5rem); text-shadow: 0 0 30px rgba(255,194,75,.5); margin: .1em 0 .15em !important; }
+  .c10-cartao-msg { font-weight: 700; font-size: clamp(1.05rem, 1.8vmin + .6rem, 1.45rem); line-height: 1.3; }
+  .c10-cartao-sub { margin-top: 1em !important; font-weight: 700; color: #6EE7A0; font-size: clamp(.95rem, 1.4vmin + .55rem, 1.2rem); }
+  .c10-cartao ul { margin: .5em 0 0; padding: 0; list-style: none; text-align: left; display: inline-block; }
+  .c10-cartao li { position: relative; padding-left: 1.2em; margin: .35em 0; font-family: "Atkinson Hyperlegible", sans-serif; font-size: clamp(.95rem, 1.3vmin + .55rem, 1.15rem); line-height: 1.3; }
+  .c10-cartao li::before { content: "•"; position: absolute; left: .2em; color: var(--ambar); font-weight: 800; }
   .c10-titulo { font-size: calc(clamp(2.2rem, 6vmin + 1rem, 4.4rem) * .7); }
   /* 10.12: estruturas de Lewis — o nome do elemento, o símbolo no meio, a área de toque, a mensagem e o "Confirmar" */
   .c1012-sub { position: absolute; left: 0; right: 0; top: 17%; margin: 0; text-align: center; z-index: 3; pointer-events: none;
@@ -1059,7 +1072,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v89 · 04/10/2026</span>
+    <span class="versao" id="versao">v90 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2622,7 +2635,7 @@ const NARRACOES = [
   // 1ª questão do resumo
   // as três partes do resumo na navegação rápida: 35 (10.1 a 10.7), 36 (10.8 a 10.11) e 37 (10.12)
   { id: "dialogo10_1", titulo: "Resumo interativo", num: 35, src: "audio/audio_moleculas_10.1.mp3",
-    inicio: () => Cena10.montar(),
+    inicio: () => { Cena10.montar(); Placar.zerar(); },   // o quiz começa: placar zerado
     eventos: [
       { tempo: 4.4,  acao: () => Cena10.questao("Segundo Lewis, os átomos se ligam pra adquirir...?", 2.6) }
     ],
@@ -4507,6 +4520,7 @@ const Cena71 = {
   // erro: a tela treme em vermelho e a opção errada fica marcada (dá para tentar de novo)
   errou(b) {
     b.classList.add("errada"); b.disabled = true;
+    if (this.perg && /^dialogo10_/.test(this.perg.de)) Placar.erro(this.perg.de);
     Vibra.tocar(this.perg && this.perg.tipo === "oxigenio" ? "oxigenioErrada" : "cloroErrada");
     const palco = document.getElementById("palco");
     palco.animate([0, -14, 12, -10, 8, -5, 3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 520, easing: "ease-out" });
@@ -4519,6 +4533,7 @@ const Cena71 = {
     const caixa = this.$(".c72-quiz .c4-opcoes");
     caixa.classList.add("respondido"); b.classList.add("certa");
     const perg = this.perg || { tipo: "cloro", de: "dialogo7_2", para: "dialogo7_3" };
+    if (/^dialogo10_/.test(perg.de)) Placar.acerto(perg.de);
     Vibra.tocar(perg.tipo === "oxigenio" ? "oxigenioCerta" : "cloroCerta");
     Palco.adicionar(`<div class="c4-verde"></div>`);
     const v = Palco.el.lastElementChild;
@@ -5918,6 +5933,66 @@ const Cena10 = {
   }
 };
 
+/* ---------- O placar do Resumo Interativo ----------
+   Cada questão (10.1 a 10.11) e cada exemplo de Lewis vale um ponto: acertando de primeira, o ponto inteiro;
+   depois de um erro, meio; depois de mais erros, um quarto. A nota (1 a 10) é sobre o que foi respondido.
+   No fim, um cartão com a nota, uma mensagem positiva e os temas em que houve erro, para estudar mais. */
+const Placar = {
+  itens: {},
+  TEMAS: [
+    [/^dialogo10_[1-4]$/, "Regra do octeto e estabilidade dos gases nobres"],
+    [/^dialogo10_[5-7]$/, "Ligação covalente e o que são moléculas"],
+    [/^dialogo10_8$/, "Substâncias moleculares, cristais iônicos e cristais metálicos"],
+    [/^dialogo10_(9|10|11)$/, "Ligações covalentes simples, duplas e triplas"],
+    [/^lewis_/, "Estruturas de Lewis e a Regra de Hund"]
+  ],
+  zerar() { this.itens = {}; },
+  item(id) { return this.itens[id] || (this.itens[id] = { erros: 0, certo: false }); },
+  erro(id) { const it = this.item(id); if (!it.certo) it.erros++; },
+  acerto(id) { this.item(id).certo = true; },
+  nota() {
+    const its = Object.values(this.itens).filter(i => i.certo); if (!its.length) return 1;
+    const soma = its.reduce((s, i) => s + (i.erros === 0 ? 1 : i.erros === 1 ? .5 : .25), 0);
+    return Math.max(1, Math.round(10 * soma / its.length));
+  },
+  // os temas das questões em que houve erro (sem repetir)
+  revisar() {
+    const temas = [];
+    Object.entries(this.itens).forEach(([id, i]) => {
+      if (!i.erros) return;
+      const t = (this.TEMAS.find(([re]) => re.test(id)) || [])[1];
+      if (t && !temas.includes(t)) temas.push(t);
+    });
+    return temas;
+  },
+  mensagem(n) {
+    if (n >= 9) return "Excelente! Você dominou o conteúdo de moléculas e ligações covalentes.";
+    if (n >= 7) return "Muito bem! Você entendeu a maior parte do conteúdo.";
+    if (n >= 5) return "Bom trabalho! Você está no caminho certo.";
+    return "Valeu pelo esforço! Com uma revisão, você chega lá.";
+  },
+  // o cartão do fim do quiz
+  cartao() {
+    if (Palco.el.querySelector(".c10-cartao")) return;
+    const n = this.nota(), temas = this.revisar();
+    // o exercício de Lewis sai de trás: o cartão fica sozinho na tela, com o título
+    Palco.el.querySelectorAll('.c1012-ex, .c1012-eletrons').forEach(el => Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }));
+    Palco.adicionar(`
+      <div class="c10-cartao" role="dialog" aria-label="Sua nota no quiz">
+        <p class="c10-cartao-tit">Sua nota</p>
+        <p class="c10-cartao-nota">${n}</p>
+        <p class="c10-cartao-msg">${this.mensagem(n)}</p>
+        ${temas.length
+          ? `<p class="c10-cartao-sub">Vale estudar um pouco mais:</p><ul>${temas.map(t => `<li>${t}</li>`).join("")}</ul>`
+          : `<p class="c10-cartao-sub">Você acertou tudo de primeira. Nada para revisar: continue assim!</p>`}
+      </div>`);
+    const c = Palco.el.lastElementChild;
+    Palco.animar(c, [{ opacity: 0, transform: "translate(-50%, -46%) scale(.9)" }, { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }],
+      { duracao: .5, easing: "cubic-bezier(.3,1.3,.5,1)" });
+    if (n >= 7) { Confete.soltar({ de: "topo" }); const a = new Audio("audio/vfx/applause.mp3"); a.play().catch(() => {}); }
+  }
+};
+
 /* ---------- Narração 10.12: o quiz de estrutura de Lewis ----------
    Em cada exemplo, o símbolo do elemento fica no meio e os elétrons de valência numa fileira em cima. Os elétrons
    ocupam lugares fixos nas quatro direções em volta do símbolo: o aluno toca numa direção e um elétron da fileira
@@ -6028,6 +6103,7 @@ const Cena1012 = {
     if (this.resolvido) return;
     const erro = this.avaliar(), sim = this.$(".c1012-sim");
     if (erro) {
+      Placar.erro("lewis_" + this.chave);
       this.msg(erro);
       sim.animate([0, -12, 10, -8, 6, -3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 500, easing: "ease-out" });
       Palco.adicionar(`<div class="c4-vermelho"></div>`);
@@ -6038,6 +6114,7 @@ const Cena1012 = {
     }
     // certo: a mesma festa dos quizzes
     this.resolvido = true;
+    Placar.acerto("lewis_" + this.chave);
     this.msg("Isso! Essa é a estrutura de Lewis do " + this.ex.nome.toLowerCase(), true);
     this.$(".c1012-ok").disabled = true; this.$(".c1012-desfaz").disabled = true;
     Palco.adicionar(`<div class="c4-verde"></div>`);
@@ -6048,7 +6125,11 @@ const Cena1012 = {
     ["audio/vfx/applause.mp3", "audio/funfare.mp3"].forEach(src => { const a = new Audio(src); a.play().catch(() => {}); });
     Vibra.tocar("cloroCerta");
     // passada a festa, o próximo exemplo (se houver)
-    const i = this.ORDEM.indexOf(this.chave), prox = this.ORDEM[i + 1]; if (!prox) return;
+    const i = this.ORDEM.indexOf(this.chave), prox = this.ORDEM[i + 1];
+    if (!prox) {   // o último exemplo: passada a festa, o cartão com a nota do quiz inteiro
+      Palco.animar(sim, [{ opacity: 1 }, { opacity: 1 }], { duracao: 2.6, fill: "none" }).finished.then(() => { if (sim.isConnected) Placar.cartao(); }, () => {});
+      return;
+    }
     Palco.animar(sim, [{ opacity: 1 }, { opacity: 1 }], { duracao: 2.6, fill: "none" }).finished.then(() => {
       if (sim.isConnected) this.trocar(prox, i + 1 === this.ORDEM.length - 1);
     }, () => {});
