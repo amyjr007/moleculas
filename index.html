@@ -448,6 +448,17 @@
   .c77-texto.em-cima { translate: -50% -100%; }
   .c77-texto.estrutural { color: var(--celeste); text-shadow: 0 0 20px rgba(163,219,247,.55); }
   .c77-texto.dupla { color: #FF8A7A; text-shadow: 0 0 20px rgba(255,122,102,.45); }   /* na cor do oxigênio */
+  /* áudio 10: o Resumo Interativo — os botões de começar e a questão digitada no meio da tela */
+  .c10-botoes { position: absolute; left: 0; right: 0; top: 50%; translate: 0 -50%; z-index: 3;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(12px, 3vw, 22px); padding: 0 16px; }
+  .c10-bt { padding: .65em 1.3em; border-radius: 999px; border: 0; cursor: pointer;
+    font: 800 clamp(1.1rem, 2.4vmin + .6rem, 1.7rem)/1 var(--display); color: var(--preto); background: var(--ambar);
+    box-shadow: 0 10px 28px rgba(0,0,0,.35), 0 0 0 0 rgba(255,194,75,.5); animation: quizChama 1.8s ease-in-out .6s infinite; }
+  .c10-bt:nth-child(2) { background: #6EE7A0; }
+  .c10-bt:active { transform: scale(.95); }
+  .c10-questao { position: absolute; left: 50%; top: 40%; translate: -50% -50%; width: min(90%, 24ch); margin: 0; z-index: 3; text-align: center;
+    font-family: var(--display); font-weight: 700; line-height: 1.3; color: #fff; font-size: clamp(1.3rem, 3.4vmin + .6rem, 2.5rem); }
+  .c72-pergunta:empty { display: none; }
   .c77-texto.tripla { color: #8FA8FF; text-shadow: 0 0 20px rgba(80,110,248,.55); }   /* na cor do nitrogênio */
   /* áudio 7.8: o par compartilhado vira um traço (Cl–Cl); como tubo, mostra os dois elétrons indo e voltando */
   .c78-traco { position: absolute; z-index: 3; pointer-events: none; border-radius: 999px;
@@ -1023,7 +1034,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v80 · 04/10/2026</span>
+    <span class="versao" id="versao">v81 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2572,7 +2583,23 @@ const NARRACOES = [
       { tempo: 1.8,  acao: () => Cena83.piscarSolitarios() },      // os pares compartilhados piscam o brilho 3 vezes
       { tempo: 8.7,  acao: () => Cena86.tracos() },                // os três pares viram três traços
       { tempo: 12,   acao: () => Cena77.texto("tripla", "Ligação covalente tripla", 1.7) }   // digitado até 13,7s
-    ] }
+    ] },
+  // o Resumo Interativo: volta do mundo quântico e o cubo traz a tela do resumo
+  { id: "dialogo10", titulo: "Resumo Interativo", src: "audio/audio_moleculas_10.mp3",
+    // pela navegação rápida: parte do N₂ formado (em traços), no mundo quântico
+    inicio: () => Cena75.montarPronta("nitrogenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); Cena86.tracos(); }),
+    eventos: [
+      { tempo: 1,    acao: () => Cena8.sair(1.8) },                // zoom out: de volta ao cilindro de nitrogênio (até 2,8s)
+      { tempo: 3.8,  acao: () => Cena10.girar() }                  // a tela vira um cubo: "Resumo Interativo"
+    ],
+    aoFim: () => Cena10.botoes() },                                // "Vamo sim!" / "Por favor!": os dois levam à 1ª questão
+  // 1ª questão do resumo
+  { id: "dialogo10_1", titulo: "Resumo: questão 1", src: "audio/audio_moleculas_10.1.mp3",
+    inicio: () => Cena10.montar(),
+    eventos: [
+      { tempo: 4.4,  acao: () => Cena10.questao("Segundo Lewis, os átomos se ligam pra adquirir...?", 2.6) }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena10.opcoes([["Energia", 0], ["Estabilidade", 1], ["Massa", 0]], "dialogo10_1", "dialogo10_2"); } }
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -4273,19 +4300,20 @@ const Cena71 = {
 
   // 13,5s: o cubo já nasce montado em volta da tela, com a face nova pronta (nada muda à vista)
   // tipo: o gás da face nova ("cloro" na 7.1, "oxigenio" no áudio 8)
-  preparar(tipo = "cloro") {
+  // html: o que vai na face nova no lugar do cilindro (ex.: o "Resumo Interativo", no áudio 10)
+  preparar(tipo = "cloro", { html } = {}) {
     if (this.$(".c71-cubo")) return;
     const P = Palco.el, W = P.clientWidth, gas = this.GASES[tipo];
     const atuais = [...P.children];
     Palco.adicionar(`
       <div class="c71-cubo"><div class="c71-giro">
         <div class="c71-face f1"></div>
-        <div class="c71-face f2">
+        <div class="c71-face f2">${html || `
           <p class="c71-exemplo">${gas.exemplo}</p>
           <h2 class="c0-titulo c71-titulo escondido" style="top:5%">${gas.titulo}</h2>
           <div class="c71-area" data-molecula="${tipo}">
             <button type="button" class="c71-cilindro" aria-label="Cilindro de gás ${gas.aria}: toque para ver as moléculas">${this.cilindro(tipo)}</button>
-          </div>
+          </div>`}
         </div>
       </div></div>`);
     const giro = this.$(".c71-giro"), f1 = this.$(".c71-face.f1"), f2 = this.$(".c71-face.f2");
@@ -4294,7 +4322,8 @@ const Cena71 = {
     f2.style.transform = `rotateY(90deg) translateZ(${W / 2}px)`;
     giro.style.transform = `translateZ(${-W / 2}px)`;
     this.W = W;
-    f2.querySelector(".c71-cilindro").addEventListener("click", () => this.entrar());   // o da face nova (o da velha também pode estar no palco)
+    const cilNovo = f2.querySelector(".c71-cilindro");   // o da face nova (o da velha também pode estar no palco)
+    if (cilNovo) cilNovo.addEventListener("click", () => this.entrar());
   },
 
   // 15s: o cubo gira da direita para a esquerda; ao parar, a face nova vira a tela (e o cubo sai)
@@ -5202,8 +5231,10 @@ const Cena78 = {
 const Cena8 = {
   $(sel) { return Palco.el.querySelector(sel); },
   // 3s: zoom out — o mundo quântico se fecha num clarão e o cilindro de cloro volta, encolhendo até o tamanho normal
-  sair() {
+  // total: quanto dura a volta (1,5s no padrão; 1,8s no áudio 10)
+  sair(total = 1.5) {
     const area = this.$(".c71-area"); if (!area || !this.$(".c71-quantico")) return;
+    const k = total / 1.5;
     Cena75.travar();
     let cil = area.querySelector(".c71-cilindro");
     if (!cil) {   // pela navegação rápida o cilindro não estava no palco: entra já "tocado" (o do gás de agora)
@@ -5214,19 +5245,19 @@ const Cena8 = {
     const q = this.$(".c71-quantico");
     Palco.adicionar(`<div class="c3-flash"></div>`);
     const flash = Palco.el.lastElementChild;
-    Palco.animar(q, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.55)" }], { duracao: .5, easing: "ease-in" });
-    Palco.animar(flash, [{ opacity: 0 }, { opacity: 1, offset: .35 }, { opacity: 0 }], { duracao: .9, easing: "ease-in-out" })
+    Palco.animar(q, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.55)" }], { duracao: .5 * k, easing: "ease-in" });
+    Palco.animar(flash, [{ opacity: 0 }, { opacity: 1, offset: .35 }, { opacity: 0 }], { duracao: .9 * k, easing: "ease-in-out" })
       .finished.then(() => flash.remove(), () => {});
     const t = this.$(".c71-titulo");
     if (t) Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => t.classList.add("escondido"), () => {});
     // no pico do clarão: some o mundo quântico (e tudo o que estava em volta da molécula); volta o cilindro
-    Palco.animar(cil, [{ opacity: 0 }, { opacity: 0 }], { duracao: .32, fill: "none" }).finished.then(() => {
+    Palco.animar(cil, [{ opacity: 0 }, { opacity: 0 }], { duracao: .32 * k, fill: "none" }).finished.then(() => {
       Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c75-status, .c75-arrasto, .c76-octeto, .c77-texto, .c78-traco, .c73-octeto, .c74-hund, .c86-formula, .c72-quiz, .c84-aviso, .c84-toques, .c83-mao")
         .forEach(el => el.remove());
       q.remove();
       Cena71.quantum = null; Cena71.m = null;
       cil.style.visibility = "";
-      Palco.animar(cil, [{ transform: "scale(5.5)", opacity: 1 }, { transform: "scale(1)", opacity: 1 }], { duracao: 1.18, easing: "cubic-bezier(.2,.7,.3,1)" });
+      Palco.animar(cil, [{ transform: "scale(5.5)", opacity: 1 }, { transform: "scale(1)", opacity: 1 }], { duracao: 1.18 * k, easing: "cubic-bezier(.2,.7,.3,1)" });
     }, () => {});
   },
   // 5s: a tela vira um cubo; na face nova, o cilindro do gás seguinte (oxigênio no áudio 8, nitrogênio no 9)
@@ -5689,6 +5720,49 @@ const Cena96 = {
     });
     Palco.el.querySelectorAll(".c77-texto").forEach(t =>
       Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => t.remove(), () => {}));
+  }
+};
+
+/* ---------- Cenas da narração 10: o Resumo Interativo ----------
+   De volta do mundo quântico do N₂, o cubo gira e a face nova traz o título "Resumo Interativo". O aluno escolhe
+   começar ("Vamo sim!" ou "Por favor!") e vêm as questões: cada uma digitada no meio da tela, com as alternativas
+   embaixo no fim do áudio — o mesmo quiz (e a mesma festa) das perguntas anteriores. */
+const Cena10 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  TITULO: `<h2 class="c0-titulo c10-titulo" style="top:5%">Resumo Interativo</h2>`,
+  // 3,8s: o cubo gira; a face nova é o resumo
+  girar() {
+    if (this.$(".c10-titulo")) return;
+    Cena71.preparar("nitrogenio", { html: this.TITULO });
+    Cena71.girar();
+  },
+  // pela navegação rápida: a tela do resumo já pronta
+  montar() { if (!this.$(".c10-titulo")) Palco.mostrar(this.TITULO); },
+  // fim do áudio 10: dois botões, que fazem a mesma coisa — começar
+  botoes() {
+    if (this.$(".c10-botoes")) return;
+    ui.semPlay(true);
+    Palco.adicionar(`<div class="c10-botoes"><button class="c10-bt">Vamo sim!</button><button class="c10-bt">Por favor!</button></div>`);
+    const caixa = this.$(".c10-botoes");
+    [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
+      { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
+    caixa.addEventListener("click", e => {
+      if (!e.target.closest(".c10-bt") || caixa.classList.contains("usado")) return;
+      caixa.classList.add("usado");
+      Vibra.tocar("toqueEletron");
+      Palco.animar(caixa, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => caixa.remove(), () => {});
+      Player.seguirSozinho();
+    });
+  },
+  // a questão, digitada no meio da tela (a anterior, se houver, sai)
+  questao(texto, dur) {
+    Palco.el.querySelectorAll(".c10-questao").forEach(q => q.remove());
+    Palco.adicionar(`<p class="c10-questao"></p>`);
+    Palco.digitar(this.$(".c10-questao"), texto, dur);
+  },
+  // as alternativas da questão (sem repetir o texto da pergunta: ele já está na tela)
+  opcoes(opcoes, de, para) {
+    Cena71.pergunta("nitrogenio", { texto: "", opcoes, de, para });
   }
 };
 
