@@ -1042,7 +1042,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v85 · 04/10/2026</span>
+    <span class="versao" id="versao">v86 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2634,14 +2634,14 @@ const NARRACOES = [
       () => [[Cena10.FIG.O3(), 1], [Cena10.FIG.CO2(), 0], [Cena10.FIG.N2(), 0]], true]
   ].map(([n, inicio, dur, texto, opcoes, imagens], k) => {
     const id = "dialogo" + n.replace(".", "_"), prox = "dialogo10_" + (k + 3);
-    const parte = n === "10.8" ? { titulo: "Sobre Moléculas", num: 36 } : { titulo: "Resumo: questão " + (k + 2), semNav: true };
+    const parte = n === "10.8" ? { titulo: "Quiz de moléculas", num: 36 } : { titulo: "Resumo: questão " + (k + 2), semNav: true };
     return { id, ...parte, src: `audio/audio_moleculas_${n}.mp3`,
       inicio: () => Cena10.montar(),
       eventos: [{ tempo: inicio, acao: () => Cena10.questao(texto, dur) }],
       aoFim: () => { ui.semPlay(true); Cena10.opcoes(typeof opcoes === "function" ? opcoes() : opcoes, id, prox, { imagens }); } };
   }),
   // 3ª parte do resumo: a estrutura de Lewis (os eventos virão depois)
-  { id: "dialogo10_12", titulo: "Estrutura de Lewis", num: 37, src: "audio/audio_moleculas_10.12.mp3",
+  { id: "dialogo10_12", titulo: "Quiz de estrutura de Lewis", num: 37, src: "audio/audio_moleculas_10.12.mp3",
     inicio: () => Cena10.montar(),
     eventos: [] }
 
