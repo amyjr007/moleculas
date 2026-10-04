@@ -448,6 +448,7 @@
   .c77-texto.em-cima { translate: -50% -100%; }
   .c77-texto.estrutural { color: var(--celeste); text-shadow: 0 0 20px rgba(163,219,247,.55); }
   .c77-texto.dupla { color: #FF8A7A; text-shadow: 0 0 20px rgba(255,122,102,.45); }   /* na cor do oxigênio */
+  .c77-texto.tripla { color: #8FA8FF; text-shadow: 0 0 20px rgba(80,110,248,.55); }   /* na cor do nitrogênio */
   /* áudio 7.8: o par compartilhado vira um traço (Cl–Cl); como tubo, mostra os dois elétrons indo e voltando */
   .c78-traco { position: absolute; z-index: 3; pointer-events: none; border-radius: 999px;
     background: linear-gradient(to bottom, #fff, #D3EFFC 45%, #6FC0EA); box-shadow: 0 0 10px rgba(163,219,247,.6);
@@ -1022,7 +1023,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v79 · 04/10/2026</span>
+    <span class="versao" id="versao">v80 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2561,6 +2562,16 @@ const NARRACOES = [
       { tempo: 33,   acao: () => { Cena96.brilhar("isoB", false, { cor: "isolado", manterCor: true });
                                    Cena96.brilhar("lig", true, { cor: "ligante" });
                                    Cena77.texto("ligante", "3 pares de elétrons ligantes", 1.5); } }
+    ],
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } },   // no lugar do play, o botão "Entendi"
+  // a ligação covalente tripla
+  { id: "dialogo9_7", titulo: "Ligação covalente tripla", src: "audio/audio_moleculas_9.7.mp3",
+    inicio: () => Cena75.montarPronta("nitrogenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); }),   // pela navegação: o N₂ formado
+    eventos: [
+      { tempo: 0,    acao: () => Cena96.normal() },                // os destaques e os textos da 9.6 saem
+      { tempo: 1.8,  acao: () => Cena83.piscarSolitarios() },      // os pares compartilhados piscam o brilho 3 vezes
+      { tempo: 8.7,  acao: () => Cena86.tracos() },                // os três pares viram três traços
+      { tempo: 12,   acao: () => Cena77.texto("tripla", "Ligação covalente tripla", 1.7) }   // digitado até 13,7s
     ] }
 ];
 
@@ -5097,7 +5108,7 @@ const Cena77 = {
   texto(tipo, frase, dur) {
     if (!Cena75.ligado || this.$(`.c77-texto.${tipo}`)) return;
     const A = Cena74.atomo("A"); if (!A) return;
-    const me = Cena74.medidas(A), cima = !["ligante", "estrutural", "dupla"].includes(tipo);   // ligante, "Fórmula estrutural" e "Ligação covalente dupla" vão embaixo
+    const me = Cena74.medidas(A), cima = !["ligante", "estrutural", "dupla", "tripla"].includes(tipo);   // ligante, "Fórmula estrutural" e "Ligação covalente dupla" vão embaixo
     const y = cima ? A.y - me.g - me.e - 12 : A.y + me.g + me.e + 14;
     if (!cima) this.esconderStatus(true);   // embaixo mora o "Molécula estável": sai enquanto este estiver na tela
     Palco.adicionar(`<p class="c77-texto ${tipo}${cima ? " em-cima" : ""}" style="top:${y}px"></p>`);
@@ -5492,21 +5503,28 @@ const Cena86 = {
   // cada traço vai da beira de um O à do outro, na altura do seu par (o de cima e o de baixo)
   posicionar(tr) {
     const A = Cena74.atomo("A"), B = Cena74.atomo("B"); if (!A || !B) return;
-    const { e, s } = Cena74.medidas(A), x1 = A.x + A.R * .8, x2 = B.x - B.R * .8, h = Math.max(5, e * .42);
-    const y = (A.y + B.y) / 2 + (tr.dataset.par === "1" ? s : -s);
+    const { e } = Cena74.medidas(A), x1 = A.x + A.R * .8, x2 = B.x - B.R * .8, h = Math.max(5, e * .42);
+    const y = (A.y + B.y) / 2 + this.desvio(tr.dataset.par, A);
     Object.assign(tr.style, { left: `${x1}px`, top: `${y - h / 2}px`, width: `${Math.max(x2 - x1, 0)}px`, height: `${h}px` });
   },
-  // 42,5s: cada par se recolhe no seu meio e vira um traço (as elipses em volta somem) — o efeito do Cl₂, duas vezes
+  // a altura de cada traço em relação ao eixo: no O₂, "0" em cima e "1" embaixo; no N₂, "0" em cima, "1" embaixo e "2" no eixo
+  desvio(par, A) {
+    const v = Cena75.vPar(A);
+    return par === "2" ? 0 : par === "1" ? v : -v;
+  },
+  // cada par se recolhe no seu meio e vira um traço (as elipses em volta somem) — o efeito do Cl₂, duas vezes (O₂) ou três (N₂)
   tracos() {
     if (!Cena75.ligado || this.$(".c86-traco")) return;
     const A = Cena74.atomo("A"), B = Cena74.atomo("B"), cx = (A.x + B.x) / 2, cy = (A.y + B.y) / 2;
-    Palco.el.querySelectorAll('.c74-e[data-lado="frente"], .c74-e[data-lado="baixo"]').forEach(el => {
-      const y = parseFloat(el.style.top), meioY = y < cy ? cy - Cena74.medidas(A).s : cy + Cena74.medidas(A).s;
+    const tripla = Cena75.tipo === "nitrogenio", lados = Cena75.MOVEIS[Cena75.tipo] || ["frente", "baixo"];
+    Palco.el.querySelectorAll(lados.map(l => `.c74-e[data-lado="${l}"]`).join(", ")).forEach(el => {
+      const y = parseFloat(el.style.top), v = Cena75.vPar(A);
+      const meioY = tripla ? cy + { cima: -v, frente: 0, baixo: v }[el.dataset.lado] : (y < cy ? cy - v : cy + v);
       Palco.animar(el, [{ transform: "translate(0px, 0px)", opacity: 1 }, { transform: `translate(${cx - parseFloat(el.style.left)}px, ${meioY - y}px)`, opacity: 0 }],
         { duracao: .5, easing: "ease-in" });
     });
     Palco.el.querySelectorAll(".c75-ligacao").forEach(l => Palco.animar(l, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }));
-    Palco.adicionar(`<div class="c78-traco c86-traco" data-par="0"></div><div class="c78-traco c86-traco" data-par="1"></div>`);
+    Palco.adicionar((tripla ? ["0", "2", "1"] : ["0", "1"]).map(p => `<div class="c78-traco c86-traco" data-par="${p}"></div>`).join(""));
     Palco.el.querySelectorAll(".c86-traco").forEach(tr => {
       this.posicionar(tr);
       Palco.animar(tr, [{ scale: "0 1", opacity: 0 }, { scale: "1.15 1", opacity: 1, offset: .7 }, { scale: "1 1", opacity: 1 }],
