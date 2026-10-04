@@ -459,6 +459,14 @@
   .c10-questao { position: absolute; left: 50%; top: 40%; translate: -50% -50%; width: min(90%, 24ch); margin: 0; z-index: 3; text-align: center;
     font-family: var(--display); font-weight: 700; line-height: 1.3; color: #fff; font-size: clamp(1.3rem, 3.4vmin + .6rem, 2.5rem); }
   .c72-pergunta:empty { display: none; }
+  /* resumo: alternativas com figuras, em retângulos; com elas na tela, a questão sobe um pouco */
+  .c72-quiz.imagens .c4-opcoes { flex-wrap: nowrap; justify-content: center; max-width: 96%; gap: clamp(8px, 2vw, 16px); }
+  .c72-quiz.imagens .c4-op { min-width: 0; width: clamp(96px, 27vw, 200px); padding: .4em; border-radius: 14px; line-height: 1; }
+  .c72-quiz.imagens .c4-op svg { display: block; width: 100%; height: auto; }
+  .c10-mol { display: flex; flex-direction: column; align-items: center; gap: .25em; }
+  .c10-mol-nome { font: 800 clamp(.95rem, 1.6vmin + .55rem, 1.35rem)/1 var(--display); color: #fff; }
+  .c10-mol-nome sub { font-size: .65em; vertical-align: -.25em; }
+  #conteudoPalco:has(.c72-quiz.imagens) .c10-questao { top: 30%; transition: top .4s ease; }
   .c77-texto.tripla { color: #8FA8FF; text-shadow: 0 0 20px rgba(80,110,248,.55); }   /* na cor do nitrogênio */
   /* áudio 7.8: o par compartilhado vira um traço (Cl–Cl); como tubo, mostra os dois elétrons indo e voltando */
   .c78-traco { position: absolute; z-index: 3; pointer-events: none; border-radius: 999px;
@@ -1034,7 +1042,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v83 · 04/10/2026</span>
+    <span class="versao" id="versao">v84 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2613,13 +2621,21 @@ const NARRACOES = [
     ["10.6", .3,  3,   "Essa ligação covalente une os átomos formando o que chamamos de substâncias...",
       [["Moleculares", 1], ["Iônicas", 0], ["Metálicas", 0]]],
     ["10.7", .3,  3,   "Nesse tipo de ligação, formamos estruturas discretas, eletricamente neutras, que chamamos de...?",
-      [["Íons", 0], ["Moléculas", 1], ["Cristais", 0]]]
-  ].map(([n, inicio, dur, texto, opcoes], k) => {
+      [["Íons", 0], ["Moléculas", 1], ["Cristais", 0]]],
+    ["10.8", 5.6, 2.6, "Qual das estruturas a seguir é formada por moléculas?",
+      () => [[Cena10.FIG.ionico(), 0], [Cena10.FIG.moleculas(), 1], [Cena10.FIG.metalico(), 0]], true],
+    ["10.9", 1.3, 3,   "Qual dessas moléculas tem uma ligação covalente simples?",
+      () => [[Cena10.FIG.O2(), 0], [Cena10.FIG.N2(), 0], [Cena10.FIG.HCl(), 1]], true],
+    ["10.10", 1,  2.5, "Qual dessas moléculas tem uma ligação covalente dupla?",
+      () => [[Cena10.FIG.HCl(), 0], [Cena10.FIG.O2(), 1], [Cena10.FIG.N2(), 0]], true],
+    ["10.11", 1,  3,   "Qual dessas moléculas tem uma ligação covalente simples e uma dupla?",
+      () => [[Cena10.FIG.O3(), 1], [Cena10.FIG.CO2(), 0], [Cena10.FIG.N2(), 0]], true]
+  ].map(([n, inicio, dur, texto, opcoes, imagens], k) => {
     const id = "dialogo" + n.replace(".", "_"), prox = "dialogo10_" + (k + 3);
     return { id, titulo: "Resumo: questão " + (k + 2), src: `audio/audio_moleculas_${n}.mp3`,
       inicio: () => Cena10.montar(),
       eventos: [{ tempo: inicio, acao: () => Cena10.questao(texto, dur) }],
-      aoFim: () => { ui.semPlay(true); Cena10.opcoes(opcoes, id, prox); } };
+      aoFim: () => { ui.semPlay(true); Cena10.opcoes(typeof opcoes === "function" ? opcoes() : opcoes, id, prox, { imagens }); } };
   })
 
 ];
@@ -5618,16 +5634,18 @@ const Cena86 = {
   },
 
   // desenhos em fórmula de traços (SVG): átomos com símbolo, traços das ligações e os pares isolados em pontinhos
-  COR: { Cl: ["#7BE36B", "#1C5E14"], O: ["#FF6B6B", "#7A0A0A"] },
+  COR: { Cl: ["#7BE36B", "#1C5E14"], O: ["#FF6B6B", "#7A0A0A"], H: ["#F4F7FB", "#8A97A8"], N: ["#6F8DFF", "#1A2F8A"], C: ["#59606B", "#22272E"] },
+  // ligacoes: [i, j] (simples) ou [i, j, 2] / [i, j, 3] (dupla, tripla: traços paralelos)
   desenho({ largura, atomos, ligacoes }) {
     const r = 17, d = r + 9, ab = 5.5;   // raio do átomo, distância dos pontinhos, meia abertura do par
     const ponto = (x, y) => `<circle cx="${x}" cy="${y}" r="3.1" fill="#D3EFFC"/>`;
     const par = (x, y, lado) => ({ cima: [[x - ab, y - d], [x + ab, y - d]], baixo: [[x - ab, y + d], [x + ab, y + d]],
       esq: [[x - d, y - ab], [x - d, y + ab]], dir: [[x + d, y - ab], [x + d, y + ab]] }[lado]).map(([a, b]) => ponto(a, b)).join("");
     return `<svg viewBox="0 0 ${largura} 72" aria-hidden="true">
-      ${ligacoes.map(([i, j]) => `<line x1="${atomos[i].x + r + 2}" y1="36" x2="${atomos[j].x - r - 2}" y2="36" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`).join("")}
+      ${ligacoes.map(([i, j, ordem = 1]) => ({ 1: [0], 2: [-5, 5], 3: [-8, 0, 8] }[ordem]).map(dy =>
+        `<line x1="${atomos[i].x + r - 2}" y1="${36 + dy}" x2="${atomos[j].x - r + 2}" y2="${36 + dy}" stroke="#fff" stroke-width="${ordem > 1 ? 3.2 : 4}" stroke-linecap="round"/>`).join("")).join("")}
       ${atomos.map(a => `<circle cx="${a.x}" cy="36" r="${r}" fill="${this.COR[a.s][0]}" stroke="${this.COR[a.s][1]}" stroke-width="1.5"/>
-        <text x="${a.x}" y="41.5" text-anchor="middle" font-size="${a.s.length > 1 ? 14 : 16}" font-weight="800" fill="#0A1322" font-family="Bricolage Grotesque, sans-serif">${a.s}</text>
+        <text x="${a.x}" y="41.5" text-anchor="middle" font-size="${a.s.length > 1 ? 14 : 16}" font-weight="800" fill="${a.s === "C" ? "#fff" : "#0A1322"}" font-family="Bricolage Grotesque, sans-serif">${a.s}</text>
         ${a.pares.map(l => par(a.x, 36, l)).join("")}`).join("")}
     </svg>`;
   },
@@ -5759,7 +5777,8 @@ const Cena10 = {
     Cena71.girar();
   },
   // pela navegação rápida: a tela do resumo já pronta
-  montar() { if (!this.$(".c10-titulo")) Palco.mostrar(this.TITULO); },
+  // (no resumo interativo não há play: quem leva adiante são as respostas)
+  montar() { if (!this.$(".c10-titulo")) Palco.mostrar(this.TITULO); ui.semPlay(true); },
   // fim do áudio 10: dois botões, que fazem a mesma coisa — começar
   botoes() {
     if (this.$(".c10-botoes")) return;
@@ -5783,9 +5802,53 @@ const Cena10 = {
     Palco.digitar(this.$(".c10-questao"), texto, dur);
   },
   // as alternativas da questão (sem repetir o texto da pergunta: ele já está na tela)
-  opcoes(opcoes, de, para) {
+  // imagens: as alternativas são figuras (estruturas ou moléculas) em retângulos
+  opcoes(opcoes, de, para, { imagens = false } = {}) {
     Cena71.pergunta("nitrogenio", { texto: "", opcoes, de, para });
-    const q = this.$(".c72-quiz"); if (q) q.classList.add("longas");   // no resumo, as alternativas são palavras: o estilo compacto cabe sempre
+    const q = this.$(".c72-quiz"); if (q) q.classList.add(imagens ? "imagens" : "longas");   // palavras: o estilo compacto cabe sempre
+  },
+
+  // as figuras das alternativas (SVG)
+  FIG: {
+    // moléculas soltas (H₂O): unidades separadas
+    moleculas() {
+      const agua = (x, y, a) => { const r = a * Math.PI / 180, h = (dx) => [x + Math.cos(r) * dx - Math.sin(r) * 9, y + Math.sin(r) * dx + Math.cos(r) * 9];
+        const [h1x, h1y] = h(-11), [h2x, h2y] = h(11);
+        return `<line x1="${x}" y1="${y}" x2="${h1x}" y2="${h1y}" stroke="#ddd" stroke-width="3"/><line x1="${x}" y1="${y}" x2="${h2x}" y2="${h2y}" stroke="#ddd" stroke-width="3"/>
+          <circle cx="${h1x}" cy="${h1y}" r="5.5" fill="#F4F7FB"/><circle cx="${h2x}" cy="${h2y}" r="5.5" fill="#F4F7FB"/><circle cx="${x}" cy="${y}" r="9" fill="#FF5A5A"/>`; };
+      return `<svg viewBox="0 0 120 100" aria-label="moléculas">${[[28, 26, 10], [86, 22, -35], [55, 55, 60], [24, 80, -15], [92, 76, 25]].map(([x, y, a]) => agua(x, y, a)).join("")}</svg>`;
+    },
+    // cristal iônico: íons + e − alternados, num retículo
+    ionico() {
+      let s = "";
+      for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) {
+        const x = 16 + i * 22, y = 17 + j * 22, neg = (i + j) % 2 === 0;
+        s += neg ? `<circle cx="${x}" cy="${y}" r="10" fill="#7BE36B"/><text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="13" font-weight="800" fill="#0A1322">−</text>`
+                 : `<circle cx="${x}" cy="${y}" r="6.5" fill="#B58CFF"/><text x="${x}" y="${y + 3.6}" text-anchor="middle" font-size="10" font-weight="800" fill="#0A1322">+</text>`;
+      }
+      return `<svg viewBox="0 0 120 100" aria-label="cristal iônico">${s}</svg>`;
+    },
+    // cristal metálico: cátions num "mar" de elétrons
+    metalico() {
+      let s = `<rect x="3" y="3" width="114" height="94" rx="10" fill="rgba(163,219,247,.14)"/>`;
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) {
+        const x = 21 + i * 26, y = 22 + j * 28;
+        s += `<circle cx="${x}" cy="${y}" r="10" fill="#B9C2CE" stroke="#6B7685" stroke-width="1.5"/><text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="13" font-weight="800" fill="#0A1322">+</text>`;
+      }
+      [[34, 36], [60, 12], [86, 64], [8, 50], [47, 64], [73, 36], [99, 22], [21, 90], [99, 88], [60, 90], [34, 8], [8, 9]].forEach(([x, y]) =>
+        s += `<circle cx="${x}" cy="${y}" r="3" fill="#6FC0EA"/>`);
+      return `<svg viewBox="0 0 120 100" aria-label="cristal metálico">${s}</svg>`;
+    },
+    // moléculas em fórmula de traços, com o nome embaixo
+    formula(nome, atomos, ligacoes, largura) {
+      return `<span class="c10-mol">${Cena86.desenho({ largura, atomos, ligacoes })}<span class="c10-mol-nome">${nome}</span></span>`;
+    },
+    HCl() { return this.formula("HCl", [{ x: 34, s: "H", pares: [] }, { x: 100, s: "Cl", pares: ["cima", "dir", "baixo"] }], [[0, 1]], 140); },
+    O2()  { return this.formula("O<sub>2</sub>", [{ x: 40, s: "O", pares: ["cima", "baixo"] }, { x: 100, s: "O", pares: ["cima", "baixo"] }], [[0, 1, 2]], 140); },
+    N2()  { return this.formula("N<sub>2</sub>", [{ x: 40, s: "N", pares: ["esq"] }, { x: 100, s: "N", pares: ["dir"] }], [[0, 1, 3]], 140); },
+    CO2() { return this.formula("CO<sub>2</sub>", [{ x: 34, s: "O", pares: ["cima", "baixo"] }, { x: 100, s: "C", pares: [] }, { x: 166, s: "O", pares: ["cima", "baixo"] }], [[0, 1, 2], [1, 2, 2]], 200); },
+    // O₃: O=O–O (uma dupla e uma simples)
+    O3()  { return this.formula("O<sub>3</sub>", [{ x: 34, s: "O", pares: ["cima", "baixo"] }, { x: 100, s: "O", pares: ["cima"] }, { x: 166, s: "O", pares: ["cima", "dir", "baixo"] }], [[0, 1, 2], [1, 2]], 200); }
   }
 };
 
