@@ -1022,7 +1022,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v77 · 04/10/2026</span>
+    <span class="versao" id="versao">v78 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2513,12 +2513,7 @@ const NARRACOES = [
       som: "audio/vfx/right.mp3", depois: () => { if (NARRACOES[Player.indice].id === "dialogo9_3") Player.seguirSozinho(); } }) },
   { id: "dialogo9_4", titulo: "Nitrogênio: os elétrons no lugar", src: "audio/audio_moleculas_9.4.mp3",
     // pela navegação rápida: os dois N separados, já com os 5 elétrons distribuídos (e os sozinhos brilhando)
-    inicio: async () => {
-      if (Cena74.$('.c74-eletrons[data-set="A"]')) return;   // vindo da 9.3, os elétrons já estão no palco
-      Cena71.montarSeparados("nitrogenio");
-      await Promise.all(["A", "B"].map(s => Cena74.montarLewis(s, { nitrogenio: true })));
-      ["A", "B"].forEach(s => Cena83.marcarSolitarios(s, ["cima", "baixo", "frente"]));
-    },
+    inicio: () => Cena84.montarN(),
     eventos: [
       { tempo: 11,   acao: () => Cena71.pergunta("nitrogenio", {               // quantos elétrons cada N compartilha
           texto: "Quantos elétrons cada N compartilha?",
@@ -2527,9 +2522,18 @@ const NARRACOES = [
     aoFim: () => ui.semPlay(true) },                               // o play some: quem leva ao áudio 9.5 é a resposta certa
   // resposta: toca só depois do acerto (não aparece na navegação rápida)
   { id: "dialogo9_5", titulo: "Resposta: 3 elétrons", src: "audio/audio_moleculas_9.5.mp3", oculta: true,
-    inicio: () => Cena71.montarSeparados("nitrogenio"),
+    inicio: () => Cena84.montarN(),
     eventos: [
       { tempo: 1,    acao: () => Cena71.tirarPergunta() }          // a pergunta e as alternativas somem em fade
+    ],
+    // sem play: o aluno arrasta um N até o outro; os três elétrons sozinhos vão para a frente conforme eles se aproximam.
+    // O encaixe (ligação tripla) traz a 9.6
+    aoFim: () => { ui.semPlay(true); Cena75.liberar(true, "nitrogenio"); } },
+  // a ligação tripla do N₂ (entra sozinha quando a molécula formada chega ao meio da tela) — os eventos virão depois
+  { id: "dialogo9_6", titulo: "A ligação tripla do N₂", src: "audio/audio_moleculas_9.6.mp3",
+    inicio: () => Cena75.montarPronta("nitrogenio").then(() => Cena75.travar()),   // pela navegação rápida: o N₂ já formado
+    eventos: [
+      { tempo: 0,    acao: () => Cena75.travar() }                 // a molécula não se desfaz mais com o dedo
     ] }
 ];
 
@@ -4726,6 +4730,7 @@ const Cena75 = {
   async montarPronta(tipo = "cloro") {
     if (this.ligado && this.$(".c75-ligacao:not(.saindo)")) return;
     if (tipo === "oxigenio") await Cena84.montar();
+    else if (tipo === "nitrogenio") await Cena84.montarN();
     else { Cena71.montarSeparados(); await Promise.all([Cena74.montarLewis("A"), Cena74.montarLewis("B")]); }
     if (!this.$(".c71-quantico")) return;
     this.liberar(false, tipo);
@@ -4735,9 +4740,9 @@ const Cena75 = {
     s.offHx += (P.clientWidth / 2 + meia - B.x) / this.ppu; s.offHy -= (P.clientHeight / 2 - B.y) / this.ppu;
     Object.assign(s, { instO: 0, instH: 0 });
     this.ligado = true; this.armado = false; this.festejou = true;
-    const pares = tipo === "oxigenio" ? ["0", "1"] : [""];
+    const pares = { oxigenio: ["0", "1"], nitrogenio: ["0", "1", "2"] }[tipo] || [""];
     this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", pares.map(p => `<div class="c75-ligacao" data-par="${p}"></div>`).join(""));
-    if (tipo === "oxigenio") this.status("estavel");
+    if (tipo !== "cloro") this.status("estavel");
     else this.tirarStatus();   // como no fim da 7.6: sem "Molécula estável" na tela
   },
   // da 7.8 em diante a molécula fica presa: os átomos não podem mais ser arrastados (nem a ligação rompida)
@@ -4757,7 +4762,7 @@ const Cena75 = {
   liberar(convite = true, tipo = "cloro") {
     const q = Cena71.quantum, m = Cena71.m; if (!q || !m || this.$(".c75-arrasto")) return;
     const s = m.userData.est;
-    this.tipo = tipo; this.proxima = tipo === "oxigenio" ? "dialogo8_6" : "dialogo7_6";
+    this.tipo = tipo; this.proxima = { oxigenio: "dialogo8_6", nitrogenio: "dialogo9_6" }[tipo] || "dialogo7_6";
     Object.assign(s, { offOx: s.offOx || 0, offOy: s.offOy || 0, offHx: s.offHx || 0, offHy: s.offHy || 0 });
     this.ppu = Math.abs(q.naTela(s.para.clone().add(new THREE.Vector3(1, 0, 0))).x - q.naTela(s.para).x) || 1;   // px por unidade da cena
     const A0 = Cena74.atomo("A"), B0 = Cena74.atomo("B");
@@ -4779,11 +4784,11 @@ const Cena75 = {
       const A = Cena74.atomo(set);
       return { set, els: Cena74.els(set).map(el => ({ el, dx: parseFloat(el.style.left) - A.x, dy: parseFloat(el.style.top) - A.y,
         // oxigênio: o sozinho da frente e o de baixo se mexem com a aproximação (ver movel)
-        mov: this.tipo === "oxigenio" && el.dataset.preso && ["frente", "baixo"].includes(el.dataset.lado) ? el.dataset.lado : null })) };
+        mov: el.dataset.preso && (this.MOVEIS[this.tipo] || []).includes(el.dataset.lado) ? el.dataset.lado : null })) };
     });
     const passo = () => {
       if (!Palco.el.contains(this.$(".c71-quantico"))) return;
-      const k = this.tipo === "oxigenio" ? this.aproximacao() : 0;
+      const k = this.MOVEIS[this.tipo] ? this.aproximacao() : 0;
       sets.forEach(({ set, els }) => {
         const A = Cena74.atomo(set); if (!A) return;
         els.forEach(o => { const [dx, dy] = o.mov ? this.movel(set, o.mov, k, A) : [o.dx, o.dy]; Cena74.pos(o.el, [A.x + dx, A.y + dy]); });
@@ -4806,15 +4811,26 @@ const Cena75 = {
   // oxigênio: onde fica (em relação ao centro do átomo) o elétron sozinho, com a aproximação k (0 → 1).
   // O da frente sobe um pouco (abre espaço); o de baixo dá a volta pelo átomo até a frente, logo abaixo dele.
   // Juntos, os dois viram a metade de cada átomo dos dois pares da ligação dupla.
+  // Nitrogênio: o da frente fica no meio; o de cima e o de baixo dão a volta até a frente, um acima e outro abaixo dele:
+  // os três viram a metade de cada átomo dos três pares da ligação tripla.
+  MOVEIS: { oxigenio: ["frente", "baixo"], nitrogenio: ["frente", "cima", "baixo"] },
   movel(set, lado, k, A) {
     const { g, s } = Cena74.medidas(A), lad = set === "A" ? 1 : -1, suave = k * k * (3 - 2 * k);
+    if (this.tipo === "nitrogenio") {
+      if (lado === "frente") return [lad * g, 0];
+      const v = this.vPar(A) * (lado === "cima" ? -1 : 1), a0 = Math.PI / 2 * Math.sign(v), a1 = Math.atan2(v, g);
+      const ang = a0 + (a1 - a0) * suave, r = g + (Math.hypot(g, v) - g) * suave;
+      return [lad * r * Math.cos(ang), r * Math.sin(ang)];
+    }
     if (lado === "frente") return [lad * g, -s * suave];
     const a0 = Math.PI / 2, a1 = Math.atan2(s, g), ang = a0 + (a1 - a0) * suave, r = g + (Math.hypot(g, s) - g) * suave;
     return [lad * r * Math.cos(ang), r * Math.sin(ang)];
   },
+  // a distância vertical entre os pares da ligação (no nitrogênio são três, então eles se afastam mais)
+  vPar(A) { const { s, e } = Cena74.medidas(A); return this.tipo === "nitrogenio" ? Math.max(s, e * 2.1) : s; },
   // a distância entre os centros na ligação: no cloro, 2g (o par fica um em cima do outro);
   // no oxigênio, um pouco mais, para os dois pares caberem lado a lado no meio
-  distLig(A) { const { g, e } = Cena74.medidas(A); return this.tipo === "oxigenio" ? 2 * g + e * 1.25 : 2 * g; },
+  distLig(A) { const { g, e } = Cena74.medidas(A); return this.MOVEIS[this.tipo] ? 2 * g + e * 1.25 : 2 * g; },
   ponto(e) { const P = Palco.el.getBoundingClientRect(); return [e.clientX - P.left, e.clientY - P.top]; },
   chave(set) { return set === "A" ? ["offOx", "offOy"] : ["offHx", "offHy"]; },
   raioEncaixe(set) { return Math.max(28, Cena74.atomo(set).R * .8); },
@@ -4886,14 +4902,14 @@ const Cena75 = {
     // a ligação: um bastão transparente entre os dois átomos, com o par de elétrons dentro
     Palco.el.querySelectorAll(".c75-ligacao").forEach(l => l.remove());
     // no oxigênio, dois bastões (ligação dupla): um para cada par
-    const pares = this.tipo === "oxigenio" ? ["0", "1"] : [""];
+    const pares = { oxigenio: ["0", "1"], nitrogenio: ["0", "1", "2"] }[this.tipo] || [""];
     this.$(".c74-eletrons").insertAdjacentHTML("beforebegin", pares.map(p => `<div class="c75-ligacao" data-par="${p}"></div>`).join(""));
     Palco.el.querySelectorAll(".c75-ligacao").forEach(lig => {
       this.posicionarLigacao(lig);
       Palco.animar(lig, [{ opacity: 0, scale: ".4 1" }, { opacity: 1, scale: "1 1" }], { duracao: .5, atraso: .2, easing: "cubic-bezier(.3,1.4,.5,1)" });
     });
     // os elétrons dos pares compartilhados brilham juntos
-    const doMeio = this.tipo === "oxigenio" ? '.c74-e[data-lado="frente"], .c74-e[data-lado="baixo"]' : '.c74-e[data-lado="frente"]';
+    const doMeio = (this.MOVEIS[this.tipo] || ["frente"]).map(l => `.c74-e[data-lado="${l}"]`).join(", ");
     Palco.el.querySelectorAll(doMeio).forEach(el => Palco.animar(el, [
       { scale: 1, boxShadow: Cena74.normal(el) }, { scale: 1.6, boxShadow: Cena74.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: Cena74.normal(el) }
     ], { duracao: .9, atraso: .25, fill: "none" }));
@@ -4909,7 +4925,7 @@ const Cena75 = {
       // fanfarra mais baixa: a narração seguinte (7.6 no cloro) começa junto, no encaixe
       const som = new Audio("audio/funfare.mp3"); som.volume = .35; som.play().catch(() => {});
       const prox = NARRACOES.findIndex(n => n.id === this.proxima);
-      if (prox >= 0 && this.tipo === "oxigenio") {
+      if (prox >= 0 && this.tipo !== "cloro") {   // (O₂ e N₂)
         // no O₂ a narração (8.6) espera a molécula chegar ao meio da tela (a ida leva 1,25s)
         const q = Cena71.$(".c71-quantico");
         Palco.animar(q, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.35, fill: "none" }).finished.then(() => {
@@ -4969,7 +4985,9 @@ const Cena75 = {
     const A = Cena74.atomo("A"), B = Cena74.atomo("B"); if (!A || !B) return;
     const { e, acima, s } = Cena74.medidas(A), x1 = A.x + A.R * .7, x2 = B.x - B.R * .7, cy = (A.y + B.y) / 2;
     // oxigênio: um bastão para cada par (o de cima e o de baixo); cloro: um só, com o par um em cima do outro
-    const par = lig.dataset.par, h = par ? e * 1.8 : 2 * acima + e * 1.7, y = par ? cy + (par === "1" ? s : -s) : cy;
+    // nitrogênio: o par "2" fica no eixo, e os outros dois a vPar dele
+    const par = lig.dataset.par, v = this.vPar(A), h = par ? e * 1.8 : 2 * acima + e * 1.7;
+    const y = !par ? cy : par === "2" ? cy : cy + (par === "1" ? v : -v);
     Object.assign(lig.style, { left: `${x1}px`, top: `${y - h / 2}px`, width: `${Math.max(x2 - x1, 0)}px`, height: `${h}px` });
   }
 };
@@ -5424,7 +5442,14 @@ const Cena84 = {
         if (q.isConnected) cfg.depois();
       }, () => {});
     }, () => {});
-  },  // os dois O já com os seus elétrons (para quem chega à 8.4 ou à 8.5 pela navegação rápida)
+  },  // os dois N já com os seus 5 elétrons (para quem chega à 9.4 em diante pela navegação rápida)
+  async montarN() {
+    if (Cena74.$('.c74-eletrons[data-set="A"]')) return;   // vindo da narração anterior, os elétrons já estão no palco
+    Cena71.montarSeparados("nitrogenio");
+    await Promise.all(["A", "B"].map(s => Cena74.montarLewis(s, { nitrogenio: true })));
+    ["A", "B"].forEach(s => Cena83.marcarSolitarios(s, ["cima", "baixo", "frente"]));
+  },
+  // os dois O já com os seus elétrons (para quem chega à 8.4 ou à 8.5 pela navegação rápida)
   async montar() {
     Cena71.montarSeparados("oxigenio");
     await Promise.all([Cena74.montarLewis("A", { oxigenio: true }), Cena74.montarLewis("B", { oxigenio: true })]);
