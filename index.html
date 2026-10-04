@@ -1034,7 +1034,7 @@
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v81 · 04/10/2026</span>
+    <span class="versao" id="versao">v82 · 04/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2599,7 +2599,29 @@ const NARRACOES = [
     eventos: [
       { tempo: 4.4,  acao: () => Cena10.questao("Segundo Lewis, os átomos se ligam pra adquirir...?", 2.6) }
     ],
-    aoFim: () => { ui.semPlay(true); Cena10.opcoes([["Energia", 0], ["Estabilidade", 1], ["Massa", 0]], "dialogo10_1", "dialogo10_2"); } }
+    aoFim: () => { ui.semPlay(true); Cena10.opcoes([["Energia", 0], ["Estabilidade", 1], ["Massa", 0]], "dialogo10_1", "dialogo10_2"); } },
+  // as questões seguintes do resumo: cada acerto leva à próxima (o texto é digitado no meio da tela; as alternativas no fim do áudio)
+  ...[
+    ["10.2", 2,   2.9, "Pra conseguir essa estabilidade, os átomos precisam que suas camadas de valência fiquem iguais às de um...",
+      [["Metal", 0], ["Halogênio", 0], ["Gás nobre", 1]]],
+    ["10.3", .3,  3.2, "Ou, pra simplificar, precisam que suas camadas de valência completem...",
+      [["Oito elétrons", 1], ["Seis elétrons", 0], ["Dez elétrons", 0]]],
+    ["10.4", .2,  1.5, "Daí o nome regra do...",
+      [["Dueto", 0], ["Octeto", 1], ["Elétron", 0]]],
+    ["10.5", 5,   3,   "Nesse capítulo estamos estudando um tipo de ligação chamada de ligação...",
+      [["Iônica", 0], ["Metálica", 0], ["Covalente", 1]]],
+    ["10.6", .3,  3,   "Essa ligação covalente une os átomos formando o que chamamos de substâncias...",
+      [["Moleculares", 1], ["Iônicas", 0], ["Metálicas", 0]]],
+    ["10.7", .3,  3,   "Nesse tipo de ligação, formamos estruturas discretas, eletricamente neutras, que chamamos de...?",
+      [["Íons", 0], ["Moléculas", 1], ["Cristais", 0]]]
+  ].map(([n, inicio, dur, texto, opcoes], k) => {
+    const id = "dialogo" + n.replace(".", "_"), prox = "dialogo10_" + (k + 3);
+    return { id, titulo: "Resumo: questão " + (k + 2), src: `audio/audio_moleculas_${n}.mp3`,
+      inicio: () => Cena10.montar(),
+      eventos: [{ tempo: inicio, acao: () => Cena10.questao(texto, dur) }],
+      aoFim: () => { ui.semPlay(true); Cena10.opcoes(opcoes, id, prox); } };
+  })
+
 ];
 
 /* ---------- Palco: área onde os eventos aparecem ---------- */
@@ -5756,7 +5778,7 @@ const Cena10 = {
   },
   // a questão, digitada no meio da tela (a anterior, se houver, sai)
   questao(texto, dur) {
-    Palco.el.querySelectorAll(".c10-questao").forEach(q => q.remove());
+    Palco.el.querySelectorAll(".c10-questao, .c72-quiz").forEach(q => q.remove());   // a questão e as alternativas anteriores saem
     Palco.adicionar(`<p class="c10-questao"></p>`);
     Palco.digitar(this.$(".c10-questao"), texto, dur);
   },
