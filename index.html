@@ -1102,7 +1102,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v100 · 06/10/2026</span>
+    <span class="versao" id="versao">v101 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2718,6 +2718,20 @@ const NARRACOES = [
     aoFim: () => ui.semPlay(true) },                               // sem play: o aluno monta a estrutura e confirma
   // capítulo novo: as moléculas poliatômicas (os eventos virão depois)
   { id: "dialogo11", titulo: "As moléculas poliatômicas", src: "audio/audio_moleculas_11.mp3", esperaPlay: true,
+    inicio: () => Cena11.tela(),
+    eventos: [
+      { tempo: 3.8,  acao: () => Cena11.ctl && Cena11.ctl.transformar("cloro") },    // vira uma molécula diatômica (Cl₂, ligação simples)
+      { tempo: 7,    acao: () => Cena11.ctl && Cena11.ctl.pulsar(0) },                // pulsa um átomo
+      { tempo: 7.7,  acao: () => Cena11.ctl && Cena11.ctl.pulsar(1) },                // e depois o outro
+      { tempo: 17,   acao: () => Cena11.ctl && Cena11.ctl.transformar("metano") },   // volta a ser o metano
+      { tempo: 19.7, acao: () => Cena11.ctl && Cena11.ctl.sequencia(3.3) },           // todos os átomos pulsam em sequência (até 23s)
+      { tempo: 28,   acao: () => Cena11.ctl && Cena11.ctl.sequencia(1, true) },       // de novo, sem parar até os 30s
+      { tempo: 29,   acao: () => Cena11.ctl && Cena11.ctl.eletron(true) },            // um elétron passeia em volta da molécula
+      { tempo: 30,   acao: () => Cena11.ctl && (Cena11.ctl.parar(), Cena11.ctl.eletron(false)) }   // tudo volta ao normal
+    ],
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "Bora"); } },   // no lugar do play, o botão "Bora" leva ao próximo áudio
+  // o próximo trecho (os eventos virão depois)
+  { id: "dialogo11_2", titulo: "Moléculas poliatômicas (2)", src: "audio/audio_moleculas_11.2.mp3",
     inicio: () => Cena11.tela(),
     eventos: [] }
 
@@ -5994,7 +6008,9 @@ const Cena11 = {
     if (!this.$(`[data-t="${this.TITULO}"]`)) Palco.mostrar(`<h2 class="c0-titulo c11-titulo" data-t="${this.TITULO}" style="top:5%">${this.TITULO}</h2><div class="c11-mol" aria-label="Molécula de metano girando"></div>`);
     this.montar();
   },
-  // a molécula 3D: o metano, CH₄
+  // a molécula 3D: começa no metano (CH₄); o áudio 11 a transforma no Cl₂ (diatômica, ligação simples) e de volta,
+  // pulsa os átomos e faz um elétron passear em volta. Tudo no relógio do palco (para na pausa).
+  // O que o áudio comanda fica em this.ctl
   montar() {
     const caixa = this.$(".c11-mol");
     if (!caixa || caixa.querySelector("canvas") || !window.THREE) return;
@@ -6008,26 +6024,41 @@ const Cena11 = {
     cena.add(new THREE.HemisphereLight(0xdfefff, 0x1b2a40, .85));
     const luz = new THREE.DirectionalLight(0xffffff, 1.2); luz.position.set(3, 5, 7); cena.add(luz);
     const luz2 = new THREE.DirectionalLight(0xA3DBF7, .5); luz2.position.set(-6, -3, -4); cena.add(luz2);
-    const mat = cor => new THREE.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
-    const M = { C: mat(0x404040), O: mat(0xFF0D0D), H: mat(0xFFFFFF), L: mat(0xC8C8C8) };
+    const mat = cor => { const m = new THREE.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 }); m.emissive = new THREE.Color(cor); m.emissiveIntensity = 0; return m; };
+    const CORES = { C: 0x404040, H: 0xFFFFFF, Cl: 0x1FF01F, L: 0xC8C8C8 };
     const esf = new THREE.SphereGeometry(1, 48, 32), bas = new THREE.CylinderGeometry(.12, .12, 1, 20);
     const mol = new THREE.Group(); cena.add(mol);
-    const atomo = (tipo, r, x, y, z = 0) => { const m = new THREE.Mesh(esf, M[tipo]); m.scale.setScalar(r); m.position.set(x, y, z); mol.add(m); return m.position; };
-    const ligar = (a, b, n = 1) => {
-      const dir = b.clone().sub(a), comp = dir.length(), meio = a.clone().add(b).multiplyScalar(.5);
-      const lado = new THREE.Vector3(-dir.y, dir.x, 0).normalize().multiplyScalar(.2);
-      (n === 2 ? [-1, 1] : [0]).forEach(k => {
-        const c = new THREE.Mesh(bas, M.L); c.scale.set(1, comp, 1); c.position.copy(meio).addScaledVector(lado, k);
-        c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()); mol.add(c);
-      });
+    let atomos = [];   // { m: malha, r: raio }
+    const atomo = (tipo, r, x, y, z = 0) => { const m = new THREE.Mesh(esf, mat(CORES[tipo])); m.scale.setScalar(r); m.position.set(x, y, z); mol.add(m); atomos.push({ m, r }); return m.position; };
+    const ligar = (a, b) => {
+      const dir = b.clone().sub(a), c = new THREE.Mesh(bas, mat(CORES.L));
+      c.scale.set(1, dir.length(), 1); c.position.copy(a).add(b).multiplyScalar(.5);
+      c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()); mol.add(c);
     };
-    // metano (CH₄): o C no meio e os quatro H nos vértices de um tetraedro (109,5° entre as ligações)
-    // um H reto para cima e os outros três num tripé embaixo (a vista dos livros), com 109,5° entre as ligações
-    const C = atomo("C", .62, 0, 0), L = 1.75, rr = L * Math.sqrt(8) / 3;
-    ligar(C, atomo("H", .4, 0, L, 0));
-    [0, 120, 240].forEach(a => { const g = (a + 90) * Math.PI / 180; ligar(C, atomo("H", .4, rr * Math.cos(g), -L / 3, rr * Math.sin(g))); });
+    // as moléculas: metano (um H para cima e um tripé embaixo, 109,5°) e Cl₂ (dois Cl e uma ligação simples)
+    const construir = tipo => {
+      while (mol.children.length) mol.remove(mol.children[0]);
+      atomos = [];
+      if (tipo === "cloro") {
+        const A = atomo("Cl", .62, -1.1, 0), B = atomo("Cl", .62, 1.1, 0); ligar(A, B);
+      } else {
+        const C = atomo("C", .62, 0, 0), L = 1.75, rr = L * Math.sqrt(8) / 3;
+        ligar(C, atomo("H", .4, 0, L, 0));
+        [0, 120, 240].forEach(a => { const g = (a + 90) * Math.PI / 180; ligar(C, atomo("H", .4, rr * Math.cos(g), -L / 3, rr * Math.sin(g))); });
+      }
+    };
+    construir("metano");
     mol.rotation.order = "XYZ";
     mol.position.y = -.2;
+
+    // o elétron que passeia em volta: uma bolinha com um halo
+    const brilho = (() => { const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, "rgba(211,239,252,1)"); gr.addColorStop(.35, "rgba(163,219,247,.55)"); gr.addColorStop(1, "rgba(163,219,247,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+    const eletron = new THREE.Group();
+    const eNucleo = new THREE.Mesh(new THREE.SphereGeometry(.16, 24, 16), new THREE.MeshBasicMaterial({ color: 0xD3EFFC, transparent: true, opacity: 0 }));
+    const eHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: brilho, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    eHalo.scale.setScalar(1.1); eletron.add(eNucleo); eletron.add(eHalo); eletron.visible = false; cena.add(eletron);
+
     // girar com o toque: arrastar para os lados gira em torno do eixo vertical; para cima/baixo, inclina (até um limite).
     // Solto, ele volta a girar sozinho depois de um instante
     let giroY = 0, giroX = 0, arraste = null, parado = 0;
@@ -6042,23 +6073,66 @@ const Cena11 = {
     });
     const soltar = () => { arraste = null; parado = 1.5; cv.style.cursor = "grab"; };
     cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
+
+    // o que o áudio comanda
+    let t = 0, troca = null, seq = null, eOpac = 0, eAlvo = 0;
+    const pulsos = [];
+    const suave = x => x * x * (3 - 2 * x);
+    this.ctl = {
+      // a molécula dá um giro rápido, encolhe e, no meio do giro, vira a outra
+      transformar: tipo => { troca = { t0: t, dur: 1.1, tipo, feito: false }; },
+      // um átomo (pelo índice) pulsa com brilho
+      pulsar: (k, dur = .55) => { if (atomos[k]) pulsos.push({ a: atomos[k], t0: t, dur }); },
+      // todos os átomos pulsam um depois do outro até "ate" segundos daqui; repetir: recomeça até ser parado
+      sequencia: (dur, repetir = false) => { seq = { t0: t, passo: dur / Math.max(atomos.length, 1), k: 0, prox: t, fim: t + dur, repetir }; },
+      eletron: ligar => { eAlvo = ligar ? 1 : 0; if (ligar) eletron.visible = true; },
+      parar: () => { seq = null; }
+    };
+
     const ajustar = () => { const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h;
       camera.position.z = 10 * Math.max(1, .8 / camera.aspect); camera.updateProjectionMatrix(); };
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
-    let antes = performance.now(), t = 0;
+    let antes = performance.now();
     const quadro = agora => {
       if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
-      const dt = Math.min((agora - antes) / 1000, .05); antes = agora; if (!Palco.pausado) t += dt;
-      // sozinha, gira em torno do eixo vertical (o H de cima fica no lugar); na mão, segue o dedo
-      if (!arraste && !Palco.pausado) { if (parado > 0) parado -= dt; else giroY += dt * .7; }
-      mol.rotation.x = giroX; mol.rotation.y = giroY;
+      const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora; t += dt;
+      // sozinha, gira em torno do eixo vertical; na mão, segue o dedo
+      if (!arraste && dt) { if (parado > 0) parado -= dt; else giroY += dt * .7; }
+      let extra = 0, esc = 1;
+      if (troca) {
+        const p = Math.min((t - troca.t0) / troca.dur, 1);
+        extra = Math.PI * 2 * suave(p);
+        esc = p < .5 ? 1 - .75 * suave(p * 2) : .25 + .75 * suave((p - .5) * 2);
+        if (p >= .5 && !troca.feito) { troca.feito = true; construir(troca.tipo); }
+        if (p >= 1) troca = null;
+      }
+      mol.rotation.x = giroX; mol.rotation.y = giroY + extra; mol.scale.setScalar(esc);
+      // a sequência de pulsos
+      if (seq) {
+        if (t >= seq.prox && (seq.repetir || t < seq.fim)) { this.ctl.pulsar(seq.k % atomos.length, Math.max(seq.passo * 1.4, .35)); seq.k++; seq.prox += seq.passo; }
+        if (!seq.repetir && t >= seq.fim) seq = null;
+      }
+      atomos.forEach(a => { a.m.scale.setScalar(a.r); a.m.material.emissiveIntensity = 0; });
+      for (let k = pulsos.length - 1; k >= 0; k--) {
+        const pu = pulsos[k], p = (t - pu.t0) / pu.dur;
+        if (p >= 1 || !atomos.includes(pu.a)) { pulsos.splice(k, 1); continue; }
+        const s = Math.sin(p * Math.PI);
+        pu.a.m.scale.setScalar(pu.a.r * (1 + .35 * s)); pu.a.m.material.emissiveIntensity = .55 * s;
+      }
+      // o elétron: entra e sai em fade, passeando numa órbita inclinada em volta da molécula
+      eOpac += (eAlvo - eOpac) * Math.min(dt * 4, 1);
+      if (eletron.visible) {
+        const a = t * 2.6;
+        eletron.position.set(Math.cos(a) * 2.7, Math.sin(a * 1.3) * 1.3 - .2, Math.sin(a) * 2.7);
+        eNucleo.material.opacity = eOpac; eHalo.material.opacity = eOpac * .9;
+        if (eAlvo === 0 && eOpac < .02) eletron.visible = false;
+      }
       renderer.render(cena, camera);
       requestAnimationFrame(quadro);
     };
     requestAnimationFrame(quadro);
   }
 };
-
 /* ---------- O placar do Resumo Interativo ----------
    Cada questão (10.1 a 10.11) e cada exemplo de Lewis vale um ponto: acertando de primeira, o ponto inteiro;
    depois de um erro, meio; depois de mais erros, um quarto. A nota (1 a 10) é sobre o que foi respondido.
@@ -6623,7 +6697,10 @@ const ui = {
     this.faixa.classList.toggle("modo-quiz", ligar);
   },
   // fim do áudio 8.6: o play dá lugar ao botão verde "Entendi", que leva à narração seguinte (volta ao trocar de narração)
-  modoEntendi(ligar) { this.faixa.classList.toggle("modo-entendi", ligar); },
+  modoEntendi(ligar, texto = "Entendi") {
+    this.faixa.classList.toggle("modo-entendi", ligar);
+    if (ligar) document.getElementById("btnEntendi").textContent = texto;
+  },
   // fim do áudio 7.2: sem play (o próximo áudio vem da resposta certa); volta ao trocar de narração
   semPlay(ligar) { this.faixa.classList.toggle("sem-play", ligar); }
 };
