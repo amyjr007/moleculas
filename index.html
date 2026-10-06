@@ -1102,7 +1102,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v99 · 06/10/2026</span>
+    <span class="versao" id="versao">v100 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6022,9 +6022,26 @@ const Cena11 = {
       });
     };
     // metano (CH₄): o C no meio e os quatro H nos vértices de um tetraedro (109,5° entre as ligações)
-    const C = atomo("C", .62, 0, 0), L = 1.75, k = L / Math.sqrt(3);
-    [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]].forEach(([x, y, z]) => ligar(C, atomo("H", .4, x * k, y * k, z * k)));
-    mol.rotation.order = "YXZ";
+    // um H reto para cima e os outros três num tripé embaixo (a vista dos livros), com 109,5° entre as ligações
+    const C = atomo("C", .62, 0, 0), L = 1.75, rr = L * Math.sqrt(8) / 3;
+    ligar(C, atomo("H", .4, 0, L, 0));
+    [0, 120, 240].forEach(a => { const g = (a + 90) * Math.PI / 180; ligar(C, atomo("H", .4, rr * Math.cos(g), -L / 3, rr * Math.sin(g))); });
+    mol.rotation.order = "XYZ";
+    mol.position.y = -.2;
+    // girar com o toque: arrastar para os lados gira em torno do eixo vertical; para cima/baixo, inclina (até um limite).
+    // Solto, ele volta a girar sozinho depois de um instante
+    let giroY = 0, giroX = 0, arraste = null, parado = 0;
+    const cv = renderer.domElement;
+    cv.style.touchAction = "none"; cv.style.cursor = "grab";
+    cv.addEventListener("pointerdown", e => { arraste = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
+    cv.addEventListener("pointermove", e => {
+      if (!arraste) return;
+      giroY += (e.clientX - arraste.x) * .012;
+      giroX = Math.max(-1.2, Math.min(1.2, giroX + (e.clientY - arraste.y) * .012));
+      arraste = { x: e.clientX, y: e.clientY };
+    });
+    const soltar = () => { arraste = null; parado = 1.5; cv.style.cursor = "grab"; };
+    cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
     const ajustar = () => { const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h;
       camera.position.z = 10 * Math.max(1, .8 / camera.aspect); camera.updateProjectionMatrix(); };
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
@@ -6032,7 +6049,9 @@ const Cena11 = {
     const quadro = agora => {
       if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
       const dt = Math.min((agora - antes) / 1000, .05); antes = agora; if (!Palco.pausado) t += dt;
-      mol.rotation.y = t * .7; mol.rotation.x = .62 + Math.sin(t * .4) * .25;   // gira em torno do eixo vertical (um H para cima), balançando de leve
+      // sozinha, gira em torno do eixo vertical (o H de cima fica no lugar); na mão, segue o dedo
+      if (!arraste && !Palco.pausado) { if (parado > 0) parado -= dt; else giroY += dt * .7; }
+      mol.rotation.x = giroX; mol.rotation.y = giroY;
       renderer.render(cena, camera);
       requestAnimationFrame(quadro);
     };
