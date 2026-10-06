@@ -485,8 +485,8 @@
     .c112-esqueleto { margin-top: 5vh; }
     .c111-eletrons { bottom: 12% !important; }   /* em pé, acima do botão (o "Entendi" é largo) */
   }
-  /* os 24 elétrons de valência, em duas fileiras de 12, embaixo de tudo */
-  .c111-eletrons { position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%); z-index: 3; display: grid; grid-template-columns: repeat(12, auto);
+  /* os 32 elétrons de valência, em duas fileiras de 16, embaixo de tudo */
+  .c111-eletrons { position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%); z-index: 3; display: grid; grid-template-columns: repeat(16, auto);
     gap: clamp(7px, 1.4vmin, 12px) clamp(8px, 1.7vmin, 15px); pointer-events: none; }
   .c111-e { width: clamp(9px, 1.5vmin, 13px); height: clamp(9px, 1.5vmin, 13px); border-radius: 50%; background: var(--celeste); box-shadow: 0 0 8px 2px rgba(163,219,247,.7); }
   .c113-voo { position: absolute; z-index: 4; border-radius: 50%; background: var(--celeste); box-shadow: 0 0 8px 2px rgba(163,219,247,.7); pointer-events: none; }
@@ -1146,7 +1146,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v109 · 06/10/2026</span>
+    <span class="versao" id="versao">v110 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2786,7 +2786,7 @@ const NARRACOES = [
       { tempo: 19.6, acao: () => Cena111.linha("5A = 5 elétrons", .55) },
       { tempo: 20.2, acao: () => Cena111.linha("6A = 6 elétrons", .55) },
       { tempo: 20.8, acao: () => Cena111.linha("7A = 7 elétrons", .55) },
-      ...Array.from({ length: 24 }, (_, k) => ({ tempo: 14 + k * .2, acao: () => Cena111.eletron(k) }))   // 24 elétrons embaixo, em sequência (2 fileiras de 12)
+      ...Array.from({ length: 32 }, (_, k) => ({ tempo: 14 + k * .15, acao: () => Cena111.eletron(k) }))   // 32 elétrons embaixo, em sequência (2 fileiras de 16)
     ],
     aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } },   // no lugar do play, o "Entendi" leva ao 11.2
   // passo 2: o esqueleto da molécula (A no meio, os quatro B em cruz e as ligações)
@@ -2800,7 +2800,7 @@ const NARRACOES = [
       { tempo: 7.9,  acao: () => Cena112.atomo("B", "dir") },
       { tempo: 9.4,  acao: () => Cena112.atomo("B", "baixo") },
       { tempo: 10.9, acao: () => Cena112.atomo("B", "esq") },
-      { tempo: 13,   acao: () => Cena112.ligacao("cima") },                 // as ligações A–B, uma de cada vez, até o fim
+      { tempo: 13,   acao: () => Cena112.ligacao("cima") },                 // as ligações A–B: um par da bandeja vira cada traço
       { tempo: 13.7, acao: () => Cena112.ligacao("dir") },
       { tempo: 14.4, acao: () => Cena112.ligacao("baixo") },
       { tempo: 15.1, acao: () => Cena112.ligacao("esq") }
@@ -6280,12 +6280,12 @@ const Cena111 = {
     lista.insertAdjacentHTML("beforeend", `<p data-t="${texto}"></p>`);
     Palco.digitar(lista.lastElementChild, texto, dur);
   },
-  // 14s em diante: os 24 elétrons de valência embaixo (2 fileiras de 12), surgindo um de cada vez;
+  // 14s em diante: os 32 elétrons de valência embaixo (2 fileiras de 16), surgindo um de cada vez;
   // ficam fora do corpo, então não somem quando os textos se apagam
   bandeja() {
     let b = this.$(".c111-eletrons");
     if (!b) {
-      Palco.adicionar(`<div class="c111-eletrons" aria-label="24 elétrons de valência">${Array.from({ length: 24 }, (_, i) => `<span class="c111-e" data-i="${i}" style="opacity:0"></span>`).join("")}</div>`);
+      Palco.adicionar(`<div class="c111-eletrons" aria-label="32 elétrons de valência">${Array.from({ length: 32 }, (_, i) => `<span class="c111-e" data-i="${i}" style="opacity:0"></span>`).join("")}</div>`);
       b = this.$(".c111-eletrons");
     }
     return b;
@@ -6345,17 +6345,23 @@ const Cena112 = {
     Palco.animar(s.querySelector(".at").lastElementChild, [{ transform: "scale(0)", opacity: 0 }, { transform: "scale(1.25)", opacity: 1, offset: .65 }, { transform: "scale(1)", opacity: 1 }],
       { duracao: .5, easing: "ease-out" });
   },
-  // a ligação A–B de um lado: o traço cresce do A até o B
-  ligacao(lado) {
+  // a ligação A–B de um lado: um par sai da bandeja (os elétrons 24 a 31), voa até o meio da ligação
+  // e vira o traço, que cresce do meio para as duas pontas
+  ligacao(lado, voar = true) {
     const s = this.svg(); if (s.querySelector(`.lig [data-l="${lado}"]`)) return;
     const [x, y] = this.POS[lado], dx = x - 100, dy = y - 100, d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
-    const x1 = 100 + ux * 23, y1 = 100 + uy * 23, x2 = x - ux * 23, y2 = y - uy * 23, comp = Math.hypot(x2 - x1, y2 - y1);
-    s.querySelector(".lig").insertAdjacentHTML("beforeend", `<line data-l="${lado}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="${comp}" stroke-dashoffset="${comp}"/>`);
-    Palco.animar(s.querySelector(".lig").lastElementChild, [{ strokeDashoffset: comp }, { strokeDashoffset: 0 }], { duracao: .45, easing: "ease-out" });
+    const x1 = 100 + ux * 23, y1 = 100 + uy * 23, x2 = x - ux * 23, y2 = y - uy * 23, mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    s.querySelector(".lig").insertAdjacentHTML("beforeend", `<line data-l="${lado}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff" stroke-width="5" stroke-linecap="round" style="transform-origin:${mx}px ${my}px;transform:scale(0)"/>`);
+    const linha = s.querySelector(".lig").lastElementChild;
+    const crescer = () => { linha.style.transform = ""; Palco.animar(linha, [{ transform: "scale(0)" }, { transform: "scale(1.15)", offset: .7 }, { transform: "scale(1)" }], { duracao: .4, easing: "ease-out" }); };
+    const b = Object.keys(this.POS).indexOf(lado);
+    // os dois elétrons se juntam no meio da ligação (um de cada lado do traço)
+    const chegou = [0, 1].map(j => voar && Cena113.voar(24 + 2 * b + j, [mx - uy * 4 * (j ? 1 : -1), my + ux * 4 * (j ? 1 : -1)], j, j ? crescer : () => {}));
+    if (!chegou[1]) crescer();
   },
   // o esqueleto completo (se o 11.3 começar sem ele)
   completo() {
-    this.atomo("A"); Object.keys(this.POS).forEach(l => { this.atomo("B", l); this.ligacao(l); });
+    this.atomo("A"); Object.keys(this.POS).forEach(l => { this.atomo("B", l); this.ligacao(l, false); });
     return this.svg();
   }
 };
@@ -6379,25 +6385,29 @@ const Cena113 = {
   pousar(s, k, [x, y]) {
     this.grupo(s).insertAdjacentHTML("beforeend", `<circle data-k="${k}" cx="${x}" cy="${y}" r="${this.RE}" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
   },
+  // o elétron k da bandeja voa, num arco, até o ponto [x, y] do desenho; ao chegar, some e chama depois().
+  // Devolve false (sem voar) se o elétron não estiver na bandeja.
+  voar(k, [x, y], j, depois) {
+    const s = Cena112.svg(), m = s.getScreenCTM(), bandeja = Palco.el.querySelector(".c111-eletrons");
+    const origem = bandeja && bandeja.querySelector(`[data-i="${k}"]`);
+    if (!origem || !m || origem.style.visibility === "hidden") return false;
+    const P = Palco.el.getBoundingClientRect(), o = origem.getBoundingClientRect(), pt = s.createSVGPoint();
+    pt.x = x; pt.y = y;
+    const t = pt.matrixTransform(m), esc = 2 * this.RE * m.a / o.width;
+    const dx = t.x - (o.left + o.width / 2), dy = t.y - (o.top + o.height / 2), alto = -Math.max(40, Math.abs(dy) * .25);
+    origem.style.visibility = "hidden";
+    Palco.el.insertAdjacentHTML("beforeend", `<span class="c113-voo" style="left:${o.left - P.left}px;top:${o.top - P.top}px;width:${o.width}px;height:${o.height}px"></span>`);
+    const voo = Palco.el.lastElementChild;
+    Palco.animar(voo, [{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx * .5}px,${dy * .5 + alto}px) scale(${(1 + esc) / 2 * 1.3})`, offset: .5 },
+      { transform: `translate(${dx}px,${dy}px) scale(${esc})` }], { duracao: .6, atraso: j * .06, easing: "cubic-bezier(.45,0,.55,1)" })
+      .finished.then(() => { voo.remove(); depois(); }, () => {});
+    return true;
+  },
   // o par n (0 a 11) salta da bandeja para o par p do B em "lado"
   par(lado, p, n) {
     const s = Cena112.completo(); if (s.querySelector(`.el [data-k="${2 * n}"]`)) return;
-    const alvos = this.alvos(lado, p), P = Palco.el.getBoundingClientRect(), m = s.getScreenCTM();
-    const bandeja = Palco.el.querySelector(".c111-eletrons");
-    [0, 1].forEach(j => {
-      const k = 2 * n + j, origem = bandeja && bandeja.querySelector(`[data-i="${k}"]`);
-      if (!origem || !m) { this.pousar(s, k, alvos[j]); return; }
-      const o = origem.getBoundingClientRect(), pt = s.createSVGPoint();
-      pt.x = alvos[j][0]; pt.y = alvos[j][1];
-      const t = pt.matrixTransform(m), tam = 2 * this.RE * m.a, esc = tam / o.width;
-      const dx = t.x - (o.left + o.width / 2), dy = t.y - (o.top + o.height / 2), alto = -Math.max(40, Math.abs(dy) * .25);
-      origem.style.visibility = "hidden";
-      Palco.el.insertAdjacentHTML("beforeend", `<span class="c113-voo" style="left:${o.left - P.left}px;top:${o.top - P.top}px;width:${o.width}px;height:${o.height}px"></span>`);
-      const voo = Palco.el.lastElementChild;
-      Palco.animar(voo, [{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx * .5}px,${dy * .5 + alto}px) scale(${(1 + esc) / 2 * 1.3})`, offset: .5 },
-        { transform: `translate(${dx}px,${dy}px) scale(${esc})` }], { duracao: .6, atraso: j * .06, easing: "cubic-bezier(.45,0,.55,1)" })
-        .finished.then(() => { voo.remove(); this.pousar(s, k, alvos[j]); }, () => {});
-    });
+    const alvos = this.alvos(lado, p);
+    [0, 1].forEach(j => { const k = 2 * n + j, pousa = () => this.pousar(s, k, alvos[j]); if (!this.voar(k, alvos[j], j, pousa)) pousa(); });
   }
 };
 
