@@ -1091,14 +1091,14 @@
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <div class="pop-nome" id="popNome" role="dialog" aria-modal="true" aria-labelledby="popNomeTit">
       <form class="pop-nome-card" id="popNomeForm">
-        <h2 id="popNomeTit">Qual é o seu nome?</h2>
+        <h2 id="popNomeTit">Antes de começar, qual o seu nome?</h2>
         <p>Ele vai aparecer no cartão com a sua nota.</p>
         <input id="popNomeCampo" type="text" maxlength="40" autocomplete="given-name" placeholder="Digite seu nome" aria-label="Seu nome">
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v94 · 06/10/2026</span>
+    <span class="versao" id="versao">v95 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6565,8 +6565,10 @@ const Aluno = {
     if (!nome) return;
     this.nome = nome;
     try { localStorage.setItem("moleculas-aluno", nome); } catch (_) {}
-    document.getElementById("popNome").classList.remove("on");
+    // a capa vira (o efeito de cubo) com o pop-up ainda nela: ele gira junto e só depois é recolhido.
+    // (dentro da capa que gira, o pop-up deixa de ficar preso à tela e acompanha a face)
     if (this.depois) this.depois();
+    setTimeout(() => document.getElementById("popNome").classList.remove("on"), 1300);
   }
 };
 document.getElementById("popNomeCampo").addEventListener("input", e => { document.getElementById("popNomeOk").disabled = !e.target.value.trim(); });
