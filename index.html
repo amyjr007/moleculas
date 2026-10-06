@@ -777,7 +777,7 @@
   @keyframes popNomeEntra { from { opacity: 0; transform: scale(.94); } }
   .pop-nome-card { width: min(100%, 26rem); padding: 26px 24px 22px; border-radius: 22px; text-align: center;
     background: linear-gradient(180deg, #1B2A40, #0A1322); border: 2px solid rgba(255,194,75,.5); box-shadow: 0 24px 60px rgba(0,0,0,.55); }
-  .pop-nome-card h2 { margin: 0 0 6px; font-family: var(--display); font-weight: 800; font-size: clamp(1.4rem, 3vmin + .8rem, 1.9rem); color: #fff; letter-spacing: -.01em; }
+  .pop-nome-card h2 { margin: 0 0 18px; font-family: var(--display); font-weight: 800; font-size: clamp(1.4rem, 3vmin + .8rem, 1.9rem); color: #fff; letter-spacing: -.01em; }
   .pop-nome-card p { margin: 0 0 16px; color: var(--celeste-claro); font-size: 1rem; }
   .pop-nome-card input { width: 100%; box-sizing: border-box; padding: .7em .9em; border-radius: 14px; border: 2px solid rgba(163,219,247,.4);
     background: rgba(10,19,34,.9); color: #fff; font: 700 1.15rem/1.2 var(--display); text-align: center; outline: none; }
@@ -1092,13 +1092,12 @@
     <div class="pop-nome" id="popNome" role="dialog" aria-modal="true" aria-labelledby="popNomeTit">
       <form class="pop-nome-card" id="popNomeForm">
         <h2 id="popNomeTit">Antes de começar, qual o seu nome?</h2>
-        <p>Ele vai aparecer no cartão com a sua nota.</p>
         <input id="popNomeCampo" type="text" maxlength="40" autocomplete="given-name" placeholder="Digite seu nome" aria-label="Seu nome">
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v95 · 06/10/2026</span>
+    <span class="versao" id="versao">v96 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
