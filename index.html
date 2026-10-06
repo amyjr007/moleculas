@@ -1164,7 +1164,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v119 · 06/10/2026</span>
+    <span class="versao" id="versao">v120 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2865,8 +2865,8 @@ const NARRACOES = [
     inicio: () => Cena12.tela(),
     eventos: [
       { tempo: 0,    acao: () => Cena121.apagar() },                 // o passo 1 se apaga até sobrar "Passo "
-      { tempo: 1,    acao: () => Cena121.numero() },                 // "2:"
-      { tempo: 1.9,  acao: () => Cena121.texto(2.6) },               // "Montar o esqueleto da molécula"
+      { tempo: 1,    acao: () => Cena121.numero("2:") },             // "2:"
+      { tempo: 1.9,  acao: () => Cena121.texto(" Montar o esqueleto da molécula", 2.6) },
       { tempo: 8.8,  acao: () => Cena121.atomo("O") },               // o O, centralizado embaixo dos elétrons
       { tempo: 10.2, acao: () => Cena121.central(.8) },              // "Átomo central" (até 11s)
       { tempo: 13.8, acao: () => Cena121.atomo("H", "esq") },        // os dois H, um de cada lado, em linha
@@ -2882,7 +2882,23 @@ const NARRACOES = [
       { tempo: 66.5, acao: () => Cena121.pulsarLigacoes() },         // as duas ligações pulsam
       { tempo: 68,   acao: () => Cena121.compartilhar(2) },          // traços transparentes; os pares vão e voltam entre os átomos (até 70s)
       { tempo: 73,   acao: () => Cena121.brilharSobra([0, 1, 2, 3], 3) }    // os 4 elétrons que sobraram brilham 3 vezes
-    ] }
+    ] },
+  // Exemplo 01, H₂O: passo 3, distribuir em pares os elétrons que sobraram
+  { id: "dialogo12_2", titulo: "A molécula de água: passo 3", src: "audio/audio_moleculas_12.2.mp3", semNav: true,
+    inicio: () => Cena12.tela(),
+    eventos: [
+      { tempo: 1,    acao: () => Cena121.apagar(1.3) },              // o passo 2 se apaga até "Passo " (até 2,3s)
+      { tempo: 3.2,  acao: () => Cena121.numero("3:") },             // "3:"
+      { tempo: 5,    acao: () => Cena121.texto(" Distribuímos em pares os elétrons que sobraram até que cada átomo atinja sua estabilidade", 6.5) },   // até 11,5s
+      { tempo: 32.5, acao: () => Cena121.pulsarAtomo(["esq", "dir"], 2) },   // os H pulsam 2 vezes
+      { tempo: 33.8, acao: () => Cena121.pulsarAtomo(["meio"], 2) },         // o O pulsa 2 vezes
+      { tempo: 38,   acao: () => Cena121.pulsarAtomo(["esq"], 2) },          // o H da esquerda pulsa 2 vezes
+      { tempo: 40,   acao: () => Cena121.pulsarLigacao("esq", 2) },          // a ligação da esquerda pulsa
+      { tempo: 42,   acao: () => Cena121.vaiVem("esq", 2) },                 // traço transparente; o par vai e vem (até 44s)
+      { tempo: 46,   acao: () => Cena121.pulsarAtomo(["dir"], 2) },          // o H da direita pulsa 2 vezes
+      { tempo: 48,   acao: () => { Cena121.pulsarLigacao("dir", 1); Cena121.parDentro("dir", 4); } }   // o traço pulsa e mostra o par dentro (até 52s)
+    ],
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } }   // no lugar do play, o "Entendi" leva ao próximo áudio
 
 ];
 
@@ -6618,30 +6634,34 @@ const Cena121 = {
   $(sel) { return Palco.el.querySelector(sel); },
   POS: { meio: 100, esq: 24, dir: 176 },
   RAIO: { O: 21, H: 21 * .8 },
-  // 0s: o passo 1 se apaga de trás para frente até "Passo "
-  apagar() {
+  // o texto do passo se apaga de trás para frente até sobrar "Passo " (em dur segundos)
+  apagar(dur = .8) {
     const corpo = Cena12.corpo();
     let passo = corpo.querySelector(".c111-passo");
     if (!passo) { corpo.insertAdjacentHTML("beforeend", `<p class="c111-passo"></p>`); passo = corpo.querySelector(".c111-passo"); Palco.letras(passo, [{ classe: "c111-rotulo", texto: "Passo 1:" }]); }
-    if (passo.querySelector(".c112-num")) return;
+    if (passo.dataset.apagando) return; passo.dataset.apagando = "1";
     Palco.pararCursor(); passo.classList.remove("com-cursor", "digita");
-    const letras = [...passo.querySelectorAll(".ch")].slice(6);   // fica "Passo "
-    const passoT = .8 / Math.max(letras.length, 1);
+    passo.querySelectorAll(".com-cursor, .digita").forEach(el => el.classList.remove("com-cursor", "digita"));
+    const letras = passo.querySelector(".c112-num") ? [...passo.querySelectorAll(".c112-num .ch, .c112-resto .ch")] : [...passo.querySelectorAll(".ch")].slice(6);   // fica "Passo "
+    const passoT = (dur - .05) / Math.max(letras.length, 1);
     letras.reverse().forEach((ch, k) => Palco.animar(ch, [{ opacity: 1 }, { opacity: 1 }], { duracao: .02, atraso: k * passoT, fill: "none" })
       .finished.then(() => ch.remove(), () => {}));
-    Palco.animar(passo, [{ opacity: 1 }, { opacity: 1 }], { duracao: .85, fill: "none" }).finished.then(() => {
+    Palco.animar(passo, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => {
       passo.innerHTML = `<span class="c111-rotulo">Passo <span class="c112-num"></span></span><span class="c112-resto"></span>`;
+      delete passo.dataset.apagando;
     }, () => {});
   },
-  // 1s: o "2:"
-  numero() {
-    const n = this.$(".c112-num"); if (!n) return setTimeout(() => this.numero(), 100);
-    if (!n.textContent) Palco.digitar(n, "2:", .3, { cursor: false });
+  // o número do passo ("2:", "3:"...), digitado
+  numero(txt) {
+    const n = this.$(".c112-num"), p = this.$(".c111-passo");
+    if (!n || (p && p.dataset.apagando)) return setTimeout(() => this.numero(txt), 100);
+    if (!n.textContent) Palco.digitar(n, txt, .3, { cursor: false });
   },
-  // 1,9s: o texto do passo 2
-  texto(dur) {
-    const r = this.$(".c112-resto"); if (!r) return setTimeout(() => this.texto(dur), 100);
-    if (!r.textContent) Palco.digitar(r, " Montar o esqueleto da molécula", dur);
+  // o texto do passo, digitado
+  texto(frase, dur) {
+    const r = this.$(".c112-resto"), p = this.$(".c111-passo");
+    if (!r || (p && p.dataset.apagando)) return setTimeout(() => this.texto(frase, dur), 100);
+    if (!r.textContent) Palco.digitar(r, frase, dur);
   },
   // o desenho (embaixo da fileira de elétrons)
   svg() {
@@ -6744,6 +6764,56 @@ const Cena121 = {
       });
     });
     Palco.animar(g, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => g.remove(), () => {});
+  },
+  // átomos do esqueleto ("esq", "meio", "dir") pulsam: crescem com brilho e voltam
+  pulsarAtomo(lados, vezes) {
+    lados.forEach(lado => {
+      const g = this.$(`.c121-esqueleto .at [data-l="${lado}"]`); if (!g) return;
+      const normal = { scale: "1", filter: "drop-shadow(0 0 0 rgba(255,255,255,0))" }, grande = { scale: "1.3", filter: "drop-shadow(0 0 8px rgba(255,255,255,.95))" };
+      const q = [];
+      for (let i = 0; i < vezes; i++) q.push({ ...normal, offset: i / vezes }, { ...grande, offset: (i + .5) / vezes });
+      q.push({ ...normal, offset: 1 });
+      Palco.animar(g, q, { duracao: .55 * vezes, easing: "ease-in-out", fill: "none" });
+    });
+  },
+  // a ligação de um lado pulsa (engrossa com brilho)
+  pulsarLigacao(lado, vezes) {
+    const l = this.$(`.c121-esqueleto .lig [data-l="${lado}"]`); if (!l) return;
+    const q = [];
+    for (let i = 0; i < vezes; i++) q.push({ strokeWidth: 5, offset: i / vezes }, { strokeWidth: 10, offset: (i + .5) / vezes });
+    q.push({ strokeWidth: 5, offset: 1 });
+    Palco.animar(l, q, { duracao: .6 * vezes, easing: "ease-in-out", fill: "none" });
+  },
+  // o traço fica transparente durante dur segundos (e volta)
+  apagarTraco(lado, dur, nivel) {
+    const l = this.$(`.c121-esqueleto .lig [data-l="${lado}"]`); if (!l) return null;
+    const ent = Math.min(.25 / dur, .2);
+    Palco.animar(l, [{ opacity: 1 }, { opacity: nivel, offset: ent }, { opacity: nivel, offset: 1 - ent }, { opacity: 1 }], { duracao: dur, fill: "none" });
+    return l;
+  },
+  // o par da ligação "indo e vindo": cada elétron sai do seu átomo (um do H, outro do O), vai até o meio e volta, repetindo
+  vaiVem(lado, dur, idas = 2) {
+    const s = this.$(".c121-esqueleto"); if (!s || !this.apagarTraco(lado, dur, .15)) return;
+    const { x1, x2, mx } = this.pontas(lado);
+    s.insertAdjacentHTML("beforeend", `<g class="vai"></g>`);
+    const g = s.lastElementChild;
+    [[x1, -3.5], [x2, 3.5]].forEach(([xa, dy]) => {
+      g.insertAdjacentHTML("beforeend", `<circle cx="${mx}" cy="${25 + dy}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
+      const c = g.lastElementChild, ini = `translateX(${xa - mx}px)`, q = [{ transform: ini, opacity: 0, offset: 0 }, { opacity: 1, offset: .06 }];
+      for (let i = 0; i < idas; i++) q.push({ transform: "translateX(0px)", offset: (i + .5) / idas }, { transform: ini, offset: (i + 1) / idas });
+      q.splice(q.length - 1, 0, { opacity: 1, offset: .94 });
+      q[q.length - 1].opacity = 0;
+      Palco.animar(c, q, { duracao: dur, easing: "ease-in-out" });
+    });
+    Palco.animar(g, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => g.remove(), () => {});
+  },
+  // o par de elétrons aparece dentro do traço (que fica transparente) por dur segundos
+  parDentro(lado, dur) {
+    const s = this.$(".c121-esqueleto"); if (!s || !this.apagarTraco(lado, dur, .3)) return;
+    const { mx } = this.pontas(lado), ent = Math.min(.3 / dur, .2);
+    s.insertAdjacentHTML("beforeend", `<g class="vai">${[-4, 4].map(dy => `<circle cx="${mx}" cy="${25 + dy}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`).join("")}</g>`);
+    const g = s.lastElementChild;
+    Palco.animar(g, [{ opacity: 0 }, { opacity: 1, offset: ent }, { opacity: 1, offset: 1 - ent }, { opacity: 0 }], { duracao: dur }).finished.then(() => g.remove(), () => {});
   },
   // 73s: os elétrons que sobraram na fileira brilham algumas vezes
   brilharSobra(ks, vezes) {
