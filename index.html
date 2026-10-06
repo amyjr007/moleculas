@@ -480,6 +480,7 @@
   /* (tamanhos e espaços do passo 1 e da lista ajustados pela ferramenta de desenvolvimento) */
   .c111-passo { width: min(100%, 30ch); font-family: var(--display); font-weight: 700; line-height: 1.3; color: #fff; font-size: calc(clamp(1.15rem, 2.6vmin + .55rem, 1.9rem) * 1.11); }
   .c111-rotulo { color: var(--ambar); font-weight: 800; }
+  .c112-esqueleto { width: min(62vw, 42vh, 300px); height: auto; overflow: visible; margin-top: 1vh; }
   /* a lista: todas as linhas do mesmo tamanho, alinhadas pela esquerda (o bloco fica centralizado) e com números de largura igual */
   .c111-lista p { font-size: 1em; }
   .c111-lista { display: flex; flex-direction: column; align-items: flex-start; text-align: left; font-variant-numeric: tabular-nums; gap: .75em; margin-top: 2vh; font-family: var(--display); font-weight: 700; color: var(--celeste); font-size: calc(clamp(1.05rem, 2.2vmin + .5rem, 1.7rem) * 1.45); }
@@ -1136,7 +1137,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v107 · 06/10/2026</span>
+    <span class="versao" id="versao">v108 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2766,7 +2767,7 @@ const NARRACOES = [
     ],
     aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "Bora"); } },   // no lugar do play, o botão "Bora" leva ao próximo áudio
   // como montar a estrutura de Lewis de uma molécula poliatômica: a fórmula genérica AB₄ e o passo 1
-  { id: "dialogo11_1", titulo: "Moléculas poliatômicas: passo 1", src: "audio/audio_moleculas_11.1.mp3", semNav: true,
+  { id: "dialogo11_1", titulo: "O passo a passo", src: "audio/audio_moleculas_11.1.mp3", esperaPlay: true,
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 0.5,  acao: () => Cena111.abrir() },                        // título numa linha só, no topo; molécula e legenda saem girando
@@ -2776,6 +2777,22 @@ const NARRACOES = [
       { tempo: 19.6, acao: () => Cena111.linha("5A = 5 elétrons", .55) },
       { tempo: 20.2, acao: () => Cena111.linha("6A = 6 elétrons", .55) },
       { tempo: 20.8, acao: () => Cena111.linha("7A = 7 elétrons", .55) }
+    ] },
+  // passo 2: o esqueleto da molécula (A no meio, os quatro B em cruz e as ligações)
+  { id: "dialogo11_2", titulo: "O passo a passo: passo 2", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
+    inicio: () => Cena11.tela(),
+    eventos: [
+      { tempo: 0,    acao: () => Cena112.apagar() },                       // a lista some e o passo 1 se apaga até o "1", que vira "2"
+      { tempo: 1,    acao: () => Cena112.texto(3) },                        // "Organize o esqueleto da molécula"
+      { tempo: 5,    acao: () => Cena112.atomo("A") },                      // o A no meio
+      { tempo: 6.4,  acao: () => Cena112.atomo("B", "cima") },              // os quatro B em cruz (até 11s)
+      { tempo: 7.9,  acao: () => Cena112.atomo("B", "dir") },
+      { tempo: 9.4,  acao: () => Cena112.atomo("B", "baixo") },
+      { tempo: 10.9, acao: () => Cena112.atomo("B", "esq") },
+      { tempo: 13,   acao: () => Cena112.ligacao("cima") },                 // as ligações A–B, uma de cada vez, até o fim
+      { tempo: 13.7, acao: () => Cena112.ligacao("dir") },
+      { tempo: 14.4, acao: () => Cena112.ligacao("baixo") },
+      { tempo: 15.1, acao: () => Cena112.ligacao("esq") }
     ] }
 
 ];
@@ -6246,6 +6263,64 @@ const Cena111 = {
     if ([...lista.children].some(p => p.dataset.t === texto)) return;
     lista.insertAdjacentHTML("beforeend", `<p data-t="${texto}"></p>`);
     Palco.digitar(lista.lastElementChild, texto, dur);
+  }
+};
+
+/* ---------- Narração 11.2: passo 2, o esqueleto da molécula ----------
+   A lista some e o "Passo 1: ..." se apaga letra por letra até sobrar "Passo ", e o "2:" é digitado no lugar.
+   Embaixo, o esqueleto de AB₄: o A no meio, os quatro B em cruz e os traços das ligações, um de cada vez. */
+const Cena112 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  POS: { cima: [100, 32], dir: [168, 100], baixo: [100, 168], esq: [32, 100] },
+  // 0s: a lista sai; o passo 1 se apaga de trás para frente até "Passo " e o "2:" é digitado
+  apagar() {
+    const corpo = Cena111.corpo();
+    const lista = corpo.querySelector(".c111-lista");
+    if (lista) Palco.animar(lista, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => lista.remove(), () => {});
+    let passo = corpo.querySelector(".c111-passo");
+    if (!passo) { corpo.insertAdjacentHTML("beforeend", `<p class="c111-passo"></p>`); passo = corpo.querySelector(".c111-passo"); Palco.letras(passo, [{ classe: "c111-rotulo", texto: "Passo 1:" }]); }
+    Palco.pararCursor(); passo.classList.remove("com-cursor", "digita");
+    const letras = [...passo.querySelectorAll(".ch")].slice(6);   // fica "Passo " (5 letras e o espaço)
+    letras.reverse().forEach((ch, k) => Palco.animar(ch, [{ opacity: 1 }, { opacity: 1 }], { duracao: .02, atraso: k * .016, fill: "none" })
+      .finished.then(() => ch.remove(), () => {}));
+    const fim = letras.length * .016 + .1;
+    Palco.animar(passo, [{ opacity: 1 }, { opacity: 1 }], { duracao: fim, fill: "none" }).finished.then(() => {
+      passo.innerHTML = `<span class="c111-rotulo">Passo <span class="c112-num"></span></span><span class="c112-resto"></span>`;
+      Palco.digitar(passo.querySelector(".c112-num"), "2:", .3);
+    }, () => {});
+  },
+  // 1s: o texto do passo 2
+  texto(dur) {
+    const r = this.$(".c112-resto"); if (!r) return setTimeout(() => this.texto(dur), 200);
+    Palco.digitar(r, " Organize o esqueleto da molécula", dur);
+  },
+  // o desenho do esqueleto (embaixo do passo)
+  svg() {
+    let s = this.$(".c112-esqueleto");
+    if (!s) {
+      Cena111.corpo().insertAdjacentHTML("beforeend", `<svg class="c112-esqueleto" viewBox="0 0 200 200" aria-label="Esqueleto da molécula AB4"><g class="lig"></g><g class="at"></g></svg>`);
+      s = this.$(".c112-esqueleto");
+    }
+    return s;
+  },
+  // um átomo: "A" no meio, ou "B" num dos quatro lados; surge crescendo
+  atomo(sim, lado) {
+    const s = this.svg(), [x, y] = lado ? this.POS[lado] : [100, 100];
+    if (s.querySelector(`.at [data-l="${lado || "meio"}"]`)) return;
+    const cor = sim === "A" ? ["#FFC24B", "#7A5410"] : ["#A3DBF7", "#2B5F7E"];
+    s.querySelector(".at").insertAdjacentHTML("beforeend", `<g data-l="${lado || "meio"}" style="transform-origin:${x}px ${y}px">
+        <circle cx="${x}" cy="${y}" r="21" fill="${cor[0]}" stroke="${cor[1]}" stroke-width="2"/>
+        <text x="${x}" y="${y + 7.5}" text-anchor="middle" font-size="21" font-weight="800" fill="#0A1322" font-family="Bricolage Grotesque, sans-serif">${sim}</text></g>`);
+    Palco.animar(s.querySelector(".at").lastElementChild, [{ transform: "scale(0)", opacity: 0 }, { transform: "scale(1.25)", opacity: 1, offset: .65 }, { transform: "scale(1)", opacity: 1 }],
+      { duracao: .5, easing: "ease-out" });
+  },
+  // a ligação A–B de um lado: o traço cresce do A até o B
+  ligacao(lado) {
+    const s = this.svg(); if (s.querySelector(`.lig [data-l="${lado}"]`)) return;
+    const [x, y] = this.POS[lado], dx = x - 100, dy = y - 100, d = Math.hypot(dx, dy), ux = dx / d, uy = dy / d;
+    const x1 = 100 + ux * 23, y1 = 100 + uy * 23, x2 = x - ux * 23, y2 = y - uy * 23, comp = Math.hypot(x2 - x1, y2 - y1);
+    s.querySelector(".lig").insertAdjacentHTML("beforeend", `<line data-l="${lado}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="${comp}" stroke-dashoffset="${comp}"/>`);
+    Palco.animar(s.querySelector(".lig").lastElementChild, [{ strokeDashoffset: comp }, { strokeDashoffset: 0 }], { duracao: .45, easing: "ease-out" });
   }
 };
 
