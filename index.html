@@ -1164,7 +1164,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v118 · 06/10/2026</span>
+    <span class="versao" id="versao">v119 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2871,7 +2871,17 @@ const NARRACOES = [
       { tempo: 10.2, acao: () => Cena121.central(.8) },              // "Átomo central" (até 11s)
       { tempo: 13.8, acao: () => Cena121.atomo("H", "esq") },        // os dois H, um de cada lado, em linha
       { tempo: 13.95, acao: () => Cena121.atomo("H", "dir") },
-      { tempo: 19,   acao: () => Cena121.tirarCentral() }            // some o "Átomo central"
+      { tempo: 19,   acao: () => Cena121.tirarCentral() },           // some o "Átomo central"
+      { tempo: 30.7, acao: () => Cena121.pulsar(".c12-l[data-l='O'] .c12-fam", 3) },   // o 6A pulsa 3 vezes
+      { tempo: 36.8, acao: () => Cena121.pulsar(".c12-l[data-l='H']", 2) },            // o H da fórmula pulsa 2 vezes
+      { tempo: 38,   acao: () => Cena121.pulsar(".c12-l[data-l='H'] .c12-fam", 2) },   // o 1A pulsa 2 vezes
+      { tempo: 51,   acao: () => Cena121.respiro(1) },               // o áudio para 1s e continua
+      { tempo: 59,   acao: () => Cena121.ligacao("esq", [7, 6], .7, .3) },    // 2 elétrons saltam e viram a ligação da esquerda (até 60s)
+      { tempo: 61,   acao: () => Cena121.ligacao("dir", [5, 4], 1.2, .55) },  // mais 2: a ligação da direita (até 62,8s)
+      { tempo: 64.8, acao: () => Cena121.verde() },                  // o esqueleto brilha verde, com aplausos
+      { tempo: 66.5, acao: () => Cena121.pulsarLigacoes() },         // as duas ligações pulsam
+      { tempo: 68,   acao: () => Cena121.compartilhar(2) },          // traços transparentes; os pares vão e voltam entre os átomos (até 70s)
+      { tempo: 73,   acao: () => Cena121.brilharSobra([0, 1, 2, 3], 3) }    // os 4 elétrons que sobraram brilham 3 vezes
     ] }
 
 ];
@@ -6606,7 +6616,8 @@ const Cena12 = {
    elétrons enfileirados entra o O (o átomo central) e depois um H de cada lado, em linha. */
 const Cena121 = {
   $(sel) { return Palco.el.querySelector(sel); },
-  POS: { meio: 100, esq: 32, dir: 168 },
+  POS: { meio: 100, esq: 24, dir: 176 },
+  RAIO: { O: 21, H: 21 * .8 },
   // 0s: o passo 1 se apaga de trás para frente até "Passo "
   apagar() {
     const corpo = Cena12.corpo();
@@ -6646,7 +6657,7 @@ const Cena121 = {
     const s = this.svg(); if (s.querySelector(`.at [data-l="${lado}"]`)) return;
     const x = this.POS[lado], y = 25;
     const [fundo, borda, letra] = sim === "O" ? ["#FF5A4E", "#8E1E16", "#fff"] : ["#F4F7FB", "#7C8BA0", "#0A1322"];
-    const r = sim === "H" ? 21 * .8 : 21;   // o H é 20% menor
+    const r = this.RAIO[sim];   // o H é 20% menor
     s.querySelector(".at").insertAdjacentHTML("beforeend", `<g data-l="${lado}" style="transform-origin:${x}px ${y}px">
         <circle cx="${x}" cy="${y}" r="${r}" fill="${fundo}" stroke="${borda}" stroke-width="2"/>
         <text x="${x}" y="${y + r * .36}" text-anchor="middle" font-size="${r}" font-weight="800" fill="${letra}" font-family="Bricolage Grotesque, sans-serif">${sim}</text></g>`);
@@ -6657,6 +6668,94 @@ const Cena121 = {
   central(dur) {
     this.svg(); const p = this.$(".c121-central");
     if (!p.textContent) Palco.digitar(p, "Átomo central", dur, { cursor: false });
+  },
+  // um elemento (seletor) pulsa algumas vezes: cresce com brilho e volta
+  pulsar(sel, vezes) {
+    const el = this.$(sel); if (!el) return;
+    const normal = { scale: "1", textShadow: "0 0 0 rgba(255,194,75,0)" }, grande = { scale: "1.4", textShadow: "0 0 22px rgba(255,194,75,.95)" };
+    const q = [];
+    for (let i = 0; i < vezes; i++) q.push({ ...normal, offset: i / vezes }, { ...grande, offset: (i + .5) / vezes });
+    q.push({ ...normal, offset: 1 });
+    Palco.animar(el, q, { duracao: .5 * vezes, easing: "ease-in-out", fill: "none" });
+  },
+  // 51s: o áudio para por um instante e continua sozinho
+  respiro(seg) {
+    const i = Player.indice; Player.pausar();
+    setTimeout(() => { if (Player.indice === i && Player.fonte && Player.fonte.paused && !Player.terminou) Player.tocar(); }, seg * 1000);
+  },
+  // as pontas da ligação O–H de um lado (fora das bolas)
+  pontas(lado) {
+    const xh = this.POS[lado], s = Math.sign(100 - xh), x1 = xh + s * (this.RAIO.H + 3), x2 = 100 - s * (this.RAIO.O + 3);
+    return { x1, x2, mx: (x1 + x2) / 2 };
+  },
+  // dois elétrons da fileira (ks) saltam em curva até o meio da ligação e viram o traço
+  ligacao(lado, ks, voo, cresce) {
+    const s = this.svg(); if (s.querySelector(`.lig [data-l="${lado}"]`)) return;
+    const { x1, x2, mx } = this.pontas(lado);
+    s.querySelector(".lig").insertAdjacentHTML("beforeend", `<line data-l="${lado}" x1="${x1}" y1="25" x2="${x2}" y2="25" stroke="#fff" stroke-width="5" stroke-linecap="round" style="transform-origin:${mx}px 25px;transform:scale(0)"/>`);
+    const linha = s.querySelector(".lig").lastElementChild;
+    const crescer = () => { linha.style.transform = ""; Palco.animar(linha, [{ transform: "scale(0)" }, { transform: "scale(1.12)", offset: .7 }, { transform: "scale(1)" }], { duracao: cresce, easing: "ease-out" }); };
+    const fila = Cena12.fila(), m = s.getScreenCTM(), P = Palco.el.getBoundingClientRect();
+    let voaram = 0;
+    ks.forEach((k, j) => {
+      const e = fila.children[k];
+      if (!e || !m || e.style.visibility === "hidden" || e.style.opacity) return;
+      voaram++;
+      const o = e.getBoundingClientRect(), pt = s.createSVGPoint(); pt.x = mx; pt.y = 25 + (j ? 4 : -4);
+      const t = pt.matrixTransform(m), dx = t.x - (o.left + o.width / 2), dy = t.y - (o.top + o.height / 2), alto = -Math.max(50, Math.abs(dy) * .3);
+      e.style.visibility = "hidden";
+      Palco.el.insertAdjacentHTML("beforeend", `<span class="c12-voo" style="left:${o.left - P.left}px;top:${o.top - P.top}px;width:${o.width}px"></span>`);
+      const v = Palco.el.lastElementChild;
+      Palco.animar(v, [{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx * .5}px,${dy * .5 + alto}px) scale(1.4)`, offset: .5 }, { transform: `translate(${dx}px,${dy}px) scale(1)` }],
+        { duracao: voo - .06, atraso: j * .06, easing: "cubic-bezier(.45,0,.55,1)" })
+        .finished.then(() => { Palco.animar(v, [{ opacity: 1 }, { opacity: 0 }], { duracao: cresce * .8 }).finished.then(() => v.remove(), () => {}); if (j === ks.length - 1) crescer(); }, () => {});
+    });
+    if (!voaram) crescer();
+  },
+  // 64,8s: o esqueleto brilha verde, com aplausos
+  verde() {
+    const s = this.$(".c121-esqueleto"); if (!s) return;
+    Palco.animar(s, [{ filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }, { filter: "drop-shadow(0 0 10px rgba(110,231,160,1)) drop-shadow(0 0 22px rgba(110,231,160,.7))", offset: .35 },
+      { filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }], { duracao: 1.8, easing: "ease-in-out", fill: "none" });
+    const a = new Audio("audio/vfx/applause.mp3"); a.play().catch(() => {});
+  },
+  // 66,5s: as duas ligações pulsam (engrossam com brilho, duas vezes)
+  pulsarLigacoes() {
+    Palco.el.querySelectorAll(".c121-esqueleto .lig line").forEach(l =>
+      Palco.animar(l, [{ strokeWidth: 5, offset: 0 }, { strokeWidth: 10, offset: .25 }, { strokeWidth: 5, offset: .5 }, { strokeWidth: 10, offset: .75 }, { strokeWidth: 5, offset: 1 }],
+        { duracao: 1.2, easing: "ease-in-out", fill: "none" }));
+  },
+  // 68s: os traços ficam transparentes e, no lugar de cada um, os dois elétrons vão e voltam entre os átomos; somem em 70s
+  compartilhar(dur) {
+    const s = this.$(".c121-esqueleto"); if (!s || s.querySelector(".vai")) return;
+    const linhas = [...s.querySelectorAll(".lig line")];
+    linhas.forEach(l => Palco.animar(l, [{ opacity: 1 }, { opacity: .15, offset: .12 }, { opacity: .15, offset: .88 }, { opacity: 1 }], { duracao: dur, fill: "none" }));
+    s.insertAdjacentHTML("beforeend", `<g class="vai"></g>`);
+    const g = s.querySelector(".vai");
+    ["esq", "dir"].forEach(lado => {
+      if (!s.querySelector(`.lig [data-l="${lado}"]`)) return;
+      const { x1, x2, mx } = this.pontas(lado), amp = (Math.abs(x2 - x1) / 2) - 2;
+      [-4, 4].forEach((dy, j) => {
+        g.insertAdjacentHTML("beforeend", `<circle cx="${mx}" cy="${25 + dy}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
+        const c = g.lastElementChild, ida = j ? amp : -amp;   // os dois do par vão em sentidos opostos
+        Palco.animar(c, [{ transform: "translateX(0)", opacity: 0 }, { opacity: 1, offset: .1 }, { transform: `translateX(${ida}px)`, offset: .25 }, { transform: `translateX(${-ida}px)`, offset: .5 },
+          { transform: `translateX(${ida}px)`, offset: .75 }, { opacity: 1, offset: .9 }, { transform: "translateX(0)", opacity: 0 }], { duracao: dur, easing: "ease-in-out" })
+          .finished.then(() => c.remove(), () => {});
+      });
+    });
+    Palco.animar(g, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => g.remove(), () => {});
+  },
+  // 73s: os elétrons que sobraram na fileira brilham algumas vezes
+  brilharSobra(ks, vezes) {
+    const els = Cena12.fila().children, normal = { scale: "1", boxShadow: "0 0 8px 2px rgba(163,219,247,.7)" };
+    const aceso = { scale: "1.4", boxShadow: "0 0 16px 7px rgba(163,219,247,.95), 0 0 34px 12px rgba(163,219,247,.45)" };
+    ks.forEach(k => {
+      const e = els[k]; if (!e) return;
+      const q = [];
+      for (let i = 0; i < vezes; i++) q.push({ ...normal, offset: i / vezes }, { ...aceso, offset: (i + .5) / vezes });
+      q.push({ ...normal, offset: 1 });
+      Palco.animar(e, q, { duracao: .6 * vezes, easing: "ease-in-out", fill: "none" });
+    });
   },
   // 19s: o rótulo some (o lugar dele fica, para nada pular)
   tirarCentral() {
