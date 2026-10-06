@@ -499,8 +499,10 @@
   .c12-l { display: inline-block; position: relative; }
   .c12-fam { position: absolute; left: 50%; bottom: 92%; transform: translateX(-50%); font-size: .3em; color: #fff; letter-spacing: 0; white-space: nowrap; }
   sub.c12-l .c12-fam { bottom: 120%; }
-  .c12-fila { display: flex; gap: clamp(9px, 2vmin, 16px); margin-top: 4.5vh; }
-  .c12-e, .c12-voo { width: clamp(13px, 2.3vmin, 19px); aspect-ratio: 1; border-radius: 50%; background: var(--celeste); box-shadow: 0 0 8px 2px rgba(163,219,247,.7); }
+  /* a fileira fica na base do palco, como os elétrons dos áudios 11 */
+  .c12-fila { position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%); z-index: 3; display: flex; gap: clamp(8px, 1.7vmin, 15px); pointer-events: none; }
+  @media (orientation: portrait) { .c12-fila { bottom: 12%; } }
+  .c12-e, .c12-voo { width: clamp(9px, 1.5vmin, 13px); aspect-ratio: 1; border-radius: 50%; background: var(--celeste); box-shadow: 0 0 8px 2px rgba(163,219,247,.7); }
   .c12-voo { position: absolute; z-index: 4; pointer-events: none; }
   /* áudio 12.1: o esqueleto da água em linha (H O H) e o rótulo "Átomo central" */
   .c121-esqueleto { width: min(70vw, 40vh, 320px); height: auto; overflow: visible; margin-top: 4vh; }
@@ -1162,7 +1164,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v117 · 06/10/2026</span>
+    <span class="versao" id="versao">v118 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6566,7 +6568,8 @@ const Cena12 = {
   fila() {
     let f = this.$(".c12-fila");
     if (!f) {
-      this.corpo().insertAdjacentHTML("beforeend", `<div class="c12-fila" aria-label="8 elétrons de valência">${'<span class="c12-e" style="opacity:0"></span>'.repeat(8)}</div>`);
+      const velha = this.$(".c111-eletrons"); if (velha) velha.remove();   // a bandeja do AB₄ (já vazia) dá lugar a esta
+      Palco.adicionar(`<div class="c12-fila" aria-label="8 elétrons de valência">${'<span class="c12-e" style="opacity:0"></span>'.repeat(8)}</div>`);
       f = this.$(".c12-fila");
     }
     return f;
@@ -6608,7 +6611,7 @@ const Cena121 = {
   apagar() {
     const corpo = Cena12.corpo();
     let passo = corpo.querySelector(".c111-passo");
-    if (!passo) { Cena12.fila().insertAdjacentHTML("beforebegin", `<p class="c111-passo"></p>`); passo = corpo.querySelector(".c111-passo"); Palco.letras(passo, [{ classe: "c111-rotulo", texto: "Passo 1:" }]); }
+    if (!passo) { corpo.insertAdjacentHTML("beforeend", `<p class="c111-passo"></p>`); passo = corpo.querySelector(".c111-passo"); Palco.letras(passo, [{ classe: "c111-rotulo", texto: "Passo 1:" }]); }
     if (passo.querySelector(".c112-num")) return;
     Palco.pararCursor(); passo.classList.remove("com-cursor", "digita");
     const letras = [...passo.querySelectorAll(".ch")].slice(6);   // fica "Passo "
@@ -6633,7 +6636,7 @@ const Cena121 = {
   svg() {
     let s = this.$(".c121-esqueleto");
     if (!s) {
-      Cena12.fila().insertAdjacentHTML("afterend", `<svg class="c121-esqueleto" viewBox="0 0 200 50" aria-label="Esqueleto da molécula de água"><g class="lig"></g><g class="at"></g></svg><p class="c121-central"></p>`);
+      Cena12.corpo().insertAdjacentHTML("beforeend", `<svg class="c121-esqueleto" viewBox="0 0 200 50" aria-label="Esqueleto da molécula de água"><g class="lig"></g><g class="at"></g></svg><p class="c121-central"></p>`);
       s = this.$(".c121-esqueleto");
     }
     return s;
@@ -6643,9 +6646,10 @@ const Cena121 = {
     const s = this.svg(); if (s.querySelector(`.at [data-l="${lado}"]`)) return;
     const x = this.POS[lado], y = 25;
     const [fundo, borda, letra] = sim === "O" ? ["#FF5A4E", "#8E1E16", "#fff"] : ["#F4F7FB", "#7C8BA0", "#0A1322"];
+    const r = sim === "H" ? 21 * .8 : 21;   // o H é 20% menor
     s.querySelector(".at").insertAdjacentHTML("beforeend", `<g data-l="${lado}" style="transform-origin:${x}px ${y}px">
-        <circle cx="${x}" cy="${y}" r="21" fill="${fundo}" stroke="${borda}" stroke-width="2"/>
-        <text x="${x}" y="${y + 7.5}" text-anchor="middle" font-size="21" font-weight="800" fill="${letra}" font-family="Bricolage Grotesque, sans-serif">${sim}</text></g>`);
+        <circle cx="${x}" cy="${y}" r="${r}" fill="${fundo}" stroke="${borda}" stroke-width="2"/>
+        <text x="${x}" y="${y + r * .36}" text-anchor="middle" font-size="${r}" font-weight="800" fill="${letra}" font-family="Bricolage Grotesque, sans-serif">${sim}</text></g>`);
     Palco.animar(s.querySelector(".at").lastElementChild, [{ transform: "scale(0)", opacity: 0 }, { transform: "scale(1.25)", opacity: 1, offset: .65 }, { transform: "scale(1)", opacity: 1 }],
       { duracao: .5, easing: "ease-out" });
   },
