@@ -1164,7 +1164,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v120 · 06/10/2026</span>
+    <span class="versao" id="versao">v121 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6610,9 +6610,13 @@ const Cena12 = {
     const dx = b.left - P.left - x0, dy = b.top - P.top - y0;
     Palco.el.insertAdjacentHTML("beforeend", `<span class="c12-voo" style="left:${x0}px;top:${y0}px"></span>`);
     const voo = Palco.el.lastElementChild;
-    Palco.animar(voo, [{ transform: "translate(0,0) scale(0)", opacity: 0 }, { transform: "translate(0,0) scale(1.5)", opacity: 1, offset: .2 },
-      { transform: `translate(${dx * .5}px,${dy * .5 - 30}px) scale(1.2)`, offset: .6 }, { transform: `translate(${dx}px,${dy}px) scale(1)`, opacity: 1 }],
-      { duracao: .8, easing: "ease-in-out" }).finished.then(() => { voo.remove(); slot.style.opacity = ""; }, () => {});
+    // sai de dentro da letra (cresce) e faz um lançamento oblíquo: sobe de lado e cai em parábola até o lugar
+    const H = Math.max(60, Math.abs(dy) * .5), sai = .15, q = [{ transform: "translate(0px,0px) scale(0)", opacity: 0, offset: 0 }];
+    for (let i = 0; i <= 16; i++) {
+      const t = i / 16;
+      q.push({ transform: `translate(${dx * t}px,${dy * t - 4 * H * t * (1 - t)}px) scale(${1.4 - .4 * t})`, opacity: 1, offset: sai + (1 - sai) * t });
+    }
+    Palco.animar(voo, q, { duracao: 1, easing: "linear" }).finished.then(() => { voo.remove(); slot.style.opacity = ""; }, () => {});
   },
   // os elétrons da fileira (índices) acendem ou apagam o brilho
   brilho(ks, ligar = true) {
