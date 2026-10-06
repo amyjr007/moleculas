@@ -1102,7 +1102,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v97 · 06/10/2026</span>
+    <span class="versao" id="versao">v98 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -5974,8 +5974,7 @@ const Cena10 = {
 
 /* ---------- Capítulo 11: as moléculas poliatômicas ----------
    Do cartão da nota, "Continuar" gira a tela de cima para baixo; a nova traz o título "As moléculas poliatômicas"
-   e uma molécula de ácido carbônico (H₂CO₃) em 3D, girando — bolas nas cores padrão (C cinza-escuro, O vermelho,
-   H branco), sem os símbolos. O play volta, e ele toca o áudio 11. */
+   e uma molécula de metano (CH₄) em 3D, girando — bolas nas cores padrão (C cinza-escuro, H branco), sem os símbolos. O play volta, e ele toca o áudio 11. */
 const Cena11 = {
   $(sel) { return Palco.el.querySelector(sel); },
   TITULO: "As moléculas poliatômicas",
@@ -5984,7 +5983,7 @@ const Cena11 = {
     const cartao = this.$(".c10-cartao");
     if (cartao) Palco.animar(cartao, [{ opacity: 1 }, { opacity: 0 }], { duracao: .3 }).finished.then(() => cartao.remove(), () => {});
     Palco.el.querySelectorAll(".c4-confete").forEach(c => c.remove());
-    Cena10.virar(this.TITULO, `<div class="c11-mol" aria-label="Molécula de ácido carbônico girando"></div>`, { baixo: true, grande: true })
+    Cena10.virar(this.TITULO, `<div class="c11-mol" aria-label="Molécula de metano girando"></div>`, { baixo: true, grande: true })
       .then(() => this.montar());
     setTimeout(() => this.montar(), 60);   // a molécula já nasce na face que entra
     // o play volta: o próximo é o áudio 11
@@ -5992,10 +5991,10 @@ const Cena11 = {
   },
   // pela navegação rápida: a tela já pronta
   tela() {
-    if (!this.$(`[data-t="${this.TITULO}"]`)) Palco.mostrar(`<h2 class="c0-titulo c11-titulo" data-t="${this.TITULO}" style="top:5%">${this.TITULO}</h2><div class="c11-mol" aria-label="Molécula de ácido carbônico girando"></div>`);
+    if (!this.$(`[data-t="${this.TITULO}"]`)) Palco.mostrar(`<h2 class="c0-titulo c11-titulo" data-t="${this.TITULO}" style="top:5%">${this.TITULO}</h2><div class="c11-mol" aria-label="Molécula de metano girando"></div>`);
     this.montar();
   },
-  // a molécula 3D: H₂CO₃ — o C no meio (trigonal plana), um O com ligação dupla e dois OH
+  // a molécula 3D: o metano, CH₄
   montar() {
     const caixa = this.$(".c11-mol");
     if (!caixa || caixa.querySelector("canvas") || !window.THREE) return;
@@ -6013,7 +6012,7 @@ const Cena11 = {
     const M = { C: mat(0x404040), O: mat(0xFF0D0D), H: mat(0xFFFFFF), L: mat(0xC8C8C8) };
     const esf = new THREE.SphereGeometry(1, 48, 32), bas = new THREE.CylinderGeometry(.12, .12, 1, 20);
     const mol = new THREE.Group(); cena.add(mol);
-    const atomo = (tipo, r, x, y) => { const m = new THREE.Mesh(esf, M[tipo]); m.scale.setScalar(r); m.position.set(x, y, 0); mol.add(m); return m.position; };
+    const atomo = (tipo, r, x, y, z = 0) => { const m = new THREE.Mesh(esf, M[tipo]); m.scale.setScalar(r); m.position.set(x, y, z); mol.add(m); return m.position; };
     const ligar = (a, b, n = 1) => {
       const dir = b.clone().sub(a), comp = dir.length(), meio = a.clone().add(b).multiplyScalar(.5);
       const lado = new THREE.Vector3(-dir.y, dir.x, 0).normalize().multiplyScalar(.2);
@@ -6022,15 +6021,10 @@ const Cena11 = {
         c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()); mol.add(c);
       });
     };
-    const ang = d => d * Math.PI / 180, L = 1.75, LH = 1.25;
-    const C = atomo("C", .6, 0, 0);
-    const O1 = atomo("O", .58, 0, L);                                                     // C=O, em cima
-    const O2 = atomo("O", .58, L * Math.cos(ang(-30)), L * Math.sin(ang(-30)));           // C–O(H) à direita
-    const O3 = atomo("O", .58, L * Math.cos(ang(210)), L * Math.sin(ang(210)));           // C–O(H) à esquerda
-    const H2 = atomo("H", .36, O2.x + LH * Math.cos(ang(-90)), O2.y + LH * Math.sin(ang(-90)));
-    const H3 = atomo("H", .36, O3.x + LH * Math.cos(ang(-90)), O3.y + LH * Math.sin(ang(-90)));
-    ligar(C, O1, 2); ligar(C, O2); ligar(C, O3); ligar(O2, H2); ligar(O3, H3);
-    mol.position.y = -.25;
+    // metano (CH₄): o C no meio e os quatro H nos vértices de um tetraedro (109,5° entre as ligações)
+    const C = atomo("C", .62, 0, 0), L = 1.75, k = L / Math.sqrt(3);
+    [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]].forEach(([x, y, z]) => ligar(C, atomo("H", .4, x * k, y * k, z * k)));
+    mol.rotation.order = "YXZ";
     const ajustar = () => { const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h;
       camera.position.z = 10 * Math.max(1, .8 / camera.aspect); camera.updateProjectionMatrix(); };
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
@@ -6038,7 +6032,7 @@ const Cena11 = {
     const quadro = agora => {
       if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
       const dt = Math.min((agora - antes) / 1000, .05); antes = agora; if (!Palco.pausado) t += dt;
-      mol.rotation.y = t * .7; mol.rotation.x = Math.sin(t * .4) * .25;   // gira em torno do eixo vertical, balançando de leve
+      mol.rotation.y = t * .7; mol.rotation.x = .62 + Math.sin(t * .4) * .25;   // gira em torno do eixo vertical (um H para cima), balançando de leve
       renderer.render(cena, camera);
       requestAnimationFrame(quadro);
     };
