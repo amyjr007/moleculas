@@ -465,6 +465,11 @@
     background: linear-gradient(180deg, rgba(27,42,64,.97), rgba(10,19,34,.97)); border: 2px solid rgba(110,231,160,.55);
     box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 40px rgba(110,231,160,.18); color: #fff; font-family: var(--display); }
   .c10-cartao p { margin: 0; }
+  .c10-cartao-botoes { display: flex; justify-content: center; gap: 12px; margin-top: 1.1em; }
+  .c10-cartao-botoes .c10-bt { font-size: clamp(1rem, 1.6vmin + .55rem, 1.3rem); }
+  .c10-refaz { background: rgba(20,33,52,.9); color: #fff; border: 2px solid rgba(163,219,247,.4); animation: none; }
+  .c11-mol { position: absolute; left: 0; right: 0; top: 17%; bottom: 14%; z-index: 2; }
+  .c11-mol canvas { display: block; width: 100%; height: 100%; }
   .c10-cartao-nome { font-weight: 800; font-size: clamp(1.3rem, 2.6vmin + .7rem, 1.9rem); color: #fff; margin-bottom: .3em !important; }
   .c10-cartao-tit { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--celeste); font-size: clamp(.9rem, 1.4vmin + .55rem, 1.2rem); }
   .c10-cartao-nota { font-weight: 800; line-height: 1; color: var(--ambar); font-size: clamp(4rem, 12vmin, 6.5rem); text-shadow: 0 0 30px rgba(255,194,75,.5); margin: .1em 0 .15em !important; }
@@ -1097,7 +1102,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v96 · 06/10/2026</span>
+    <span class="versao" id="versao">v97 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2710,7 +2715,11 @@ const NARRACOES = [
       { tempo: 2,    acao: () => Cena10.virar("Estruturas de Lewis") },   // a tela vira de baixo para cima: "Estruturas de Lewis"
       { tempo: 20.5, acao: () => Cena1012.exemplo("carbono") }     // 1º exemplo: Carbono – Família 4A (4 elétrons)
     ],
-    aoFim: () => ui.semPlay(true) }                                // sem play: o aluno monta a estrutura e confirma
+    aoFim: () => ui.semPlay(true) },                               // sem play: o aluno monta a estrutura e confirma
+  // capítulo novo: as moléculas poliatômicas (os eventos virão depois)
+  { id: "dialogo11", titulo: "As moléculas poliatômicas", src: "audio/audio_moleculas_11.mp3",
+    inicio: () => Cena11.tela(),
+    eventos: [] }
 
 ];
 
@@ -5856,22 +5865,25 @@ const Cena10 = {
     });
   },
   // a tela vira de baixo para cima (face de um cubo) e a nova traz outro título; html: o que mais vai nela
-  virar(txt, html = "") {
-    if (this.$(`.c10-titulo[data-t="${txt}"]`) || this.$(".c71-cubo")) return;
+  // baixo: a tela gira de cima para baixo (a face nova vem de cima) · grande: o título no tamanho cheio (um capítulo novo)
+  virar(txt, html = "", { baixo = false, grande = false } = {}) {
+    if (this.$(`[data-t="${txt}"]`) || this.$(".c71-cubo")) return Promise.resolve();
     const P = Palco.el, H = P.clientHeight, atuais = [...P.children];
+    const tit = grande ? `<h2 class="c0-titulo c11-titulo" data-t="${txt}" style="top:5%">${txt}</h2>` : this.titulo(txt);
     Palco.adicionar(`<div class="c71-cubo"><div class="c71-giro">
         <div class="c71-face f1"></div>
-        <div class="c71-face f2">${this.titulo(txt)}${html}</div>
+        <div class="c71-face f2">${tit}${html}</div>
       </div></div>`);
     const giro = this.$(".c71-giro"), f1 = this.$(".c71-face.f1"), f2 = this.$(".c71-face.f2");
     atuais.forEach(c => f1.appendChild(c));
     f1.style.transform = `translateZ(${H / 2}px)`;
-    f2.style.transform = `rotateX(-90deg) translateZ(${H / 2}px)`;   // a face de baixo
+    const g = baixo ? -1 : 1;
+    f2.style.transform = `rotateX(${-90 * g}deg) translateZ(${H / 2}px)`;   // a face de baixo (ou a de cima)
     const z = `translateZ(${-H / 2}px)`, easing = "cubic-bezier(.65,0,.35,1)";
     giro.style.transform = z;
     Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, easing });
     Palco.animar(f2, [{ filter: "brightness(.35)" }, { filter: "brightness(1)" }], { duracao: 1.2, easing });
-    Palco.animar(giro, [{ transform: `${z} rotateX(0deg)` }, { transform: `${z} rotateX(90deg)` }], { duracao: 1.2, easing })
+    return Palco.animar(giro, [{ transform: `${z} rotateX(0deg)` }, { transform: `${z} rotateX(${90 * g}deg)` }], { duracao: 1.2, easing })
       .finished.then(() => {
         const cubo = this.$(".c71-cubo"); if (!cubo) return;
         [...f2.children].forEach(c => Palco.el.appendChild(c));
@@ -5960,6 +5972,80 @@ const Cena10 = {
   }
 };
 
+/* ---------- Capítulo 11: as moléculas poliatômicas ----------
+   Do cartão da nota, "Continuar" gira a tela de cima para baixo; a nova traz o título "As moléculas poliatômicas"
+   e uma molécula de ácido carbônico (H₂CO₃) em 3D, girando — bolas nas cores padrão (C cinza-escuro, O vermelho,
+   H branco), sem os símbolos. O play volta, e ele toca o áudio 11. */
+const Cena11 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  TITULO: "As moléculas poliatômicas",
+  // do cartão da nota: a tela vira (de cima para baixo) e o play volta para o áudio 11
+  chegar() {
+    const cartao = this.$(".c10-cartao");
+    if (cartao) Palco.animar(cartao, [{ opacity: 1 }, { opacity: 0 }], { duracao: .3 }).finished.then(() => cartao.remove(), () => {});
+    Palco.el.querySelectorAll(".c4-confete").forEach(c => c.remove());
+    Cena10.virar(this.TITULO, `<div class="c11-mol" aria-label="Molécula de ácido carbônico girando"></div>`, { baixo: true, grande: true })
+      .then(() => this.montar());
+    setTimeout(() => this.montar(), 60);   // a molécula já nasce na face que entra
+    // o play volta: o próximo é o áudio 11
+    Player.terminou = true; ui.semPlay(false); ui.modoEntendi(false); ui.atualizarBotao(false);
+  },
+  // pela navegação rápida: a tela já pronta
+  tela() {
+    if (!this.$(`[data-t="${this.TITULO}"]`)) Palco.mostrar(`<h2 class="c0-titulo c11-titulo" data-t="${this.TITULO}" style="top:5%">${this.TITULO}</h2><div class="c11-mol" aria-label="Molécula de ácido carbônico girando"></div>`);
+    this.montar();
+  },
+  // a molécula 3D: H₂CO₃ — o C no meio (trigonal plana), um O com ligação dupla e dois OH
+  montar() {
+    const caixa = this.$(".c11-mol");
+    if (!caixa || caixa.querySelector("canvas") || !window.THREE) return;
+    let renderer;
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return; }
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    caixa.appendChild(renderer.domElement);
+    const cena = new THREE.Scene(), camera = new THREE.PerspectiveCamera(35, 1, .1, 100);
+    camera.position.set(0, 0, 13);
+    cena.add(new THREE.HemisphereLight(0xdfefff, 0x1b2a40, .85));
+    const luz = new THREE.DirectionalLight(0xffffff, 1.2); luz.position.set(3, 5, 7); cena.add(luz);
+    const luz2 = new THREE.DirectionalLight(0xA3DBF7, .5); luz2.position.set(-6, -3, -4); cena.add(luz2);
+    const mat = cor => new THREE.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
+    const M = { C: mat(0x404040), O: mat(0xFF0D0D), H: mat(0xFFFFFF), L: mat(0xC8C8C8) };
+    const esf = new THREE.SphereGeometry(1, 48, 32), bas = new THREE.CylinderGeometry(.12, .12, 1, 20);
+    const mol = new THREE.Group(); cena.add(mol);
+    const atomo = (tipo, r, x, y) => { const m = new THREE.Mesh(esf, M[tipo]); m.scale.setScalar(r); m.position.set(x, y, 0); mol.add(m); return m.position; };
+    const ligar = (a, b, n = 1) => {
+      const dir = b.clone().sub(a), comp = dir.length(), meio = a.clone().add(b).multiplyScalar(.5);
+      const lado = new THREE.Vector3(-dir.y, dir.x, 0).normalize().multiplyScalar(.2);
+      (n === 2 ? [-1, 1] : [0]).forEach(k => {
+        const c = new THREE.Mesh(bas, M.L); c.scale.set(1, comp, 1); c.position.copy(meio).addScaledVector(lado, k);
+        c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()); mol.add(c);
+      });
+    };
+    const ang = d => d * Math.PI / 180, L = 1.75, LH = 1.25;
+    const C = atomo("C", .6, 0, 0);
+    const O1 = atomo("O", .58, 0, L);                                                     // C=O, em cima
+    const O2 = atomo("O", .58, L * Math.cos(ang(-30)), L * Math.sin(ang(-30)));           // C–O(H) à direita
+    const O3 = atomo("O", .58, L * Math.cos(ang(210)), L * Math.sin(ang(210)));           // C–O(H) à esquerda
+    const H2 = atomo("H", .36, O2.x + LH * Math.cos(ang(-90)), O2.y + LH * Math.sin(ang(-90)));
+    const H3 = atomo("H", .36, O3.x + LH * Math.cos(ang(-90)), O3.y + LH * Math.sin(ang(-90)));
+    ligar(C, O1, 2); ligar(C, O2); ligar(C, O3); ligar(O2, H2); ligar(O3, H3);
+    mol.position.y = -.25;
+    const ajustar = () => { const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h;
+      camera.position.z = 10 * Math.max(1, .8 / camera.aspect); camera.updateProjectionMatrix(); };
+    const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
+    let antes = performance.now(), t = 0;
+    const quadro = agora => {
+      if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      const dt = Math.min((agora - antes) / 1000, .05); antes = agora; if (!Palco.pausado) t += dt;
+      mol.rotation.y = t * .7; mol.rotation.x = Math.sin(t * .4) * .25;   // gira em torno do eixo vertical, balançando de leve
+      renderer.render(cena, camera);
+      requestAnimationFrame(quadro);
+    };
+    requestAnimationFrame(quadro);
+  }
+};
+
 /* ---------- O placar do Resumo Interativo ----------
    Cada questão (10.1 a 10.11) e cada exemplo de Lewis vale um ponto: acertando de primeira, o ponto inteiro;
    depois de um erro, meio; depois de mais erros, um quarto. A nota (1 a 10) é sobre o que foi respondido.
@@ -6013,9 +6099,18 @@ const Placar = {
         ${temas.length
           ? `<p class="c10-cartao-sub">Vale estudar um pouco mais:</p><ul>${temas.map(t => `<li>${t}</li>`).join("")}</ul>`
           : `<p class="c10-cartao-sub">Você acertou tudo de primeira. Nada para revisar: continue assim!</p>`}
+        <div class="c10-cartao-botoes"><button class="c10-bt c10-refaz">Refazer</button><button class="c10-bt c10-continua">Continuar</button></div>
       </div>`);
     const c = Palco.el.lastElementChild;
     const nm = c.querySelector(".c10-cartao-nome"); if (nm) nm.textContent = Aluno.nome;   // (textContent: o nome entra como texto, nunca como HTML)
+    // Refazer: o quiz recomeça da 1ª questão · Continuar: o próximo capítulo (as moléculas poliatômicas)
+    c.querySelector(".c10-refaz").addEventListener("click", () => {
+      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo10_1"), false);
+    });
+    c.querySelector(".c10-continua").addEventListener("click", () => {
+      c.querySelectorAll("button").forEach(b => b.disabled = true);
+      Cena11.chegar();
+    });
     Palco.animar(c, [{ opacity: 0, transform: "translate(-50%, -46%) scale(.9)" }, { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }],
       { duracao: .5, easing: "cubic-bezier(.3,1.3,.5,1)" });
     if (n >= 7) { Confete.soltar({ de: "topo" }); const a = new Audio("audio/vfx/applause.mp3"); a.play().catch(() => {}); }
@@ -6105,6 +6200,12 @@ const Cena1012 = {
     Palco.animar(t, [{ scale: .2, opacity: 1 }, { scale: 1.4, opacity: 0 }], { duracao: .5, easing: "ease-out" }).finished.then(() => t.remove(), () => {});
     Vibra.tocar("toqueEletron"); this.msg("");
   },
+  // todos os elétrons colocados voltam para a fileira
+  recomecar() {
+    if (this.resolvido || !this.ordem) return;
+    this.ordem.forEach(el => { delete el.dataset.lado; this.mover(el, this.fila[+el.dataset.casa]); });
+    this.ordem = []; this.lados = { cima: [], dir: [], baixo: [], esq: [] };
+  },
   // o último elétron colocado volta para a fileira
   desfazer() {
     if (this.resolvido) return;
@@ -6139,6 +6240,8 @@ const Cena1012 = {
       const v = Palco.el.lastElementChild;
       v.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }], { duration: 900, easing: "ease-out" }).finished.then(() => v.remove());
       Vibra.tocar("toqueErrado");
+      // passado o tremor, todos os elétrons voltam para a fileira: tenta de novo do começo
+      Palco.animar(sim, [{ opacity: 1 }, { opacity: 1 }], { duracao: .9, fill: "none" }).finished.then(() => this.recomecar(), () => {});
       return;
     }
     // certo: a mesma festa dos quizzes
