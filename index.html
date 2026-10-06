@@ -470,6 +470,10 @@
   .c10-refaz { background: rgba(20,33,52,.9); color: #fff; border: 2px solid rgba(163,219,247,.4); animation: none; }
   .c11-mol { position: absolute; left: 0; right: 0; top: 17%; bottom: 14%; z-index: 2; }
   .c11-mol canvas { display: block; width: 100%; height: 100%; }
+  .c11-titulo .c11-poli { display: inline-block; transform-origin: 0% 60%; }   /* cresce para a direita: não invade "moléculas" */
+  .c11-legenda { position: absolute; left: 0; right: 0; bottom: 14%; margin: 0; z-index: 3; text-align: center; pointer-events: none;
+    font-family: var(--display); font-weight: 800; letter-spacing: -.01em; color: var(--ambar);
+    font-size: clamp(1.3rem, 3vmin + .6rem, 2.3rem); text-shadow: 0 0 20px rgba(255,194,75,.45); }
   .c10-cartao-nome { font-weight: 800; font-size: clamp(1.3rem, 2.6vmin + .7rem, 1.9rem); color: #fff; margin-bottom: .3em !important; }
   .c10-cartao-tit { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--celeste); font-size: clamp(.9rem, 1.4vmin + .55rem, 1.2rem); }
   .c10-cartao-nota { font-weight: 800; line-height: 1; color: var(--ambar); font-size: clamp(4rem, 12vmin, 6.5rem); text-shadow: 0 0 30px rgba(255,194,75,.5); margin: .1em 0 .15em !important; }
@@ -1102,7 +1106,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v101 · 06/10/2026</span>
+    <span class="versao" id="versao">v102 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2720,10 +2724,10 @@ const NARRACOES = [
   { id: "dialogo11", titulo: "As moléculas poliatômicas", src: "audio/audio_moleculas_11.mp3", esperaPlay: true,
     inicio: () => Cena11.tela(),
     eventos: [
-      { tempo: 3.8,  acao: () => Cena11.ctl && Cena11.ctl.transformar("cloro") },    // vira uma molécula diatômica (Cl₂, ligação simples)
+      { tempo: 3.8,  acao: () => { Cena11.ctl && Cena11.ctl.transformar("cloro"); Cena11.legenda("Molécula diatômica"); } },   // vira o Cl₂; a legenda surge
       { tempo: 7,    acao: () => Cena11.ctl && Cena11.ctl.pulsar(0) },                // pulsa um átomo
       { tempo: 7.7,  acao: () => Cena11.ctl && Cena11.ctl.pulsar(1) },                // e depois o outro
-      { tempo: 17,   acao: () => Cena11.ctl && Cena11.ctl.transformar("metano") },   // volta a ser o metano
+      { tempo: 17,   acao: () => { Cena11.ctl && Cena11.ctl.transformar("metano"); Cena11.legenda("Moléculas poliatômicas"); Cena11.realcarPoli(); } },   // volta ao metano; legenda e título
       { tempo: 19.7, acao: () => Cena11.ctl && Cena11.ctl.sequencia(3.3) },           // todos os átomos pulsam em sequência (até 23s)
       { tempo: 28,   acao: () => Cena11.ctl && Cena11.ctl.sequencia(1, true) },       // de novo, sem parar até os 30s
       { tempo: 29,   acao: () => Cena11.ctl && Cena11.ctl.eletron(true) },            // um elétron passeia em volta da molécula
@@ -2731,7 +2735,7 @@ const NARRACOES = [
     ],
     aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "Bora"); } },   // no lugar do play, o botão "Bora" leva ao próximo áudio
   // o próximo trecho (os eventos virão depois)
-  { id: "dialogo11_2", titulo: "Moléculas poliatômicas (2)", src: "audio/audio_moleculas_11.2.mp3",
+  { id: "dialogo11_2", titulo: "Moléculas poliatômicas (2)", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
     inicio: () => Cena11.tela(),
     eventos: [] }
 
@@ -5998,7 +6002,7 @@ const Cena11 = {
     if (cartao) Palco.animar(cartao, [{ opacity: 1 }, { opacity: 0 }], { duracao: .3 }).finished.then(() => cartao.remove(), () => {});
     Palco.el.querySelectorAll(".c4-confete").forEach(c => c.remove());
     Cena10.virar(this.TITULO, `<div class="c11-mol" aria-label="Molécula de metano girando"></div>`, { baixo: true, grande: true })
-      .then(() => this.montar());
+      .then(() => { this.marcarTitulo(); this.montar(); });
     setTimeout(() => this.montar(), 60);   // a molécula já nasce na face que entra
     // o play volta: o próximo é o áudio 11
     Player.terminou = true; ui.semPlay(false); ui.modoEntendi(false); ui.atualizarBotao(false);
@@ -6006,7 +6010,29 @@ const Cena11 = {
   // pela navegação rápida: a tela já pronta
   tela() {
     if (!this.$(`[data-t="${this.TITULO}"]`)) Palco.mostrar(`<h2 class="c0-titulo c11-titulo" data-t="${this.TITULO}" style="top:5%">${this.TITULO}</h2><div class="c11-mol" aria-label="Molécula de metano girando"></div>`);
+    this.marcarTitulo();
     this.montar();
+  },
+  // a palavra "poliatômicas" do título num trecho próprio (para crescer sozinha)
+  marcarTitulo() {
+    const h = this.$(".c11-titulo"); if (!h || h.querySelector(".c11-poli")) return;
+    h.innerHTML = 'As moléculas <span class="c11-poli">poliatômicas</span>';
+  },
+  // 17s: "poliatômicas" cresce com brilho, fica assim 1s e volta
+  realcarPoli() {
+    this.marcarTitulo();
+    const el = this.$(".c11-titulo .c11-poli"); if (!el) return;
+    const normal = { transform: "scale(1)", textShadow: "0 0 0 rgba(255,194,75,0)", color: "var(--celeste)" };
+    const grande = { transform: "scale(1.18)", textShadow: "0 0 26px rgba(255,194,75,.75)", color: "#FFC24B" };
+    Palco.animar(el, [normal, { ...grande, offset: .2 }, { ...grande, offset: .75 }, normal], { duracao: 1.6, easing: "ease-in-out", fill: "none" });
+  },
+  // a legenda embaixo da molécula: surge (ou troca) num giro rápido, como a molécula
+  legenda(texto) {
+    let el = this.$(".c11-legenda");
+    const entra = () => Palco.animar(el, [{ transform: "perspective(500px) rotateY(-90deg) scale(.6)", opacity: .2 }, { transform: "perspective(500px)", opacity: 1 }], { duracao: .18, easing: "ease-out" });
+    if (!el) { Palco.adicionar(`<p class="c11-legenda">${texto}</p>`); el = this.$(".c11-legenda"); entra(); return; }
+    Palco.animar(el, [{ transform: "perspective(500px)", opacity: 1 }, { transform: "perspective(500px) rotateY(90deg) scale(.6)", opacity: .2 }], { duracao: .17, easing: "ease-in" })
+      .finished.then(() => { el.textContent = texto; entra(); }, () => {});
   },
   // a molécula 3D: começa no metano (CH₄); o áudio 11 a transforma no Cl₂ (diatômica, ligação simples) e de volta,
   // pulsa os átomos e faz um elétron passear em volta. Tudo no relógio do palco (para na pausa).
@@ -6080,7 +6106,7 @@ const Cena11 = {
     const suave = x => x * x * (3 - 2 * x);
     this.ctl = {
       // a molécula dá um giro rápido, encolhe e, no meio do giro, vira a outra
-      transformar: tipo => { troca = { t0: t, dur: 1.1, tipo, feito: false }; },
+      transformar: tipo => { troca = { t0: t, dur: .35, tipo, feito: false }; },
       // um átomo (pelo índice) pulsa com brilho
       pulsar: (k, dur = .55) => { if (atomos[k]) pulsos.push({ a: atomos[k], t0: t, dur }); },
       // todos os átomos pulsam um depois do outro até "ate" segundos daqui; repetir: recomeça até ser parado
