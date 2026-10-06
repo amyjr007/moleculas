@@ -480,7 +480,16 @@
   /* (tamanhos e espaços do passo 1 e da lista ajustados pela ferramenta de desenvolvimento) */
   .c111-passo { width: min(100%, 30ch); font-family: var(--display); font-weight: 700; line-height: 1.3; color: #fff; font-size: calc(clamp(1.15rem, 2.6vmin + .55rem, 1.9rem) * 1.11); }
   .c111-rotulo { color: var(--ambar); font-weight: 800; }
-  .c112-esqueleto { width: min(62vw, 42vh, 300px); height: auto; overflow: visible; margin-top: 1vh; }
+  .c112-esqueleto { width: min(62vw, 31vh, 300px); height: auto; overflow: visible; margin-top: 2.5vh; }
+  @media (orientation: portrait) {
+    .c112-esqueleto { margin-top: 5vh; }
+    .c111-eletrons { bottom: 12% !important; }   /* em pé, acima do botão (o "Entendi" é largo) */
+  }
+  /* os 24 elétrons de valência, em duas fileiras de 12, embaixo de tudo */
+  .c111-eletrons { position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%); z-index: 3; display: grid; grid-template-columns: repeat(12, auto);
+    gap: clamp(7px, 1.4vmin, 12px) clamp(8px, 1.7vmin, 15px); pointer-events: none; }
+  .c111-e { width: clamp(9px, 1.5vmin, 13px); height: clamp(9px, 1.5vmin, 13px); border-radius: 50%; background: var(--celeste); box-shadow: 0 0 8px 2px rgba(163,219,247,.7); }
+  .c113-voo { position: absolute; z-index: 4; border-radius: 50%; background: var(--celeste); box-shadow: 0 0 8px 2px rgba(163,219,247,.7); pointer-events: none; }
   /* a lista: todas as linhas do mesmo tamanho, alinhadas pela esquerda (o bloco fica centralizado) e com números de largura igual */
   .c111-lista p { font-size: 1em; }
   .c111-lista { display: flex; flex-direction: column; align-items: flex-start; text-align: left; font-variant-numeric: tabular-nums; gap: .75em; margin-top: 2vh; font-family: var(--display); font-weight: 700; color: var(--celeste); font-size: calc(clamp(1.05rem, 2.2vmin + .5rem, 1.7rem) * 1.45); }
@@ -1137,7 +1146,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v108 · 06/10/2026</span>
+    <span class="versao" id="versao">v109 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2776,8 +2785,10 @@ const NARRACOES = [
       { tempo: 19,   acao: () => Cena111.linha("4A = 4 elétrons", .55) },  // a lista das famílias, uma linha de cada vez
       { tempo: 19.6, acao: () => Cena111.linha("5A = 5 elétrons", .55) },
       { tempo: 20.2, acao: () => Cena111.linha("6A = 6 elétrons", .55) },
-      { tempo: 20.8, acao: () => Cena111.linha("7A = 7 elétrons", .55) }
-    ] },
+      { tempo: 20.8, acao: () => Cena111.linha("7A = 7 elétrons", .55) },
+      ...Array.from({ length: 24 }, (_, k) => ({ tempo: 14 + k * .2, acao: () => Cena111.eletron(k) }))   // 24 elétrons embaixo, em sequência (2 fileiras de 12)
+    ],
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } },   // no lugar do play, o "Entendi" leva ao 11.2
   // passo 2: o esqueleto da molécula (A no meio, os quatro B em cruz e as ligações)
   { id: "dialogo11_2", titulo: "O passo a passo: passo 2", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
     inicio: () => Cena11.tela(),
@@ -2793,7 +2804,12 @@ const NARRACOES = [
       { tempo: 13.7, acao: () => Cena112.ligacao("dir") },
       { tempo: 14.4, acao: () => Cena112.ligacao("baixo") },
       { tempo: 15.1, acao: () => Cena112.ligacao("esq") }
-    ] }
+    ],
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } },   // o "Entendi" leva ao 11.3
+  // passo 3: os elétrons de baixo saltam aos pares para os átomos B (3 pares em cada), de 1s a 10s
+  { id: "dialogo11_3", titulo: "O passo a passo: passo 3", src: "audio/audio_moleculas_11.3.mp3", semNav: true,
+    inicio: () => Cena11.tela(),
+    eventos: ["cima", "dir", "baixo", "esq"].flatMap((lado, b) => [0, 1, 2].map(p => ({ tempo: 1 + (b * 3 + p) * .75, acao: () => Cena113.par(lado, p, b * 3 + p) }))) }
 
 ];
 
@@ -6263,6 +6279,21 @@ const Cena111 = {
     if ([...lista.children].some(p => p.dataset.t === texto)) return;
     lista.insertAdjacentHTML("beforeend", `<p data-t="${texto}"></p>`);
     Palco.digitar(lista.lastElementChild, texto, dur);
+  },
+  // 14s em diante: os 24 elétrons de valência embaixo (2 fileiras de 12), surgindo um de cada vez;
+  // ficam fora do corpo, então não somem quando os textos se apagam
+  bandeja() {
+    let b = this.$(".c111-eletrons");
+    if (!b) {
+      Palco.adicionar(`<div class="c111-eletrons" aria-label="24 elétrons de valência">${Array.from({ length: 24 }, (_, i) => `<span class="c111-e" data-i="${i}" style="opacity:0"></span>`).join("")}</div>`);
+      b = this.$(".c111-eletrons");
+    }
+    return b;
+  },
+  eletron(k) {
+    const e = this.bandeja().querySelector(`[data-i="${k}"]`); if (!e || !e.style.opacity) return;
+    e.style.opacity = "";
+    Palco.animar(e, [{ opacity: 0, transform: "scale(0)" }, { opacity: 1, transform: "scale(1.6)", offset: .6 }, { opacity: 1, transform: "scale(1)" }], { duracao: .35, easing: "ease-out", fill: "none" });
   }
 };
 
@@ -6321,6 +6352,52 @@ const Cena112 = {
     const x1 = 100 + ux * 23, y1 = 100 + uy * 23, x2 = x - ux * 23, y2 = y - uy * 23, comp = Math.hypot(x2 - x1, y2 - y1);
     s.querySelector(".lig").insertAdjacentHTML("beforeend", `<line data-l="${lado}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="${comp}" stroke-dashoffset="${comp}"/>`);
     Palco.animar(s.querySelector(".lig").lastElementChild, [{ strokeDashoffset: comp }, { strokeDashoffset: 0 }], { duracao: .45, easing: "ease-out" });
+  },
+  // o esqueleto completo (se o 11.3 começar sem ele)
+  completo() {
+    this.atomo("A"); Object.keys(this.POS).forEach(l => { this.atomo("B", l); this.ligacao(l); });
+    return this.svg();
+  }
+};
+
+/* ---------- Narração 11.3: passo 3, os pares de elétrons nos átomos da extremidade ----------
+   Os elétrons de baixo (do 11.1) saltam aos pares, num arco, para os átomos B: 3 pares em cada,
+   nos três lados que não apontam para o A. */
+const Cena113 = {
+  R: 31, MEIO: 5.5, RE: 4,   // distância do par ao centro do B, meia separação entre os dois elétrons e o raio (em unidades do desenho)
+  // onde ficam os dois elétrons do par p (0 = para fora, 1 e 2 = dos lados) do B em "lado"
+  alvos(lado, p) {
+    const [x, y] = Cena112.POS[lado], d = Math.hypot(x - 100, y - 100), ux = (x - 100) / d, uy = (y - 100) / d;
+    const dir = [[ux, uy], [-uy, ux], [uy, -ux]][p], cx = x + dir[0] * this.R, cy = y + dir[1] * this.R;
+    return [-1, 1].map(s => [cx - dir[1] * this.MEIO * s, cy + dir[0] * this.MEIO * s]);
+  },
+  grupo(s) {
+    let g = s.querySelector(".el");
+    if (!g) { s.insertAdjacentHTML("beforeend", `<g class="el"></g>`); g = s.querySelector(".el"); }
+    return g;
+  },
+  pousar(s, k, [x, y]) {
+    this.grupo(s).insertAdjacentHTML("beforeend", `<circle data-k="${k}" cx="${x}" cy="${y}" r="${this.RE}" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
+  },
+  // o par n (0 a 11) salta da bandeja para o par p do B em "lado"
+  par(lado, p, n) {
+    const s = Cena112.completo(); if (s.querySelector(`.el [data-k="${2 * n}"]`)) return;
+    const alvos = this.alvos(lado, p), P = Palco.el.getBoundingClientRect(), m = s.getScreenCTM();
+    const bandeja = Palco.el.querySelector(".c111-eletrons");
+    [0, 1].forEach(j => {
+      const k = 2 * n + j, origem = bandeja && bandeja.querySelector(`[data-i="${k}"]`);
+      if (!origem || !m) { this.pousar(s, k, alvos[j]); return; }
+      const o = origem.getBoundingClientRect(), pt = s.createSVGPoint();
+      pt.x = alvos[j][0]; pt.y = alvos[j][1];
+      const t = pt.matrixTransform(m), tam = 2 * this.RE * m.a, esc = tam / o.width;
+      const dx = t.x - (o.left + o.width / 2), dy = t.y - (o.top + o.height / 2), alto = -Math.max(40, Math.abs(dy) * .25);
+      origem.style.visibility = "hidden";
+      Palco.el.insertAdjacentHTML("beforeend", `<span class="c113-voo" style="left:${o.left - P.left}px;top:${o.top - P.top}px;width:${o.width}px;height:${o.height}px"></span>`);
+      const voo = Palco.el.lastElementChild;
+      Palco.animar(voo, [{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx * .5}px,${dy * .5 + alto}px) scale(${(1 + esc) / 2 * 1.3})`, offset: .5 },
+        { transform: `translate(${dx}px,${dy}px) scale(${esc})` }], { duracao: .6, atraso: j * .06, easing: "cubic-bezier(.45,0,.55,1)" })
+        .finished.then(() => { voo.remove(); this.pousar(s, k, alvos[j]); }, () => {});
+    });
   }
 };
 
