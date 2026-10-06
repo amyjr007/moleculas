@@ -470,6 +470,16 @@
   .c10-refaz { background: rgba(20,33,52,.9); color: #fff; border: 2px solid rgba(163,219,247,.4); animation: none; }
   .c11-mol { position: absolute; left: 0; right: 0; top: 17%; bottom: 14%; z-index: 2; }
   .c11-mol canvas { display: block; width: 100%; height: 100%; }
+  .c11-titulo.uma-linha { white-space: nowrap; }
+  /* 11.1: a fórmula genérica, o passo 1 e a lista das famílias, em coluna embaixo do título */
+  .c111-corpo { position: absolute; left: 0; right: 0; top: 13%; bottom: 14%; z-index: 3; display: flex; flex-direction: column; align-items: center;
+    gap: clamp(10px, 2.4vh, 26px); padding: 0 16px; text-align: center; pointer-events: none; }
+  .c111-corpo p { margin: 0; }
+  .c111-formula { font-family: var(--display); font-weight: 800; line-height: 1; color: var(--ambar); font-size: clamp(3rem, 10vmin, 6rem); letter-spacing: .02em; }
+  .c111-formula sub { font-size: .55em; vertical-align: -.25em; }
+  .c111-passo { width: min(100%, 30ch); font-family: var(--display); font-weight: 700; line-height: 1.3; color: #fff; font-size: clamp(1.15rem, 2.6vmin + .55rem, 1.9rem); }
+  .c111-rotulo { color: var(--ambar); font-weight: 800; }
+  .c111-lista { display: flex; flex-direction: column; gap: .35em; font-family: var(--display); font-weight: 700; color: var(--celeste); font-size: clamp(1.05rem, 2.2vmin + .5rem, 1.7rem); }
   .c11-titulo .c11-poli { display: inline-block; transform-origin: 0% 60%; }   /* cresce para a direita: não invade "moléculas" */
   /* a legenda (vale para "Molécula diatômica" e "Moléculas poliatômicas"): ajustada pela ferramenta de desenvolvimento
      — 18,2% da altura mais para cima e a letra a 67% */
@@ -1121,7 +1131,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v104 · 06/10/2026</span>
+    <span class="versao" id="versao">v105 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2750,10 +2760,18 @@ const NARRACOES = [
       { tempo: 30,   acao: () => Cena11.ctl && (Cena11.ctl.parar(), Cena11.ctl.eletron(false)) }   // tudo volta ao normal
     ],
     aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "Bora"); } },   // no lugar do play, o botão "Bora" leva ao próximo áudio
-  // o próximo trecho (os eventos virão depois)
-  { id: "dialogo11_2", titulo: "Moléculas poliatômicas (2)", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
+  // como montar a estrutura de Lewis de uma molécula poliatômica: a fórmula genérica AB₄ e o passo 1
+  { id: "dialogo11_1", titulo: "Moléculas poliatômicas: passo 1", src: "audio/audio_moleculas_11.1.mp3", semNav: true,
     inicio: () => Cena11.tela(),
-    eventos: [] }
+    eventos: [
+      { tempo: 0.5,  acao: () => Cena111.abrir() },                        // título numa linha só, no topo; molécula e legenda saem girando
+      { tempo: 3,    acao: () => Cena111.formula() },                      // a fórmula genérica AB₄ aparece e pulsa
+      { tempo: 13,   acao: () => Cena111.passo1(4) },                      // "Passo 1: some todos os elétrons..." (até 17s)
+      { tempo: 19,   acao: () => Cena111.linha("4A = 4 elétrons", .55) },  // a lista das famílias, uma linha de cada vez
+      { tempo: 19.6, acao: () => Cena111.linha("5A = 5 elétrons", .55) },
+      { tempo: 20.2, acao: () => Cena111.linha("6A = 6 elétrons", .55) },
+      { tempo: 20.8, acao: () => Cena111.linha("7A = 7 elétrons", .55) }
+    ] }
 
 ];
 
@@ -6175,6 +6193,55 @@ const Cena11 = {
     requestAnimationFrame(quadro);
   }
 };
+/* ---------- Narração 11.1: o passo 1 da estrutura de Lewis de uma molécula poliatômica ----------
+   O título encolhe e cabe numa linha só, no topo; a molécula e a legenda saem girando para a esquerda.
+   Entra a fórmula genérica AB₄, e embaixo dela o passo 1 e a lista de elétrons de valência por família. */
+const Cena111 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  // 0,5s: o título numa linha só (encolhe até caber) e a molécula + a legenda saem girando para a esquerda
+  abrir() {
+    const h = this.$(".c11-titulo");
+    if (h && !h.classList.contains("uma-linha")) {
+      const de = parseFloat(getComputedStyle(h).fontSize);
+      h.classList.add("uma-linha");
+      const larg = h.scrollWidth, cabe = Palco.el.clientWidth * .92;
+      const para = Math.min(de * .75, de * cabe / Math.max(larg, 1));
+      h.style.fontSize = `${para}px`;
+      Palco.animar(h, [{ fontSize: `${de}px` }, { fontSize: `${para}px` }], { duracao: .6, easing: "cubic-bezier(.4,0,.2,1)" });
+    }
+    Palco.el.querySelectorAll(".c11-mol, .c11-legenda").forEach(el =>
+      Palco.animar(el, [{ transform: "translateX(0) rotate(0deg) scale(1)", opacity: 1 }, { transform: "translateX(-55%) rotate(-200deg) scale(0)", opacity: 0 }],
+        { duracao: .7, easing: "cubic-bezier(.5,0,.75,0)" }).finished.then(() => el.remove(), () => {}));
+    if (!this.$(".c111-corpo")) Palco.adicionar(`<div class="c111-corpo"></div>`);
+  },
+  corpo() { if (!this.$(".c111-corpo")) this.abrir(); return this.$(".c111-corpo"); },
+  // 3s: a fórmula genérica AB₄ aparece e depois pulsa
+  formula() {
+    const c = this.corpo(); if (c.querySelector(".c111-formula")) return;
+    c.insertAdjacentHTML("beforeend", `<p class="c111-formula">AB<sub>4</sub></p>`);
+    const f = c.querySelector(".c111-formula");
+    Palco.animar(f, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1)" }], { duracao: .45, easing: "cubic-bezier(.3,1.4,.5,1)" })
+      .finished.then(() => Palco.animar(f, [{ transform: "scale(1)", textShadow: "0 0 0 rgba(255,194,75,0)" },
+        { transform: "scale(1.18)", textShadow: "0 0 30px rgba(255,194,75,.85)", offset: .4 }, { transform: "scale(1)", textShadow: "0 0 0 rgba(255,194,75,0)" }],
+        { duracao: .8, easing: "ease-in-out", fill: "none" }), () => {});
+  },
+  // 13s: o passo 1, digitado
+  passo1(dur) {
+    const c = this.corpo(); if (c.querySelector(".c111-passo")) return;
+    c.insertAdjacentHTML("beforeend", `<p class="c111-passo"></p>`);
+    Palco.digitar(c.querySelector(".c111-passo"), [{ classe: "c111-rotulo", texto: "Passo 1:" }, { texto: " Some todos os elétrons das camadas de valência" }], dur);
+  },
+  // 19s em diante: uma linha da lista das famílias, digitada
+  linha(texto, dur) {
+    const c = this.corpo();
+    let lista = c.querySelector(".c111-lista");
+    if (!lista) { c.insertAdjacentHTML("beforeend", `<div class="c111-lista"></div>`); lista = c.querySelector(".c111-lista"); }
+    if ([...lista.children].some(p => p.dataset.t === texto)) return;
+    lista.insertAdjacentHTML("beforeend", `<p data-t="${texto}"></p>`);
+    Palco.digitar(lista.lastElementChild, texto, dur);
+  }
+};
+
 /* ---------- O placar do Resumo Interativo ----------
    Cada questão (10.1 a 10.11) e cada exemplo de Lewis vale um ponto: acertando de primeira, o ponto inteiro;
    depois de um erro, meio; depois de mais erros, um quarto. A nota (1 a 10) é sobre o que foi respondido.
