@@ -1146,7 +1146,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v112 · 06/10/2026</span>
+    <span class="versao" id="versao">v113 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2811,10 +2811,12 @@ const NARRACOES = [
     inicio: () => Cena11.tela(),
     eventos: ["cima", "dir", "baixo", "esq"].flatMap((lado, b) => [0, 1, 2].map(p => ({ tempo: 1 + (b * 3 + p) * .75, acao: () => Cena113.par(lado, p, b * 3 + p) }))),
     aoFim: () => Player.seguirSozinho() },   // emenda direto no 11.3A
-  // continuação do passo 3: entra sozinha, sem o botão de play
+  // continuação do passo 3: entra sozinha, sem o botão de play; em 1s pausa para a festa e só então o play aparece
   { id: "dialogo11_3A", titulo: "O passo a passo: passo 3 (continuação)", src: "audio/audio_moleculas_11.3A.mp3", semNav: true,
     inicio: () => { Cena11.tela(); ui.semPlay(true); },
-    eventos: [],
+    eventos: [
+      { tempo: 1, acao: () => Cena113.festa() }   // pausa; aplausos, fanfarra e confetes; depois o play para continuar
+    ],
     aoFim: () => ui.semPlay(true) }
 
 ];
@@ -6414,6 +6416,18 @@ const Cena113 = {
     const s = Cena112.completo(); if (s.querySelector(`.el [data-k="${2 * n}"]`)) return;
     const alvos = this.alvos(lado, p);
     [0, 1].forEach(j => { const k = 2 * n + j, pousa = () => this.pousar(s, k, alvos[j]); if (!this.voar(k, alvos[j], j, pousa)) pousa(); });
+  },
+  // 11.3A, 1s: o áudio pausa; aplausos, fanfarra e confetes; quando os sons acabam, o play aparece para continuar
+  festa() {
+    const indice = Player.indice;
+    Player.pausar(); ui.semPlay(true);
+    Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+    const sons = ["audio/vfx/applause.mp3", "audio/funfare.mp3"].map(src => { const a = new Audio(src); a.play().catch(() => {}); return a; });
+    const fim = a => new Promise(r => { a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 15000); });
+    Promise.all(sons.map(fim)).then(() => {
+      if (Player.indice !== indice || Player.terminou) return;   // saiu da cena no meio da festa
+      ui.semPlay(false); ui.atualizarBotao(false);
+    });
   }
 };
 
