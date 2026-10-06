@@ -489,6 +489,8 @@
   .c11-legenda { position: absolute; left: 0; right: 0; bottom: 32.2%; margin: 0; z-index: 3; text-align: center; pointer-events: none;
     font-family: var(--display); font-weight: 800; letter-spacing: -.01em; color: var(--ambar);
     font-size: calc(clamp(1.3rem, 3vmin + .6rem, 2.3rem) * .67); text-shadow: 0 0 20px rgba(255,194,75,.45); }
+  /* "Moléculas poliatômicas": 4,8% da altura mais para baixo que a do Cl₂ (ajuste da ferramenta) */
+  .c11-legenda.poli { bottom: 27.4%; }
   /* o título do capítulo: 2,2% da altura mais para cima e a letra a 85% */
   .c11-titulo { top: 2.8% !important; font-size: calc(clamp(2.2rem, 6vmin + 1rem, 4.4rem) * .85); }
   .c10-cartao-nome { font-weight: 800; font-size: clamp(1.3rem, 2.6vmin + .7rem, 1.9rem); color: #fff; margin-bottom: .3em !important; }
@@ -1134,7 +1136,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v106 · 06/10/2026</span>
+    <span class="versao" id="versao">v107 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6067,9 +6069,11 @@ const Cena11 = {
   legenda(texto) {
     let el = this.$(".c11-legenda");
     const entra = () => Palco.animar(el, [{ transform: "perspective(500px) rotateY(-90deg) scale(.6)", opacity: .2 }, { transform: "perspective(500px)", opacity: 1 }], { duracao: .18, easing: "ease-out" });
-    if (!el) { Palco.adicionar(`<p class="c11-legenda">${texto}</p>`); el = this.$(".c11-legenda"); entra(); return; }
+    // "poli": a legenda do metano fica um pouco mais baixa que a do Cl₂ (o metano é mais alto)
+    const poli = /poliat/i.test(texto);
+    if (!el) { Palco.adicionar(`<p class="c11-legenda${poli ? " poli" : ""}">${texto}</p>`); el = this.$(".c11-legenda"); entra(); return; }
     Palco.animar(el, [{ transform: "perspective(500px)", opacity: 1 }, { transform: "perspective(500px) rotateY(90deg) scale(.6)", opacity: .2 }], { duracao: .17, easing: "ease-in" })
-      .finished.then(() => { el.textContent = texto; entra(); }, () => {});
+      .finished.then(() => { el.textContent = texto; el.classList.toggle("poli", poli); entra(); }, () => {});
   },
   // a molécula 3D: começa no metano (CH₄); o áudio 11 a transforma no Cl₂ (diatômica, ligação simples) e de volta,
   // pulsa os átomos e faz um elétron passear em volta. Tudo no relógio do palco (para na pausa).
