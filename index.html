@@ -506,6 +506,11 @@
   .c12-voo { position: absolute; z-index: 4; pointer-events: none; }
   /* áudio 12.1: o esqueleto da água em linha (H O H) e o rótulo "Átomo central" */
   .c121-esqueleto { width: min(70vw, 40vh, 320px); height: auto; overflow: visible; margin-top: 4vh; }
+  /* áudio 12.3: a pergunta fica logo acima da fileira de elétrons */
+  .c72-quiz.c123 { bottom: calc(3.5% + 34px); flex-direction: row; justify-content: center; gap: clamp(16px, 2.5vw, 32px); }   /* deitada: numa linha só, sem cobrir a molécula */
+  @media (orientation: portrait) { .c72-quiz.c123 { bottom: calc(12% + 30px); flex-direction: column; } }
+  /* fim do 12.4: o aviso do toque fora da regra, em verde */
+  .c84-aviso.verde { color: #6EE7A0; text-shadow: 0 0 20px rgba(110,231,160,.6); }
   .c121-central { margin-top: .4em !important; min-height: 1.3em; font-family: var(--display); font-weight: 700; color: var(--celeste); font-size: calc(clamp(1.05rem, 2.2vmin + .5rem, 1.7rem) * 1.1); }
   .c113-voo { position: absolute; z-index: 4; border-radius: 50%; background: var(--celeste); box-shadow: 0 0 8px 2px rgba(163,219,247,.7); pointer-events: none; }
   /* a lista: todas as linhas do mesmo tamanho, alinhadas pela esquerda (o bloco fica centralizado) e com números de largura igual */
@@ -1164,7 +1169,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v121 · 06/10/2026</span>
+    <span class="versao" id="versao">v122 · 06/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2896,9 +2901,26 @@ const NARRACOES = [
       { tempo: 40,   acao: () => Cena121.pulsarLigacao("esq", 2) },          // a ligação da esquerda pulsa
       { tempo: 42,   acao: () => Cena121.vaiVem("esq", 2) },                 // traço transparente; o par vai e vem (até 44s)
       { tempo: 46,   acao: () => Cena121.pulsarAtomo(["dir"], 2) },          // o H da direita pulsa 2 vezes
-      { tempo: 48,   acao: () => { Cena121.pulsarLigacao("dir", 1); Cena121.parDentro("dir", 4); } }   // o traço pulsa e mostra o par dentro (até 52s)
+      { tempo: 48,   acao: () => { Cena121.pulsarLigacao("dir", 1); Cena121.vaiVem("dir", 4, 4); } }   // o traço pulsa; o par vai e vem dentro dele (até 52s)
     ],
-    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } }   // no lugar do play, o "Entendi" leva ao próximo áudio
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } },  // no lugar do play, o "Entendi" leva ao 12.3
+  // Exemplo 01, H₂O: o O ainda não tem o octeto — quantos pares faltam?
+  { id: "dialogo12_3", titulo: "A molécula de água: o octeto do O", src: "audio/audio_moleculas_12.3.mp3", semNav: true,
+    inicio: () => Cena12.tela(),
+    eventos: [
+      { tempo: 1,    acao: () => Cena121.pulsarAtomo(["meio"], 2) },                                    // o O pulsa 2 vezes
+      { tempo: 4,    acao: () => { Cena121.pulsarLigacao("esq", 2); Cena121.pulsarLigacao("dir", 2); } },  // os dois traços pulsam 2 vezes
+      { tempo: 8,    acao: () => { Cena121.vaiVem("esq", 2); Cena121.vaiVem("dir", 2); } },            // traços transparentes, os pares em movimento (até 10s)
+      { tempo: 11,   acao: () => Cena124.pergunta() }                                                   // "Quantos pares faltam pro octeto?"
+    ],
+    aoFim: () => ui.semPlay(true) },                               // o play some: quem leva ao 12.4 é a resposta certa
+  // resposta: toca só depois do acerto
+  { id: "dialogo12_4", titulo: "Resposta: 2 pares", src: "audio/audio_moleculas_12.4.mp3", oculta: true,
+    inicio: () => Cena12.tela(),
+    eventos: [
+      { tempo: 1,    acao: () => Cena71.tirarPergunta() }          // a pergunta e as alternativas somem em fade
+    ],
+    aoFim: () => Cena124.liberar() }                               // o aluno toca em cima e embaixo do O para pôr os 2 pares
 
 ];
 
@@ -6836,6 +6858,86 @@ const Cena121 = {
     const p = this.$(".c121-central"); if (!p || !p.textContent || p.classList.contains("saindo")) return;
     p.classList.add("saindo");
     Palco.animar(p, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => { p.textContent = ""; p.classList.remove("saindo"); }, () => {});
+  }
+};
+
+/* ---------- Narrações 12.3 e 12.4: os pares que faltam no O ----------
+   12.3: a pergunta "Quantos pares faltam pro octeto?" (a festa do acerto traz o 12.4).
+   Fim do 12.4: o aluno toca em cima ou embaixo do O e um elétron da fileira salta para lá (em curva).
+   Cabem dois em cada lado; o terceiro: o O treme em verde e aparece "Organize os elétrons em pares". */
+const Cena124 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  LUGAR: { cima: [[95.5, -6], [104.5, -6]], baixo: [[95.5, 56], [104.5, 56]] },   // os pares em cima e embaixo do O
+  pergunta() {
+    Cena71.pergunta("nitrogenio", { texto: "Quantos pares faltam pro octeto?", opcoes: [["1", 0], ["2", 1], ["3", 0]], de: "dialogo12_3", para: "dialogo12_4" });
+    const q = this.$(".c72-quiz"); if (q) q.classList.add("c123");
+  },
+  // o O na tela: centro e raio (px, relativos ao palco)
+  oxigenio() {
+    const c = this.$('.c121-esqueleto .at [data-l="meio"] circle'); if (!c) return null;
+    const P = Palco.el.getBoundingClientRect(), r = c.getBoundingClientRect();
+    return { x: r.left + r.width / 2 - P.left, y: r.top + r.height / 2 - P.top, R: r.width / 2 };
+  },
+  liberar() {
+    if (this.$(".c84-toques")) return;
+    ui.semPlay(true);
+    this.lados = { cima: 0, baixo: 0 };
+    Palco.adicionar(`<div class="c84-toques" aria-label="Toque em cima ou embaixo do O para colocar os elétrons"></div>`);
+    this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    Cena121.pulsarAtomo(["meio"], 1);   // convite: o O dá uma pulsada
+  },
+  toque(e) {
+    if (Palco.pausado) return;
+    const O = this.oxigenio(); if (!O) return;
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top, dx = x - O.x, dy = y - O.y;
+    // só vale perto do O, em cima ou embaixo dele (dos lados ficam as ligações)
+    if (Math.hypot(dx, dy) > O.R * 5 || Math.abs(dy) < Math.abs(dx) * .8 || Math.abs(dy) < O.R * .4) return;
+    const lado = dy < 0 ? "cima" : "baixo";
+    Cena84.circulo(x, y, "");
+    if (this.lados[lado] >= 2) return this.erro();
+    const fila = Cena12.fila(), livres = [...fila.children].filter(el => !el.style.opacity && el.style.visibility !== "hidden");
+    const el = livres[livres.length - 1]; if (!el) return;
+    Vibra.tocar("toqueEletron");
+    const k = this.lados[lado]++, alvo = this.LUGAR[lado][k], s = Cena121.svg();
+    const pousar = () => s.querySelector(".at").insertAdjacentHTML("beforebegin",
+      `<circle class="c124-e" cx="${alvo[0]}" cy="${alvo[1]}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
+    this.voar(el, alvo, .75, pousar);
+    if (this.lados.cima + this.lados.baixo === 4) this.pronto();
+  },
+  // um elétron da fileira salta em curva (lançamento oblíquo) até o ponto [x, y] do desenho
+  voar(el, [x, y], dur, depois) {
+    const s = Cena121.svg(), m = s.getScreenCTM(); if (!m) return depois();
+    const P = Palco.el.getBoundingClientRect(), o = el.getBoundingClientRect(), pt = s.createSVGPoint(); pt.x = x; pt.y = y;
+    const t = pt.matrixTransform(m), dx = t.x - (o.left + o.width / 2), dy = t.y - (o.top + o.height / 2), esc = 8 * m.a / o.width;
+    const H = Math.max(60, Math.abs(dy) * .45), q = [];
+    for (let i = 0; i <= 16; i++) { const u = i / 16; q.push({ transform: `translate(${dx * u}px,${dy * u - 4 * H * u * (1 - u)}px) scale(${1 + (esc - 1) * u})`, offset: u }); }
+    el.style.visibility = "hidden";
+    Palco.el.insertAdjacentHTML("beforeend", `<span class="c12-voo" style="left:${o.left - P.left}px;top:${o.top - P.top}px;width:${o.width}px"></span>`);
+    const v = Palco.el.lastElementChild;
+    Palco.animar(v, q, { duracao: dur, easing: "linear" }).finished.then(() => { v.remove(); depois(); }, () => {});
+  },
+  // o terceiro num lado: o O treme com um brilho verde, o aparelho vibra e aparece o aviso
+  erro() {
+    const g = this.$('.c121-esqueleto .at [data-l="meio"]');
+    if (g) Palco.animar(g, [0, -5, 5, -4, 4, -2, 0].map((x, i, a) => ({ translate: `${x}px 0`, filter: `drop-shadow(0 0 ${i === 0 || i === a.length - 1 ? 0 : 9}px rgba(110,231,160,.95))` })),
+      { duracao: .5, easing: "ease-out", fill: "none" });
+    Vibra.tocar("toqueErrado");
+    const O = this.oxigenio(); if (!O) return;
+    let av = this.$(".c84-aviso");
+    if (!av) { Palco.adicionar(`<p class="c84-aviso verde" style="top:${O.y + O.R * 3.1}px"></p>`); av = this.$(".c84-aviso"); }
+    av.textContent = "Organize os elétrons em pares";
+    av.getAnimations().forEach(a => a.cancel());
+    Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: .08 }, { opacity: 1, offset: .82 }, { opacity: 0 }], { duracao: 2.6, easing: "linear" })
+      .finished.then(() => av.remove(), () => {});
+  },
+  // os 4 no lugar: o O completa o octeto (brilho verde e o som de acerto)
+  pronto() {
+    const z = this.$(".c84-toques"); if (z) z.remove();
+    const s = Cena121.svg();
+    Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: .8, fill: "none" }).finished.then(() => {
+      if (!s.isConnected) return;
+      Cena121.verde();   // (o verde já vem com os aplausos)
+    }, () => {});
   }
 };
 
