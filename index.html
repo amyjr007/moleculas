@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v152 · 07/10/2026</span>
+    <span class="versao" id="versao">v153 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -5516,11 +5516,12 @@ const Cena76 = {
     const c = this.$(`.c76-octeto[data-set="${set}"]`);
     this.posicionar(c);
     Palco.animar(c, [{ opacity: 0, scale: .85 }, { opacity: 1, scale: 1 }], { duracao: .6, easing: "ease-out" });
-    Cena74.somEletron();   // o círculo do octeto entra com o som dos elétrons
+    Cena74.somBrilho();   // o círculo do octeto entra com o som dos elétrons (um some e outro entra juntos: um som só)
   },
   tirar(set) {
     const c = this.$(`.c76-octeto[data-set="${set}"]`); if (!c) return;
     c.removeAttribute("data-set");
+    Cena74.somBrilho();    // e sai com o mesmo som
     Palco.animar(c, [{ opacity: 1 }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => c.remove(), () => {});
   },
   // centrado no átomo, com raio até depois do elétron mais longe (os do par do meio ficam na diagonal)
@@ -5588,8 +5589,8 @@ const Cena77 = {
     const A = Cena74.atomo("A"); if (!A) return;
     const me = Cena74.medidas(A), cima = !["ligante", "estrutural", "dupla", "tripla"].includes(tipo);   // ligante, "Fórmula estrutural" e "Ligação covalente dupla" vão embaixo
     let y = cima ? A.y - me.g - me.e - 12 : A.y + me.g + me.e + 14;
-    // "Ligação Covalente" e "Fórmula estrutural" um pouco mais para baixo (ajuste da professora)
-    y += Palco.el.clientHeight * ({ covalente: .052, estrutural: .036 }[tipo] || 0);
+    // ajustes da professora: "Ligação Covalente" um pouco mais para cima; "Fórmula estrutural", para baixo
+    y += Palco.el.clientHeight * ({ covalente: -.058, estrutural: .036 }[tipo] || 0);
     if (!cima) this.esconderStatus(true);   // embaixo mora o "Molécula estável": sai enquanto este estiver na tela
     Palco.adicionar(`<p class="c77-texto ${tipo}${cima ? " em-cima" : ""}" style="top:${y}px"></p>`);
     const el = Palco.el.lastElementChild;
