@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v154 · 07/10/2026</span>
+    <span class="versao" id="versao">v155 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2597,8 +2597,8 @@ const NARRACOES = [
     inicio: () => Cena71.montarSeparados("oxigenio"),              // pela navegação rápida: os dois O separados no meio da tela
     eventos: [
       { tempo: 7,    acao: () => Cena71.pulsarTitulo(".fam") },                                   // "Família 6A" pulsa
-      { tempo: 9,    acao: () => Cena74.mostrar(10.5, "A", { qtd: 6, isolado: false }) },        // 6 na fileira de cima,
-      { tempo: 10.5, acao: () => Cena74.mostrar(12, "B", { qtd: 6, isolado: false, embaixo: true }) },   // 6 na de baixo (até 12s)
+      { tempo: 9,    acao: () => Cena74.mostrar(10.5, "A", { qtd: 6, isolado: false, doAtomo: true }) },   // 6 saem do O e sobem para a fileira de cima,
+      { tempo: 10.5, acao: () => Cena74.mostrar(12, "B", { qtd: 6, isolado: false, embaixo: true, doAtomo: true }) },   // 6 saem do outro O e descem para a de baixo (até 12s)
       // a mãozinha mostra que dá para tocar nos quatro lados do O da esquerda (até 28s)
       { tempo: 24,   acao: () => Cena83.tocar("cima") },
       { tempo: 25,   acao: () => Cena83.tocar("fora") },                                          // o lado esquerdo
@@ -2707,8 +2707,8 @@ const NARRACOES = [
     inicio: () => Cena71.montarSeparados("nitrogenio"),            // pela navegação rápida: os dois N separados no meio da tela
     eventos: [
       { tempo: 6.7,  acao: () => Cena71.pulsarTitulo(".fam") },                                     // "Família 5A" pulsa
-      { tempo: 9.9,  acao: () => { Cena74.mostrar(11.9, "A", { qtd: 5, isolado: false });           // 5 na fileira de cima
-                                   Cena74.mostrar(11.9, "B", { qtd: 5, isolado: false, embaixo: true }); } }   // e 5 na de baixo (até 11,9s)
+      { tempo: 9.9,  acao: () => { Cena74.mostrar(11.9, "A", { qtd: 5, isolado: false, doAtomo: true });   // 5 saem do N e sobem para a fileira de cima
+                                   Cena74.mostrar(11.9, "B", { qtd: 5, isolado: false, embaixo: true, doAtomo: true }); } }   // e 5 saem do outro N e descem (até 11,9s)
     ],
     // o aluno distribui os elétrons nos dois N: um em cada lado e depois o par, do lado de fora.
     // Cada N completo: conquista e o som "right"; os dois prontos: a narração seguinte
@@ -5092,7 +5092,11 @@ const Cena74 = {
   // som "electron_jumping" (50% mais baixo) quando o elétron começa a saltar (cloro, oxigênio e nitrogênio).
   // A espera é uma animação do palco (e não um setTimeout): assim ela também para na pausa
   somSalto(el, atraso = 0) {
-    Palco.animar(el, [{}, {}], { duracao: .01, atraso, fill: "none" }).finished.then(() => this.somEletron(), () => {});
+    Palco.animar(el, [{}, {}], { duracao: .01, atraso, fill: "none" }).finished.then(() => {
+      // dois elétrons saltando no mesmo instante (as duas fileiras do N₂ juntas) dão um som só
+      const agora = performance.now(); if (agora - (this.ultimoSalto || 0) < 50) return;
+      this.ultimoSalto = agora; this.somEletron();
+    }, () => {});
   },
   // o mesmo som quando os pares de elétrons acendem; os dois átomos acendendo juntos dão um som só
   somBrilho() {
