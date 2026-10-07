@@ -1190,7 +1190,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v131 · 07/10/2026</span>
+    <span class="versao" id="versao">v132 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2471,7 +2471,7 @@ const NARRACOES = [
       // o áudio novo (07/10/2026) é 1,28s mais longo: daqui em diante, tudo 1,28s mais tarde que antes
       { tempo: 12.28, acao: () => Cena74.hund() },              // "Regra de Hund" embaixo dos elétrons espalhados
       // Regra de Hund: primeiro um elétron em cada lado do Cl, e só depois os pares
-      { tempo: 30.28, acao: () => Cena74.saltar([0], "cima1") },   // um para cima
+      { tempo: 30.78, acao: () => Cena74.saltar([0], "cima1") },   // um para cima (meio segundo depois do resto do ajuste)
       { tempo: 31.48, acao: () => Cena74.saltar([1], "fora1") },   // um para a esquerda
       { tempo: 33.18, acao: () => Cena74.saltar([2], "baixo1") },  // um para baixo
       { tempo: 35.28, acao: () => Cena74.saltar([6], "frente") },  // o isolado, à direita, um pouco acima (o espaço ao lado é do elétron do outro Cl)
