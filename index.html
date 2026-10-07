@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v149 · 07/10/2026</span>
+    <span class="versao" id="versao">v150 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2184,7 +2184,7 @@ const Quiz = (() => {
         som("yes"); som("applause"); confete();
         vibe([40, 40, 80]);
         setTimeout(() => {
-          if (f < total - 1) { poe(f + 1); travado = false; return; }
+          if (f < total - 1) { som("transition_cube"); poe(f + 1); travado = false; return; }
           if (nq < questoes.length - 1) mostra(nq + 1, true);
           else {
             placar.textContent = exemplosTodos + " / " + exemplosTodos;
@@ -2246,6 +2246,7 @@ const Quiz = (() => {
     if (semMov.matches) { depois(); return; }
     girando = true;
     document.body.classList.add("girando");
+    som("transition_cube");
     sai.classList.add(cSai); entra.classList.add(cEntra);
     entra.addEventListener("animationend", function fim(e) {
       if (e.target !== entra) return;          // ignora as animações dos filhos
@@ -3464,6 +3465,7 @@ const Cena3 = {
     Palco.animar(f1, [{ backgroundColor: "rgba(20,33,52,0)", borderColor: "rgba(163,219,247,0)" },
                       { backgroundColor: "rgba(20,33,52,.92)", borderColor: "rgba(163,219,247,.2)" }], { duracao: .3 });
     Palco.animar(giro, [{ transform: `${z} rotateY(0deg)` }, { transform: `${z} rotateY(-90deg)` }], { duracao: 1.2, atraso: .3, easing });
+    somCubo(.3);
     Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, atraso: .3, easing });
     Palco.animar(f2, [{ filter: "brightness(.35)" }, { filter: "brightness(1)" }], { duracao: 1.2, atraso: .3, easing });
   }
@@ -4723,6 +4725,7 @@ const Cena71 = {
     const z = `translateZ(${-this.W / 2}px)`, easing = "cubic-bezier(.65,0,.35,1)";
     Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, easing });
     Palco.animar(f2, [{ filter: "brightness(.35)" }, { filter: "brightness(1)" }], { duracao: 1.2, easing });
+    somCubo();
     Palco.animar(giro, [{ transform: `${z} rotateY(0deg)` }, { transform: `${z} rotateY(-90deg)` }], { duracao: 1.2, easing })
       .finished.then(() => {
         const cubo = this.$(".c71-cubo"); if (!cubo) return;
@@ -6206,6 +6209,7 @@ const Cena10 = {
     giro.style.transform = z;
     Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, easing });
     Palco.animar(f2, [{ filter: "brightness(.35)" }, { filter: "brightness(1)" }], { duracao: 1.2, easing });
+    somCubo();
     return Palco.animar(giro, [{ transform: `${z} rotateX(0deg)` }, { transform: `${z} rotateX(${90 * g}deg)` }], { duracao: 1.2, easing })
       .finished.then(() => {
         const cubo = this.$(".c71-cubo"); if (!cubo) return;
@@ -6682,6 +6686,7 @@ const Cena113 = {
         </div></div></div>`);
     const cubo = P.querySelector(".c113-cubo"), giro = cubo.querySelector(".c113-giro");
     velhos.forEach(el => cubo.querySelector(".f1").appendChild(el));
+    somCubo();
     Palco.animar(giro, [{ transform: `translateZ(${-z}px) rotateY(0deg)` }, { transform: `translateZ(${-z}px) rotateY(-90deg)` }], { duracao: .9, easing: "cubic-bezier(.65,0,.35,1)" })
       .finished.then(() => {
         [...cubo.querySelector(".f2").children].forEach(el => P.insertBefore(el, cubo));   // a face nova vira o palco de novo
@@ -7722,6 +7727,13 @@ function aoEntrar(tela) {
   if (tela === pagina1) Player.carregar(0);   // monta a fábrica no palco, à espera do play
 }
 
+// o som do cubo virando (atraso: espera do palco, que também para na pausa)
+function somCubo(atraso = 0) {
+  const toca = () => { try { const a = new Audio("audio/vfx/transition_cube.mp3"); a.volume = .55; a.play().catch(() => {}); } catch (_) {} };
+  if (!atraso) return toca();
+  Palco.animar(Palco.el, [{}, {}], { duracao: .01, atraso, fill: "none" }).finished.then(toca, () => {});
+}
+
 // Troca de tela girando um cubo: ida gira para a esquerda, volta para a direita
 function mostrarTela(tela) {
   const atual = document.querySelector(".tela.ativa");
@@ -7734,6 +7746,7 @@ function mostrarTela(tela) {
   const sai = volta ? "cubo-sai-volta" : "cubo-sai";
   const entra = volta ? "cubo-entra-volta" : "cubo-entra";
   document.body.classList.add("girando");
+  somCubo();
   tela.classList.add("ativa", entra);
   atual.classList.add(sai);
   aoEntrar(tela);
