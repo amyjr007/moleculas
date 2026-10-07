@@ -1190,7 +1190,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v133 · 07/10/2026</span>
+    <span class="versao" id="versao">v134 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3867,12 +3867,16 @@ const Quantico = {
       s.position.copy(origem); s.renderOrder = 12; s.scale.setScalar(.01); cena.add(s);
       claroes.push({ s, tam, dur, t0: estado.t });
     };
-    // estouro: a molécula incha, some, e solta faíscas do lugar onde estava
+    // estouro: a molécula incha, some, e solta faíscas do lugar onde estava (com o som "flip")
+    const flip = new Audio("audio/vfx/flip.mp3");
     estado.estourar = (m, atraso = 0) => {
       const s = m.userData.est;
       estado.animar(s, "estouro", 1, .2, atraso);
       estado.animar(s, "opac", 0, .2, atraso);
-      tweens.push({ obj: {}, chave: "x", para: 1, dur: .01, t0: estado.t + atraso + .1, de: null, aoComecar: () => estado.faiscas(m.position) });
+      tweens.push({ obj: {}, chave: "x", para: 1, dur: .01, t0: estado.t + atraso + .1, de: null, aoComecar: () => {
+        estado.faiscas(m.position);
+        try { flip.cloneNode().play().catch(() => {}); } catch (_) {}   // um clone por estouro: estouros seguidos se sobrepõem
+      } });
     };
     // símbolos (H, O) desenhados sobre as esferas
     const rotulo = (letra, cor) => {

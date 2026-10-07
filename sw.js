@@ -1,6 +1,6 @@
 /* Service worker do app. Guarda tudo na instalação: depois da primeira
    visita, o app abre inteiro sem internet. */
-const CACHE = 'moleculas-v133';
+const CACHE = 'moleculas-v134';
 const ARQUIVOS = [
   './',
   './index.html',
@@ -80,6 +80,7 @@ const ARQUIVOS = [
   './audio/vfx/agoraesse.mp3',
   './audio/vfx/applause.mp3',
   './audio/vfx/error.mp3',
+  './audio/vfx/flip.mp3',
   './audio/vfx/lowscore.mp3',
   './audio/vfx/maisessa.mp3',
   './audio/vfx/maisesse.mp3',
