@@ -1190,7 +1190,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v134 · 07/10/2026</span>
+    <span class="versao" id="versao">v135 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -4760,9 +4760,10 @@ const Cena71 = {
       const ex = this.$(".c71-exemplo");
       if (ex) Palco.animar(ex, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => ex.remove(), () => {});
       // tocou no cilindro durante (ou depois) da narração "entrada" (7.1A / 8): a próxima (a pergunta) entra sozinha.
+      // O 7.1A é só o convite "toque no cilindro": é cortado na hora e o 7.2 entra já; as outras esperam acabar.
       // Tocou ainda na narração de antes (7.1): fica guardado e vale no fim da 7.1A
       const id = NARRACOES[Player.indice] && NARRACOES[Player.indice].id;
-      if (id === this.GASES[tipo].entrada) Player.seguirSozinho();
+      if (id === this.GASES[tipo].entrada) Player.seguirSozinho(id === "dialogo7_1A");
       else if (id && id === this.GASES[tipo].antes) this.tocado = tipo;
     }, () => {});
   },
@@ -7583,8 +7584,9 @@ const Player = {
 
   // a próxima narração da sequência entra sozinha, sem o play (ex.: ao entrar no cilindro de gás).
   // Se a de agora ainda está tocando, espera ela acabar.
-  seguirSozinho() {
-    if (!this.terminou) { this.seguirAoFim = true; return; }
+  // cortar: não espera a narração atual acabar — ela é interrompida e a seguinte entra já
+  seguirSozinho(cortar = false) {
+    if (!this.terminou && !cortar) { this.seguirAoFim = true; return; }
     const prox = NARRACOES.findIndex((n, i) => i > this.indice && !n.oculta);
     if (prox < 0) return;
     this.terminou = false;
