@@ -525,6 +525,24 @@
   /* "Moléculas poliatômicas": 4,8% da altura mais para baixo que a do Cl₂ (ajuste da ferramenta) */
   .c11-legenda.poli { bottom: 27.4%; }
   /* o título do capítulo: 2,2% da altura mais para cima e a letra a 85% */
+  /* 7.A: a janela "Exceção à regra" por cima da foto de Lewis e da regra */
+  .c7a-pop { position: absolute; left: 9%; right: 9%; top: 13%; bottom: 5%; z-index: 5; display: flex; flex-direction: column; align-items: center;
+    gap: 1.6vh; padding: 2.4vh 4%; border-radius: 22px; border: 1.5px solid rgba(163,219,247,.45);
+    background: linear-gradient(180deg, #14253D 0%, #0E1A2C 100%); box-shadow: 0 22px 60px rgba(0,0,0,.6); }
+  /* em pé: a janela termina acima do play e o conteúdo se espalha pela altura */
+  @media (orientation: portrait) {
+    .c7a-pop { left: 5%; right: 5%; bottom: 14%; justify-content: space-evenly; }
+    .c7a-atomo svg { width: min(38vw, 25vh, 190px); }
+  }
+  .c7a-titulo { margin: 0; font-family: var(--display); font-weight: 800; letter-spacing: -.01em; color: var(--ambar); font-size: clamp(1.3rem, 3vmin + .6rem, 2.3rem); }
+  .c7a-simbolo { position: relative; margin: 0; font-family: var(--display); font-weight: 800; line-height: 1; color: #fff; font-size: clamp(3.4rem, 11vmin, 7rem); }
+  .c7a-lewis { position: absolute; left: 100%; top: 50%; translate: .14em -50%; display: flex; flex-direction: column; gap: .12em; }
+  .c7a-lewis i { display: block; width: .13em; height: .13em; border-radius: 50%; background: var(--celeste); box-shadow: 0 0 10px 2px rgba(163,219,247,.75); }
+  .c7a-atomos { display: flex; align-items: flex-end; justify-content: center; gap: 6vw; }
+  .c7a-atomo { margin: 0; display: flex; flex-direction: column; align-items: center; }
+  .c7a-atomo svg { width: min(34vw, 25vh, 190px); height: auto; overflow: visible; }
+  .c7a-atomo figcaption { font-family: var(--display); font-weight: 700; color: var(--celeste); font-size: clamp(.9rem, 1.6vmin + .45rem, 1.25rem); }
+  .c7a-estavel { margin: 0 0 .2em; font-family: var(--display); font-weight: 800; color: #6EE7A0; text-shadow: 0 0 18px rgba(110,231,160,.55); font-size: clamp(1rem, 2.2vmin + .5rem, 1.6rem); }
   /* padrão_título: tamanho e posição de título combinados com o professor (ajustado em "Regra do Octeto", v122):
      fonte ×0,61 do título padrão; 2,6% mais alto (top 5% → 2,4%) e 0,4% para a esquerda */
   .padrao-titulo { top: 2.4% !important; left: -.4%; right: .4%; font-size: calc(clamp(2.2rem, 6vmin + 1rem, 4.4rem) * .61); }
@@ -1172,7 +1190,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v123 · 07/10/2026</span>
+    <span class="versao" id="versao">v124 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2393,10 +2411,23 @@ const NARRACOES = [
       { tempo: 1,    acao: () => Cena7.subir() },          // 1 → 7s: "Regra do Octeto" sobe de baixo empurrando tudo e para no topo
       { tempo: 10,   acao: () => Cena7.lewis() },          // foto de Lewis (fade in)
       { tempo: 11,   acao: () => Cena7.regra() }           // a regra, digitada com o tracinho
+    ],
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } },   // no lugar do play, o "Entendi" leva ao 7.A
+  // um parêntese: a exceção à regra do octeto (o H fica estável com 2 elétrons, como o He).
+  // extra: entrou depois — fica fora da navegação rápida e não muda a numeração dela
+  { id: "dialogo7_A", titulo: "Exceção à regra", src: "audio/audio_moleculas_7.A.mp3", semNav: true, extra: true,
+    inicio: () => Cena7.montarFinal(),
+    eventos: [
+      { tempo: 6,    acao: () => Cena7A.abrir() },         // a janela "Exceção à regra" (fade in) cobre a foto e a regra
+      { tempo: 8.8,  acao: () => Cena7A.simbolo() },       // o símbolo H, grande
+      { tempo: 11.5, acao: () => Cena7A.atomo("H") },      // o átomo de Rutherford do H (núcleo e a camada), em fade in
+      { tempo: 13,   acao: () => Cena7A.eletron(1) },      // o elétron, na camada e na frente do símbolo
+      { tempo: 19,   acao: () => Cena7A.eletron(2) },      // um segundo elétron: na frente do símbolo e no lado oposto da camada
+      { tempo: 22,   acao: () => Cena7A.helio() }          // o átomo de hélio à direita, com "Átomo estável" em cima
     ] },
   // o exemplo do gás cloro (Cl₂)
   { id: "dialogo7_1", titulo: "Exemplo: o gás cloro", src: "audio/audio_moleculas_7.1.mp3",
-    inicio: () => Cena7.montarFinal(),                     // pela navegação rápida: a tela final da narração 7
+    inicio: () => { Cena7.montarFinal(); Cena7A.fechar(); },   // pela navegação rápida: a tela final da narração 7 (e a janela do 7.A sai)
     eventos: [
       { tempo: 5.9,  acao: () => Cena71.realcar(".r-oito") },    // "8 elétrons" cresce 10% e muda de cor
       { tempo: 8.6,  acao: () => Cena71.realcar(".r-gases") },   // "gases nobres" também
@@ -4488,7 +4519,7 @@ const Cena7 = {
     { classe: "destaque", texto: "estabilidade" },
     { texto: " dos " },
     { classe: "r-realce r-gases", texto: "gases nobres" },
-    { classe: "fecha", texto: "”", junto: true }           // colada em "nobres" (não quebra linha), mas sem herdar a cor
+    { classe: "fecha", texto: "”.", junto: true }          // colada em "nobres" (não quebra linha), mas sem herdar a cor
   ],
 
   // 1 → 7s: o título novo vem de baixo, colado no que está na tela, e empurra tudo para cima
@@ -6944,6 +6975,74 @@ const Cena124 = {
   }
 };
 
+/* ---------- Narração 7.A: exceção à regra do octeto ----------
+   Uma janela cobre a foto e a regra: "Exceção à regra", o símbolo H (com os elétrons na frente, como em Lewis)
+   e o átomo de Rutherford do H; com 2 elétrons ele fica como o hélio, que aparece ao lado: "Átomo estável". */
+const Cena7A = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  // a janela, em fade in
+  abrir() {
+    if (this.$(".c7a-pop")) return;
+    Palco.adicionar(`<div class="c7a-pop" role="dialog" aria-label="Exceção à regra"><h3 class="c7a-titulo">Exceção à regra</h3></div>`);
+    Palco.animar(this.$(".c7a-pop"), [{ opacity: 0, scale: ".96" }, { opacity: 1, scale: "1" }], { duracao: .6, easing: "ease-out" });
+  },
+  pop() { if (!this.$(".c7a-pop")) this.abrir(); return this.$(".c7a-pop"); },
+  // 8,8s: o símbolo H, grande (os elétrons de Lewis entram depois, na frente dele)
+  simbolo() {
+    const p = this.pop(); if (p.querySelector(".c7a-simbolo")) return;
+    p.insertAdjacentHTML("beforeend", `<p class="c7a-simbolo">H<span class="c7a-lewis"></span></p>`);
+    Palco.animar(p.lastElementChild, [{ opacity: 0, scale: ".5" }, { opacity: 1, scale: "1.12", offset: .65 }, { opacity: 1, scale: "1" }], { duracao: .5, easing: "ease-out" });
+  },
+  // o desenho de um átomo de Rutherford: núcleo, a camada e (vazios) os lugares dos elétrons em cima e embaixo
+  svgAtomo(sim, nucleo) {
+    return `<svg viewBox="0 0 120 120" aria-label="Átomo de ${sim}">
+      <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(163,219,247,.7)" stroke-width="2" stroke-dasharray="5 4"/>
+      <circle cx="60" cy="60" r="14" fill="${nucleo}" stroke="rgba(0,0,0,.35)" stroke-width="1.5"/>
+      <text x="60" y="65" text-anchor="middle" font-size="${sim.length > 1 ? 12 : 14}" font-weight="800" fill="#0A1322" font-family="Bricolage Grotesque, sans-serif">${sim}</text>
+      <g class="el"></g></svg>`;
+  },
+  // 11,5s: o átomo do H (núcleo e a única camada), em fade in
+  atomo() {
+    const p = this.pop(); if (p.querySelector(".c7a-atomos")) return;
+    p.insertAdjacentHTML("beforeend", `<div class="c7a-atomos"><figure class="c7a-atomo" data-el="H">${this.svgAtomo("H", "#F4F7FB")}<figcaption>Hidrogênio</figcaption></figure></div>`);
+    Palco.animar(p.querySelector(".c7a-atomos"), [{ opacity: 0 }, { opacity: 1 }], { duracao: .8, easing: "ease-out" });
+  },
+  // um elétron na camada (k = 1: em cima; 2: embaixo, no lado oposto)
+  naCamada(svg, k) {
+    const y = k === 1 ? 16 : 104;
+    svg.querySelector(".el").insertAdjacentHTML("beforeend", `<circle cx="60" cy="${y}" r="6" fill="#A3DBF7" style="filter:drop-shadow(0 0 4px rgba(163,219,247,.95));transform-origin:60px ${y}px"/>`);
+    return svg.querySelector(".el").lastElementChild;
+  },
+  // 13s / 19s: o elétron k, ao mesmo tempo na camada do H e na frente do símbolo
+  eletron(k) {
+    if (!this.$(".c7a-simbolo")) this.simbolo();
+    if (!this.$(".c7a-atomos")) this.atomo();
+    const lw = this.$(".c7a-lewis"), svg = this.$('.c7a-atomo[data-el="H"] svg');
+    if (lw.children.length >= k) return;
+    lw.insertAdjacentHTML("beforeend", "<i></i>");
+    const novos = [lw.lastElementChild, this.naCamada(svg, k)];
+    novos.forEach(el => Palco.animar(el, [{ scale: "0", opacity: 0 }, { scale: "1.8", opacity: 1, offset: .6 }, { scale: "1", opacity: 1 }], { duracao: .5, easing: "ease-out" }));
+  },
+  // 22s: o hélio à direita do H (o H desliza para a esquerda), com "Átomo estável" em cima
+  helio() {
+    if (!this.$(".c7a-atomos")) this.atomo();
+    const caixa = this.$(".c7a-atomos"); if (caixa.querySelector('[data-el="He"]')) return;
+    const H = caixa.querySelector('[data-el="H"]'), antes = H.getBoundingClientRect().left;
+    caixa.insertAdjacentHTML("beforeend", `<figure class="c7a-atomo" data-el="He"><p class="c7a-estavel">Átomo estável</p>${this.svgAtomo("He", "#FFC24B")}<figcaption>Hélio</figcaption></figure>`);
+    const He = caixa.lastElementChild, svg = He.querySelector("svg");
+    this.naCamada(svg, 1); this.naCamada(svg, 2);
+    const dx = antes - H.getBoundingClientRect().left;
+    Palco.animar(H, [{ translate: `${dx}px 0` }, { translate: "0 0" }], { duracao: .6, easing: "cubic-bezier(.3,0,.2,1)" });
+    Palco.animar(He, [{ opacity: 0, translate: "40px 0" }, { opacity: 1, translate: "0 0" }], { duracao: .7, atraso: .15, easing: "ease-out" });
+  },
+  // a janela sai (o 7.1 volta para a regra)
+  fechar() {
+    const p = this.$(".c7a-pop"); if (!p || p.classList.contains("saindo")) return;
+    p.classList.add("saindo");
+    Palco.animar(p, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => p.remove(), () => {});
+  }
+};
+
 /* ---------- O placar do Resumo Interativo ----------
    Cada questão (10.1 a 10.11) e cada exemplo de Lewis vale um ponto: acertando de primeira, o ponto inteiro;
    depois de um erro, meio; depois de mais erros, um quarto. A nota (1 a 10) é sobre o que foi respondido.
@@ -7706,11 +7805,12 @@ const veu = document.getElementById("veu");
 const sumario = document.getElementById("sumario");
 
 function montarSumario() {
-  // semNav: fica fora da lista (mas toca normalmente na sequência) · num: o número mostrado na lista
+  // semNav: fica fora da lista (mas toca normalmente na sequência) · num: o número mostrado na lista ·
+  // extra: entrou depois no meio da sequência (não conta na numeração, para os números de antes não mudarem)
   sumario.innerHTML = NARRACOES.map((n, i) => n.oculta || n.semNav ? "" : `
     <li>
       <button class="item-sumario" data-indice="${i}">
-        <span class="num">${n.num || i + 1}</span>
+        <span class="num">${n.num || i + 1 - NARRACOES.slice(0, i).filter(m => m.extra).length}</span>
         <span class="item-texto">${n.titulo}</span>
       </button>
     </li>`).join("");
