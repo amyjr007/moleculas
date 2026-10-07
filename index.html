@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v155 · 07/10/2026</span>
+    <span class="versao" id="versao">v156 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2713,7 +2713,7 @@ const NARRACOES = [
     // o aluno distribui os elétrons nos dois N: um em cada lado e depois o par, do lado de fora.
     // Cada N completo: conquista e o som "right"; os dois prontos: a narração seguinte
     aoFim: () => Cena84.liberar({ sets: ["A", "B"], qtd: 5, pares: ["fora"], solitarios: ["cima", "baixo", "frente"],
-      som: "audio/vfx/right.mp3", depois: () => { if (NARRACOES[Player.indice].id === "dialogo9_3") Player.seguirSozinho(); } }) },
+      depois: () => { if (NARRACOES[Player.indice].id === "dialogo9_3") Player.seguirSozinho(); } }) },
   { id: "dialogo9_4", titulo: "Nitrogênio: os elétrons no lugar", src: "audio/audio_moleculas_9.4.mp3",
     // pela navegação rápida: os dois N separados, já com os 5 elétrons distribuídos (e os sozinhos brilhando)
     inicio: () => Cena84.montarN(),
@@ -5878,6 +5878,7 @@ const Cena83 = {
     ], { duracao: 1, easing: "ease-in-out", fill: "none" }));
     Cena74.pulsarAtomo(set, 1.1);
     Vibra.tocar("conquista");
+    try { new Audio("audio/vfx/right.mp3").play().catch(() => {}); } catch (_) {}   // o "right" junto com o brilho
   }
 };
 
