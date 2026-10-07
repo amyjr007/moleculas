@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v139 · 07/10/2026</span>
+    <span class="versao" id="versao">v140 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -5068,7 +5068,17 @@ const Cena74 = {
       const quadros = Array.from({ length: 17 }, (_, n) => { const p = n / 16;
         return { transform: `translate(${dx * (1 - p)}px, ${dy * (1 - p) - h * Math.sin(Math.PI * p)}px)`, scale: p < .25 ? .3 + 2.8 * p : 1, opacity: p < .12 ? p / .12 : 1 }; });
       Palco.animar(el, quadros, { duracao: voo, atraso, easing: "cubic-bezier(.4,0,.3,1)" });
+      this.somSalto(el, atraso);
     });
+  },
+
+  // som "electron_jumping" (50% mais baixo) quando o elétron começa a saltar — só no cloro (narrações 7.x).
+  // A espera é uma animação do palco (e não um setTimeout): assim ela também para na pausa
+  somSalto(el, atraso = 0) {
+    const n = NARRACOES[Player.indice]; if (!n || !n.id.startsWith("dialogo7_")) return;
+    Palco.animar(el, [{}, {}], { duracao: .01, atraso, fill: "none" }).finished.then(() => {
+      try { const a = new Audio("audio/vfx/electron_jumping.mp3"); a.volume = .5; a.play().catch(() => {}); } catch (_) {}
+    }, () => {});
   },
 
   // salto em arco até o seu lugar em volta do símbolo (o par sai com um pequeno intervalo)
@@ -5086,6 +5096,7 @@ const Cena74 = {
       const quadros = Array.from({ length: 17 }, (_, n) => { const p = n / 16;
         return { transform: `translate(${dx * (1 - p)}px, ${dy * (1 - p) - h * Math.sin(Math.PI * p)}px)` }; });
       Palco.animar(el, quadros, { duracao: .8, atraso: k * .12, easing: "cubic-bezier(.45,0,.35,1)" });
+      this.somSalto(el, k * .12);
     });
   },
   // emparelha: o elétron que estava sozinho no meio do lado desliza para o lado, e o novo salta em arco para junto dele
