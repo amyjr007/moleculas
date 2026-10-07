@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v141 · 07/10/2026</span>
+    <span class="versao" id="versao">v142 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -4731,6 +4731,8 @@ const Cena71 = {
     this.m = null;                                       // a molécula que sobra na 7.3 é escolhida de novo
     area.insertAdjacentHTML("beforeend", `<div class="c71-quantico" aria-label="Moléculas de gás ${this.GASES[tipo].aria}: toque nelas"></div>`);
     this.quantum = Quantico.montar(this.$(".c71-quantico"), { molecula: tipo, cheia: true });
+    // dentro do cilindro elas não entram uma a uma: no fim do zoom já estão todas à vista
+    this.quantum.moleculas.forEach(m => { m.userData.entrada = -1; });
   },
 
   // toque no cilindro: zoom para dentro dele, dash e clarão; sob o clarão, as moléculas de Cl₂
