@@ -1190,7 +1190,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v126 · 07/10/2026</span>
+    <span class="versao" id="versao">v127 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2437,7 +2437,8 @@ const NARRACOES = [
       { tempo: 16.1, acao: () => Cena71.preparar() },            // monta a face nova (tela parada: nada muda à vista)
       { tempo: 17.6, acao: () => Cena71.girar() }                // a tela vira um cubo: entra o cilindro de gás cloro
     ],
-    aoFim: () => { ui.semPlay(true); Player.seguirSozinho(); } },   // sem play: o 7.1A entra na sequência
+    // sem play: o 7.1A entra na sequência, meio segundo depois (se o aluno não tiver saído daqui)
+    aoFim: () => { ui.semPlay(true); const i = Player.indice; setTimeout(() => { if (Player.indice === i && Player.terminou) Player.seguirSozinho(); }, 500); } },
   // o convite para tocar no cilindro. Sem play no fim: o toque no cilindro leva à pergunta (7.2)
   { id: "dialogo7_1A", titulo: "Toque no cilindro", src: "audio/audio_moleculas_7.1A.mp3", semNav: true, extra: true,
     inicio: () => { if (!Cena71.$(".c71-cilindro") && !Cena71.$(".c71-quantico.ativo")) Cena71.girar(); ui.semPlay(true); },   // (o cilindro já vem do 7.1)
