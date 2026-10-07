@@ -1190,7 +1190,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v124 · 07/10/2026</span>
+    <span class="versao" id="versao">v125 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2424,15 +2424,18 @@ const NARRACOES = [
       { tempo: 13,   acao: () => Cena7A.eletron(1) },      // o elétron, na camada e na frente do símbolo
       { tempo: 19,   acao: () => Cena7A.eletron(2) },      // um segundo elétron: na frente do símbolo e no lado oposto da camada
       { tempo: 22,   acao: () => Cena7A.helio() }          // o átomo de hélio à direita, com "Átomo estável" em cima
-    ] },
+    ],
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "OK"); } },   // no lugar do play, o "OK" leva ao 7.1
   // o exemplo do gás cloro (Cl₂)
   { id: "dialogo7_1", titulo: "Exemplo: o gás cloro", src: "audio/audio_moleculas_7.1.mp3",
-    inicio: () => { Cena7.montarFinal(); Cena7A.fechar(); },   // pela navegação rápida: a tela final da narração 7 (e a janela do 7.A sai)
+    inicio: () => Cena7.montarFinal(),                     // pela navegação rápida: a tela final da narração 7
     eventos: [
-      { tempo: 5.9,  acao: () => Cena71.realcar(".r-oito") },    // "8 elétrons" cresce 10% e muda de cor
-      { tempo: 8.6,  acao: () => Cena71.realcar(".r-gases") },   // "gases nobres" também
-      { tempo: 13.5, acao: () => Cena71.preparar() },            // monta a face nova (tela parada: nada muda à vista)
-      { tempo: 15,   acao: () => Cena71.girar() }                // a tela vira um cubo: entra o cilindro de gás cloro
+      { tempo: 2,    acao: () => Cena7A.fechar() },              // a janela do 7.A some
+      { tempo: 4,    acao: () => Cena71.realcar(".r-estab") },   // "estabilidade" cresce
+      { tempo: 6.4,  acao: () => Cena71.realcar(".r-oito") },    // "8 elétrons" cresce 10% e muda de cor
+      { tempo: 9,    acao: () => Cena71.realcar(".r-gases") },   // "gases nobres" também
+      { tempo: 16.1, acao: () => Cena71.preparar() },            // monta a face nova (tela parada: nada muda à vista)
+      { tempo: 17.6, acao: () => Cena71.girar() }                // a tela vira um cubo: entra o cilindro de gás cloro
     ] },
   // a pergunta: qual a fórmula do gás cloro? (Cl, Cl₂ ou Cl₃)
   { id: "dialogo7_2", titulo: "Qual a fórmula do cloro?", src: "audio/audio_moleculas_7.2.mp3",
@@ -4516,7 +4519,7 @@ const Cena7 = {
     { texto: "“Os átomos tendem a reagir quimicamente a fim de completarem " },
     { classe: "r-realce r-oito", texto: "8 elétrons" },
     { texto: " na camada de valência, o que garante a " },
-    { classe: "destaque", texto: "estabilidade" },
+    { classe: "destaque r-realce r-estab", texto: "estabilidade" },
     { texto: " dos " },
     { classe: "r-realce r-gases", texto: "gases nobres" },
     { classe: "fecha", texto: "”.", junto: true }          // colada em "nobres" (não quebra linha), mas sem herdar a cor
@@ -4580,7 +4583,7 @@ const Cena71 = {
   realcar(sel) {
     const el = this.$(".c7-regra " + sel); if (!el) return;
     // (a margem abre espaço dos lados: o "scale" sozinho faria a palavra encostar nas vizinhas)
-    Palco.animar(el, [{ transform: "scale(1)", marginInline: "0em", color: "#ffffff", textShadow: "0 0 0 rgba(255,194,75,0)" },
+    Palco.animar(el, [{ transform: "scale(1)", marginInline: "0em", color: getComputedStyle(el).color, textShadow: "0 0 0 rgba(255,194,75,0)" },   // (sai da cor que tem: "estabilidade" já é âmbar)
                       { transform: "scale(1.1)", marginInline: ".32em", color: "#FFC24B", textShadow: "0 0 22px rgba(255,194,75,.55)" }],
       { duracao: .45, easing: "cubic-bezier(.3,1.4,.5,1)" });
   },
