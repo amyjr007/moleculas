@@ -1190,7 +1190,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v127 · 07/10/2026</span>
+    <span class="versao" id="versao">v128 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2459,7 +2459,8 @@ const NARRACOES = [
       { tempo: 14,   acao: () => Cena71.centralizar() },    // a que sobrou vai girando para o meio da tela
       { tempo: 21,   acao: () => Cena71.separar() },        // os átomos se separam, a ligação quebra e aparece "Cl"
       { tempo: 29,   acao: () => Cena71.octeto() }          // "Cada átomo tem que ter 8 elétrons de valência", digitado em cima dos átomos
-    ] },
+    ],
+    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "OK"); } },   // no lugar do play, o "OK" leva ao 7.4
   { id: "dialogo7_4", titulo: "Cloro: família 7A", src: "audio/audio_moleculas_7.4.mp3",
     inicio: () => Cena71.montarSeparados(),                // pela navegação rápida: os dois átomos de Cl separados no centro
     eventos: [
