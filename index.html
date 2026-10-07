@@ -595,6 +595,8 @@
   .c77-texto .c77-silaba { display: inline-block; transform-origin: 50% 70%; }   /* "Co" e "valente" crescem (inline-block: só assim o "scale" pega) */
   .c77-texto.isolado { color: #C9A7FF; text-shadow: 0 0 20px rgba(167,123,255,.55); }
   .c77-texto.ligante, .c77-texto.covalente { color: #6EE7A0; text-shadow: 0 0 20px rgba(110,231,160,.55); }
+  /* "Ligação Covalente" (7.7) maior (×1,81) e numa linha só, centrada na tela mesmo quando "Co" e "valente" crescem */
+  .c77-texto.covalente { font-size: clamp(1.9rem, 4.2vmin + .9rem, 3.2rem); width: max-content; white-space: nowrap; }
   /* áudio 8.3: a mãozinha que toca nos lados do átomo, o círculo do toque e o anel da conquista */
   .c83-mao { position: absolute; z-index: 5; pointer-events: none; width: clamp(34px, 4.5vmin + 16px, 54px);
     translate: -46% -4%; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }   /* a ponta do dedo fica no ponto */
@@ -632,6 +634,9 @@
   .c75-ligacao { position: absolute; z-index: 3; pointer-events: none; border-radius: 999px;
     background: linear-gradient(to bottom, rgba(255,255,255,.28), rgba(163,219,247,.16) 45%, rgba(163,219,247,.08));
     border: 2px solid rgba(211,239,252,.55); box-shadow: 0 0 18px rgba(110,231,160,.45), inset 0 0 12px rgba(163,219,247,.3); }
+  /* no Cl₂ (um par só), a elipse fica no verde de "Ligação Covalente" (#6EE7A0), com a mesma transparência */
+  .c75-ligacao[data-par=""] { background: linear-gradient(to bottom, rgba(110,231,160,.28), rgba(110,231,160,.16) 45%, rgba(110,231,160,.08));
+    border-color: rgba(110,231,160,.55); box-shadow: 0 0 18px rgba(110,231,160,.45), inset 0 0 12px rgba(110,231,160,.3); }
   /* áudio 7.3: a frase do octeto, digitada logo acima dos dois átomos */
   .c73-octeto { position: absolute; left: 50%; translate: -50% -100%; width: min(92%, 22ch); margin: 0; text-align: center; z-index: 3; pointer-events: none;
     font-family: var(--display); font-weight: 800; color: #fff; line-height: 1.2; letter-spacing: -.01em;
@@ -1190,7 +1195,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v136 · 07/10/2026</span>
+    <span class="versao" id="versao">v137 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -5539,7 +5544,8 @@ const Cena77 = {
     if (!Cena75.ligado || this.$(`.c77-texto.${tipo}`)) return;
     const A = Cena74.atomo("A"); if (!A) return;
     const me = Cena74.medidas(A), cima = !["ligante", "estrutural", "dupla", "tripla"].includes(tipo);   // ligante, "Fórmula estrutural" e "Ligação covalente dupla" vão embaixo
-    const y = cima ? A.y - me.g - me.e - 12 : A.y + me.g + me.e + 14;
+    let y = cima ? A.y - me.g - me.e - 12 : A.y + me.g + me.e + 14;
+    if (tipo === "covalente") y += Palco.el.clientHeight * .034;   // "Ligação Covalente" um pouco mais para baixo (ajuste da professora)
     if (!cima) this.esconderStatus(true);   // embaixo mora o "Molécula estável": sai enquanto este estiver na tela
     Palco.adicionar(`<p class="c77-texto ${tipo}${cima ? " em-cima" : ""}" style="top:${y}px"></p>`);
     const el = Palco.el.lastElementChild;
