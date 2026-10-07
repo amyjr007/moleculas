@@ -1190,7 +1190,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v135 · 07/10/2026</span>
+    <span class="versao" id="versao">v136 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -5269,9 +5269,20 @@ const Cena75 = {
   // Juntos, os dois viram a metade de cada átomo dos dois pares da ligação dupla.
   // Nitrogênio: o da frente fica no meio; o de cima e o de baixo dão a volta até a frente, um acima e outro abaixo dele:
   // os três viram a metade de cada átomo dos três pares da ligação tripla.
-  MOVEIS: { oxigenio: ["frente", "baixo"], nitrogenio: ["frente", "cima", "baixo"] },
+  // Cloro: o sozinho da frente gira em volta do átomo para o lado do outro Cl, mais quanto mais perto ele está —
+  // assim, na distância da ligação, os dois se encaixam um em cima do outro em qualquer direção (e voltam se afastar).
+  MOVEIS: { cloro: ["frente"], oxigenio: ["frente", "baixo"], nitrogenio: ["frente", "cima", "baixo"] },
+  GIRO_MAX: Math.PI * 40 / 180,   // o quanto o da frente do cloro pode girar (mais, e ele bateria nos pares de cima e de baixo)
   movel(set, lado, k, A) {
-    const { g, s } = Cena74.medidas(A), lad = set === "A" ? 1 : -1, suave = k * k * (3 - 2 * k);
+    const { g, s, acima } = Cena74.medidas(A), lad = set === "A" ? 1 : -1, suave = k * k * (3 - 2 * k);
+    if (this.tipo === "cloro") {
+      const O = Cena74.atomo(set === "A" ? "B" : "A"), base = set === "A" ? 0 : Math.PI;
+      let rel = Math.atan2(O.y - A.y, O.x - A.x) - base;
+      rel = Math.atan2(Math.sin(rel), Math.cos(rel));   // entre -π e π
+      const ang = base + Math.min(Math.max(rel, -this.GIRO_MAX), this.GIRO_MAX) * suave;
+      // na direção ang, a g do centro; deslocado "acima" para o lado (no outro Cl, o mesmo deslocamento cai do outro lado do eixo)
+      return [g * Math.cos(ang) + acima * Math.sin(ang), g * Math.sin(ang) - acima * Math.cos(ang)];
+    }
     if (this.tipo === "nitrogenio") {
       if (lado === "frente") return [lad * g, 0];
       const v = this.vPar(A) * (lado === "cima" ? -1 : 1), a0 = Math.PI / 2 * Math.sign(v), a1 = Math.atan2(v, g);
@@ -5286,7 +5297,7 @@ const Cena75 = {
   vPar(A) { const { s, e } = Cena74.medidas(A); return this.tipo === "nitrogenio" ? Math.max(s, e * 2.1) : s; },
   // a distância entre os centros na ligação: no cloro, 2g (o par fica um em cima do outro);
   // no oxigênio, um pouco mais, para os dois pares caberem lado a lado no meio
-  distLig(A) { const { g, e } = Cena74.medidas(A); return this.MOVEIS[this.tipo] ? 2 * g + e * 1.25 : 2 * g; },
+  distLig(A) { const { g, e } = Cena74.medidas(A); return this.tipo !== "cloro" ? 2 * g + e * 1.25 : 2 * g; },
   ponto(e) { const P = Palco.el.getBoundingClientRect(); return [e.clientX - P.left, e.clientY - P.top]; },
   chave(set) { return set === "A" ? ["offOx", "offOy"] : ["offHx", "offHy"]; },
   raioEncaixe(set) { return Math.max(28, Cena74.atomo(set).R * .8); },
