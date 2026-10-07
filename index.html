@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v148 · 07/10/2026</span>
+    <span class="versao" id="versao">v149 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2980,15 +2980,18 @@ const NARRACOES = [
 const Palco = {
   el: document.getElementById("conteudoPalco"),
   pausado: false,
-  limpar() { this.pararCursor(); this.el.innerHTML = ""; },
+  limpar() { this.pararCursor(); this.calarDigitacao(); this.el.innerHTML = ""; },
+  // o som de digitação de cada texto que está sendo digitado (ver digitar): segue a pausa e some quando a cena é limpa
+  sonsDigitar: new Set(),
+  calarDigitacao() { this.sonsDigitar.forEach(s => s.pause()); this.sonsDigitar.clear(); },
   mostrar(html) { this.el.innerHTML = html; this.sincronizar(); },
   adicionar(html) { this.el.insertAdjacentHTML("beforeend", html); this.sincronizar(); },
   reiniciar() { this.limpar(); this.pausado = false; },
   // Animações (CSS ou Web Animations) do palco seguem o estado do áudio.
   // Só as que estão rodando são pausadas: retomar uma animação já terminada a faria recomeçar.
   animacoes() { return this.el.getAnimations ? this.el.getAnimations({ subtree: true }) : []; },
-  pausar() { this.pausado = true; this.animacoes().forEach(a => { if (a.playState === "running") a.pause(); }); },
-  retomar() { this.pausado = false; this.animacoes().forEach(a => { if (a.playState === "paused") a.play(); }); },
+  pausar() { this.pausado = true; this.animacoes().forEach(a => { if (a.playState === "running") a.pause(); }); this.sonsDigitar.forEach(s => s.pause()); },
+  retomar() { this.pausado = false; this.animacoes().forEach(a => { if (a.playState === "paused") a.play(); }); this.sonsDigitar.forEach(s => s.play().catch(() => {})); },
   sincronizar() { if (this.pausado) this.pausar(); },
 
   // Anima um elemento e já respeita a pausa (segundos → milissegundos ficam aqui)
@@ -3032,6 +3035,13 @@ const Palco = {
     if (cursor) { this.pararCursor(); el.classList.add("com-cursor"); }
     const letras = this.letras(el, partes);
     const passo = duracao / letras.length;
+    // som de digitação, bem discreto, do começo ao fim da digitação (a espera é do palco: para na pausa)
+    try {
+      const som = new Audio("audio/vfx/typing sound.mp3"); som.loop = true; som.volume = .12;
+      this.sonsDigitar.add(som); if (!this.pausado) som.play().catch(() => {});
+      const fim = () => { som.pause(); this.sonsDigitar.delete(som); };
+      this.animar(el, [{}, {}], { duracao, fill: "none" }).finished.then(fim, fim);
+    } catch (_) {}
     letras.forEach((s, i) => {
       if (!cursor) { this.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: .04, atraso: i * passo, easing: "linear" }); return; }
       // a letra surge subindo de leve; o tracinho (::after da letra) aparece só enquanto ela é a última
