@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v138 · 07/10/2026</span>
+    <span class="versao" id="versao">v139 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -4882,6 +4882,8 @@ const Cena71 = {
   // 21s: a ligação arrebenta — estalo de luz, faíscas, tranco da tela; os átomos são arremessados para os lados
   // (passam do ponto e voltam), crescem 44% (1,2 × 1,2), o brilho do meio some e o símbolo Cl aparece dentro de cada bola
   ESCALA_SEPARADOS: 1.44,
+  // o som da ligação do Cl₂ arrebentando (60% mais baixo)
+  somRuptura() { try { const a = new Audio("audio/vfx/rupture.mp3"); a.volume = .4; a.play().catch(() => {}); } catch (_) {} },
   // a referência é o cloro: raio do átomo de Cl e meia distância entre os dois na molécula. O oxigênio,
   // separado, fica do mesmo tamanho e à mesma distância que os cloros ficaram.
   R_REF: .66, MEIO_REF: .9,
@@ -4897,8 +4899,8 @@ const Cena71 = {
     const meio = u.baseH[0].distanceTo(u.baseO) / 2;                                       // do centro da molécula até cada átomo
     return this.MEIO_REF + sepCl - meio;                                                    // o centro de cada átomo onde ficaria o do cloro
   },
-  // status: escrever "Átomos Instáveis" (no cloro) · faisca: a cor das faíscas coloridas da quebra
-  separar({ status = true, faisca = 0xB8FF8A } = {}) {
+  // status: escrever "Átomos Instáveis" (no cloro) · faisca: a cor das faíscas coloridas da quebra · som: o "rupture" (no cloro)
+  separar({ status = true, faisca = 0xB8FF8A, som = true } = {}) {
     const q = this.quantum, m = this.m; if (!q || !m) return;
     const s = m.userData.est, u = m.userData;
     const tranco = p => 1 + 2.70158 * Math.pow(p - 1, 3) + 1.70158 * Math.pow(p - 1, 2);   // sai rápido, passa do ponto e volta
@@ -4913,6 +4915,7 @@ const Cena71 = {
     const meio = m.localToWorld(u.baseO.clone().add(u.baseH[0]).multiplyScalar(.5));
     q.clarao(meio, { tam: 3.2, dur: .4 });
     Vibra.tocar("quebra");
+    if (som) this.somRuptura();
     q.faiscas(meio, { cor: 0xFFFFFF, qtd: 26, forca: 5.5, dur: .6, tam: .2 });
     q.faiscas(meio, { cor: faisca, qtd: 18, forca: 3.5, dur: .75, tam: .16 });
     document.getElementById("palco").animate([0, -9, 8, -6, 4, -2, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 380, easing: "ease-out" });
@@ -5444,6 +5447,7 @@ const Cena75 = {
     this.status("instavel");
     Cena76.tirar("A"); Cena76.tirar("B");
     Vibra.tocar("puxao");
+    if (this.tipo === "cloro") Cena71.somRuptura();
     const q = Cena71.quantum, u = Cena71.m.userData;
     Cena71.m.updateMatrixWorld();
     const meio = u.O.getWorldPosition(new THREE.Vector3()).add(u.Hs[0].getWorldPosition(new THREE.Vector3())).multiplyScalar(.5);
@@ -5729,7 +5733,7 @@ const Cena82 = {
   // o puxão rompe a ligação dupla: o mesmo estalo do cloro; os dois ficam separados como os cloros ficaram
   separar() {
     const z = this.$(".c75-arrasto"); if (z) z.remove();
-    Cena71.separar({ status: false, faisca: this.faisca });
+    Cena71.separar({ status: false, faisca: this.faisca, som: false });
     Player.calar();   // se a narração ainda estava falando, ela se cala no puxão
     // passado o estalo (1,2s), a narração seguinte entra sozinha (a espera é do palco: para na pausa)
     const q = Cena71.$(".c71-quantico"), prox = NARRACOES.findIndex(n => n.id === this.proxima);
