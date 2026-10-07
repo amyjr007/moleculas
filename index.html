@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v150 · 07/10/2026</span>
+    <span class="versao" id="versao">v151 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -5094,6 +5094,11 @@ const Cena74 = {
   somSalto(el, atraso = 0) {
     Palco.animar(el, [{}, {}], { duracao: .01, atraso, fill: "none" }).finished.then(() => this.somEletron(), () => {});
   },
+  // o mesmo som quando os pares de elétrons acendem; os dois átomos acendendo juntos dão um som só
+  somBrilho() {
+    const agora = performance.now(); if (agora - (this.ultimoBrilho || 0) < 150) return;
+    this.ultimoBrilho = agora; this.somEletron();
+  },
   somEletron() { try { const a = new Audio("audio/vfx/electron_jumping.mp3"); a.volume = .5; a.play().catch(() => {}); } catch (_) {} },
 
   // salto em arco até o seu lugar em volta do símbolo (o par sai com um pequeno intervalo)
@@ -5174,6 +5179,7 @@ const Cena74 = {
   // pulso com brilho (cresce e volta)
   pulsar(idx, dur = .7, set = "A") {
     const els = this.els(set);
+    if (idx.some(i => els[i])) this.somBrilho();
     idx.forEach(i => els[i] && Palco.animar(els[i], [
       { scale: 1, boxShadow: this.normal(els[i]) }, { scale: 1.7, boxShadow: this.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: this.normal(els[i]) }
     ], { duracao: dur, easing: "ease-in-out", fill: "none" }));
@@ -5193,6 +5199,7 @@ const Cena74 = {
   // crescem e ficam assim (ligar = false: voltam ao normal). brilho = false: crescem sem mudar o brilho
   crescer(idx, ligar = true, esc = 1.45, set = "A", brilho = true) {
     const els = this.els(set);
+    if (ligar && brilho && idx.some(i => els[i])) this.somBrilho();
     idx.forEach(i => {
       const el = els[i]; if (!el) return;
       const atual = getComputedStyle(el), de = { scale: atual.scale === "none" ? "1" : atual.scale, boxShadow: atual.boxShadow };
@@ -5413,6 +5420,7 @@ const Cena75 = {
     });
     // os elétrons dos pares compartilhados brilham juntos
     const doMeio = (this.MOVEIS[this.tipo] || ["frente"]).map(l => `.c74-e[data-lado="${l}"]`).join(", ");
+    Cena74.somBrilho();
     Palco.el.querySelectorAll(doMeio).forEach(el => Palco.animar(el, [
       { scale: 1, boxShadow: Cena74.normal(el) }, { scale: 1.6, boxShadow: Cena74.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: Cena74.normal(el) }
     ], { duracao: .9, atraso: .25, fill: "none" }));
@@ -5551,6 +5559,7 @@ const Cena77 = {
   // manterCor: volta ao tamanho e ao brilho normais, mas continua na cor do tipo (enquanto o nome dele estiver na tela)
   realcar(lados, tipo, ligar = true, esc = 1.45, { manterCor = false } = {}) {
     if (!Cena75.ligado) return;
+    if (ligar) Cena74.somBrilho();
     this.els(lados).forEach(el => {
       el.classList.toggle("cor-" + tipo, ligar || manterCor);
       if (ligar) el.dataset.realce = tipo; else delete el.dataset.realce;
@@ -5562,6 +5571,7 @@ const Cena77 = {
   // cresce e já desce, como uma pulsada, na cor do tipo
   pulsar(lados, tipo, dur = .8) {
     if (!Cena75.ligado) return;
+    Cena74.somBrilho();
     this.els(lados).forEach(el => {
       el.classList.add("cor-" + tipo);
       Palco.animar(el, [{ scale: 1, boxShadow: Cena74.normal(el) }, { scale: 1.6, boxShadow: this.COR[tipo], offset: .4 }, { scale: 1, boxShadow: Cena74.normal(el) }],
@@ -5660,6 +5670,7 @@ const Cena78 = {
   },
   // pulsada com brilho num par de um Cl (cima, fora, baixo)
   pulsarPar(set, lado) {
+    Cena74.somBrilho();
     this.par(set, lado).forEach(el => Palco.animar(el, [
       { scale: 1, boxShadow: Cena74.normal(el) }, { scale: 1.7, boxShadow: Cena74.BRILHO_FORTE, offset: .4 }, { scale: 1, boxShadow: Cena74.normal(el) }
     ], { duracao: .6, easing: "ease-in-out", fill: "none" }));
@@ -6019,6 +6030,7 @@ const Cena86 = {
     return Cena74.els(set).filter(el => el.dataset.lado === alvo);
   },
   brilhar(alvo, set, ligar = true) {
+    if (ligar) Cena74.somBrilho();
     this.els(alvo, set).forEach(el => {
       const atual = getComputedStyle(el), de = { scale: atual.scale === "none" ? "1" : atual.scale, boxShadow: atual.boxShadow };
       Palco.animar(el, [de, ligar ? { scale: 1.45, boxShadow: Cena74.BRILHO_FORTE } : { scale: 1, boxShadow: Cena74.normal(el) }],
@@ -6151,6 +6163,7 @@ const Cena96 = {
   },
   // acende (cresce com brilho) ou apaga. cor: "isolado" (roxo) ou "ligante" (verde); manterCor: apaga o brilho, mas fica na cor
   brilhar(alvo, ligar = true, { cor = null, manterCor = false } = {}) {
+    if (ligar) Cena74.somBrilho();
     this.els(alvo).forEach(el => {
       if (cor) el.classList.toggle("cor-" + cor, ligar || manterCor);
       const atual = getComputedStyle(el), de = { scale: atual.scale === "none" ? "1" : atual.scale, boxShadow: atual.boxShadow };
