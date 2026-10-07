@@ -1197,7 +1197,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v144 · 07/10/2026</span>
+    <span class="versao" id="versao">v145 · 07/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -5076,10 +5076,9 @@ const Cena74 = {
   // som "electron_jumping" (50% mais baixo) quando o elétron começa a saltar (cloro, oxigênio e nitrogênio).
   // A espera é uma animação do palco (e não um setTimeout): assim ela também para na pausa
   somSalto(el, atraso = 0) {
-    Palco.animar(el, [{}, {}], { duracao: .01, atraso, fill: "none" }).finished.then(() => {
-      try { const a = new Audio("audio/vfx/electron_jumping.mp3"); a.volume = .5; a.play().catch(() => {}); } catch (_) {}
-    }, () => {});
+    Palco.animar(el, [{}, {}], { duracao: .01, atraso, fill: "none" }).finished.then(() => this.somEletron(), () => {});
   },
+  somEletron() { try { const a = new Audio("audio/vfx/electron_jumping.mp3"); a.volume = .5; a.play().catch(() => {}); } catch (_) {} },
 
   // salto em arco até o seu lugar em volta do símbolo (o par sai com um pequeno intervalo)
   // casa: em qual das duas casas do par o primeiro da lista cai (0 ou 1)
@@ -5615,6 +5614,7 @@ const Cena78 = {
       Palco.animar(el, [{ transform: "translate(0px, 0px)", opacity: 1 }, { transform: `translate(${dx}px, ${dy}px)`, opacity: 0 }],
         { duracao: .5, easing: "ease-in" });
     });
+    Cena74.somEletron();   // o som dos elétrons, no recolhimento do par
     const lig = this.$(".c75-ligacao");
     if (lig) Palco.animar(lig, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 });
     Palco.adicionar(`<div class="c78-traco"></div>`);
@@ -5630,6 +5630,11 @@ const Cena78 = {
     tr.innerHTML = ligar ? '<span class="c78-e"></span><span class="c78-e volta"></span>' : "";
     this.posicionar(tr);
     Palco.sincronizar();   // se estiver pausado, os elétrons novos já nascem parados
+    // o som dos elétrons a cada ida e a cada volta (cada repetição da animação CSS); para na pausa e acaba quando eles somem
+    if (ligar) {
+      if (!Palco.pausado) Cena74.somEletron();
+      tr.querySelector(".c78-e").addEventListener("animationiteration", () => Cena74.somEletron());
+    }
   },
   // pulsada com brilho no traço
   pulsarTraco() {
