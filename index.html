@@ -482,6 +482,7 @@
   .c11-copo.chama::before { content: ""; position: absolute; left: 22%; right: 22%; top: 18%; bottom: 10%; border-radius: 50%; pointer-events: none; z-index: 1;
     background: radial-gradient(closest-side, rgba(163,219,247,.3), rgba(163,219,247,0)); animation: c71Chama 1.8s ease-in-out infinite; }
   .c11-riso { font-size: .85em; margin-left: .15em; }
+  .c11-passo-bt { top: auto; bottom: 9%; translate: none; }   /* o botão "Passo 1" do fim do 11.1B: centralizado embaixo */
   .c11-voa { position: absolute; z-index: 6; margin: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; pointer-events: none; box-sizing: border-box; }
   .c4-op:has(.c11-riso) { white-space: nowrap; min-width: 0; padding-inline: .55em; font-size: clamp(1.15rem, 2.3vmin + .6rem, 1.8rem); }   /* "H₂O 😂" numa linha só, as três cabendo */
   .c11-titulo.uma-linha { white-space: nowrap; }
@@ -1216,7 +1217,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v174 · 08/10/2026</span>
+    <span class="versao" id="versao">v175 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2940,6 +2941,10 @@ const NARRACOES = [
     eventos: [
       { tempo: 4,    acao: () => Cena11Copo.formulaSobe() }            // a opção marcada vira o H₂O no topo; a molécula, pequena, ao lado (até 5s)
     ],
+    aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1(); } },   // no lugar do play, o botão "Passo 1" (leva ao 11.1C)
+  // o passo 1 (entra pelo botão "Passo 1"; os eventos ainda vão ser definidos)
+  { id: "dialogo11_1C", titulo: "Passo 1", src: "audio/audio_moleculas_11.1C.mp3", semNav: true, extra: true,
+    eventos: [],
     aoFim: () => ui.semPlay(true) },   // (por enquanto sem play: o que vem depois ainda vai ser refeito — o 11.2 antigo está guardado)
   // passo 2 com a água: o esqueleto (o O no centro, um H de cada lado) — os efeitos do antigo 12.1, no áudio novo (53,6s)
   { id: "dialogo11_2", titulo: "O passo a passo: passo 2", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
@@ -6930,6 +6935,20 @@ const Cena11Copo = {
     // o emoji some no caminho (e deixa de ocupar lugar: o H₂O fica no centro)
     const riso = v.querySelector(".c11-riso");
     if (riso) Palco.animar(riso, [{ opacity: 1, fontSize: ".85em", marginLeft: ".15em" }, { opacity: 0, fontSize: "0em", marginLeft: "0em" }], { duracao: this.ENCOLHE * .6, easing: "ease-in" });
+  },
+  // fim do 11.1B: no lugar do play, um botão "Passo 1", centralizado embaixo; o toque nele leva ao 11.1C
+  botaoPasso1() {
+    if (this.$(".c11-passo-bt")) return;
+    Palco.adicionar(`<div class="c10-botoes c11-passo-bt"><button class="c10-bt">Passo 1</button></div>`);
+    const caixa = this.$(".c11-passo-bt"), b = caixa.querySelector(".c10-bt");
+    Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }], { duracao: .45, easing: "cubic-bezier(.3,1.4,.5,1)" });
+    b.addEventListener("click", () => {
+      if (caixa.classList.contains("usado")) return;
+      caixa.classList.add("usado");
+      Vibra.tocar("toqueEletron");
+      Palco.animar(caixa, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => caixa.remove(), () => {});
+      Player.seguirSozinho();
+    });
   },
   // o lugar da molécula pequena: à esquerda da fórmula (fr), da altura dela, no plano dos átomos (z = 0)
   encolher(fr) {
