@@ -1206,7 +1206,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v165 · 08/10/2026</span>
+    <span class="versao" id="versao">v166 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2836,7 +2836,7 @@ const NARRACOES = [
     ],
     aoFim: () => ui.semPlay(true) },                               // quem leva adiante são os botões do resumo
   // 1ª questão do resumo
-  // as três partes do resumo na navegação rápida: 36 (10.1 a 10.7), 37 (10.8 a 10.11) e 38 (10.12)
+  // as três partes do resumo na navegação rápida: 36 (10.1 a 10.7), 37 (10.8 a 10.11C) e 38 (10.12)
   { id: "dialogo10_1", titulo: "Resumo interativo", num: 36, src: "audio/audio_moleculas_10.1.mp3",
     inicio: () => { Cena10.montar(); Placar.zerar(); },   // o quiz começa: placar zerado
     eventos: [
@@ -2862,11 +2862,20 @@ const NARRACOES = [
     ["10.9", 1.3, 3,   "Qual dessas moléculas tem uma ligação covalente simples?",
       () => [[Cena10.FIG.O2(), 0], [Cena10.FIG.N2(), 0], [Cena10.FIG.HCl(), 1]], true],
     ["10.10", 1,  2.5, "Qual dessas moléculas tem uma ligação covalente dupla?",
-      () => [[Cena10.FIG.H2O(), 0], [Cena10.FIG.CH2O(), 1], [Cena10.FIG.HCl(), 0]], true],
-    ["10.11", 1,  3,   "Qual dessas moléculas tem uma ligação covalente tripla?",
-      () => [[Cena10.FIG.OCl2(), 0], [Cena10.FIG.CO2(), 0], [Cena10.FIG.N2(), 1]], true]
-  ].map(([n, inicio, dur, texto, opcoes, imagens], k) => {
-    const id = "dialogo" + n.replace(".", "_"), prox = "dialogo10_" + (k + 3);
+      () => [[Cena10.FIG.H2O(), 0], [Cena10.FIG.O2(), 1], [Cena10.FIG.N2(), 0]], true],
+    ["10.11", .5, 2.8, "Qual dessas moléculas tem uma ligação covalente tripla?",
+      () => [[Cena10.FIG.OCl2(), 0], [Cena10.FIG.CO2(), 0], [Cena10.FIG.N2(), 1]], true],
+    // da 5ª à 7ª: as ligações desenhadas como pares de elétrons compartilhados (sem traços)
+    ["10.11A", .5, 2.6, "Qual dessas tem pelo menos UMA ligação covalente dupla?",
+      () => Cena10.FIG.emPares(() => [[Cena10.FIG.H2O(), 0], [Cena10.FIG.CO2(), 1], [Cena10.FIG.HCl(), 0]]), true],
+    ["10.11B", .5, 3,   "Qual dessas moléculas tem duas ligações simples?",
+      () => Cena10.FIG.emPares(() => [[Cena10.FIG.O2(), 0], [Cena10.FIG.H2O(), 1], [Cena10.FIG.N2(), 0]]), true],
+    ["10.11C", .5, 3.8, "Qual dessas tem duas ligações covalentes simples e uma covalente dupla?",
+      () => Cena10.FIG.emPares(() => [[Cena10.FIG.CO2(), 0], [Cena10.FIG.CH2O(), 1], [Cena10.FIG.H2O(), 0]]), true]
+  ].map((q, k, lista) => {
+    const [n, inicio, dur, texto, opcoes, imagens] = q;
+    // a próxima é a questão seguinte da lista; depois da última, a 3ª parte do resumo (10.12)
+    const id = "dialogo" + n.replace(".", "_"), prox = lista[k + 1] ? "dialogo" + lista[k + 1][0].replace(".", "_") : "dialogo10_12";
     const parte = n === "10.8" ? { titulo: "Quiz de moléculas", num: 37 } : { titulo: "Resumo: questão " + (k + 2), semNav: true };
     const sobre = k >= 6, tit = sobre ? "Sobre moléculas e ligações" : "Resumo Interativo";
     return { id, ...parte, src: `audio/audio_moleculas_${n}.mp3`,
@@ -6196,7 +6205,8 @@ const Cena86 = {
   COR: { Cl: ["#7BE36B", "#1C5E14"], O: ["#FF6B6B", "#7A0A0A"], H: ["#F4F7FB", "#8A97A8"], N: ["#6F8DFF", "#1A2F8A"], C: ["#59606B", "#22272E"] },
   // ligacoes: [i, j] (simples) ou [i, j, 2] / [i, j, 3] (dupla, tripla: traços paralelos)
   // cada átomo: { x, s, pares } e, se não estiver na linha do meio, y (o padrão é 36) · altura: a do desenho (padrão 72)
-  desenho({ largura, atomos, ligacoes, altura = 72 }) {
+  // compartilhados: as ligações viram pares de elétrons entre os átomos (um par por ligação: ":" simples, "::" dupla...)
+  desenho({ largura, atomos, ligacoes, altura = 72, compartilhados = false }) {
     const r = 17, d = r + 9, ab = 5.5;   // raio do átomo, distância dos pontinhos, meia abertura do par
     const Y = a => a.y ?? 36;
     const ponto = (x, y) => `<circle cx="${x}" cy="${y}" r="3.1" fill="#D3EFFC"/>`;
@@ -6207,8 +6217,15 @@ const Cena86 = {
       const dx = b.x - a.x, dy = Y(b) - Y(a), L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, k = r - 2;
       return `<line x1="${a.x + ux * k - uy * desvio}" y1="${Y(a) + uy * k + ux * desvio}" x2="${b.x - ux * k - uy * desvio}" y2="${Y(b) - uy * k + ux * desvio}" stroke="#fff" stroke-width="${ordem > 1 ? 3.2 : 4}" stroke-linecap="round"/>`;
     };
+    // os pares compartilhados: no meio da ligação, cada par com os dois elétrons atravessados nela; vários pares lado a lado ao longo dela
+    const compartilhado = (a, b, ordem) => {
+      const dx = b.x - a.x, dy = Y(b) - Y(a), L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, mx = (a.x + b.x) / 2, my = (Y(a) + Y(b)) / 2;
+      return ({ 1: [0], 2: [-4.5, 4.5], 3: [-8.5, 0, 8.5] }[ordem]).map(t =>
+        [-ab, ab].map(s => ponto(mx + ux * t - uy * s, my + uy * t + ux * s)).join("")).join("");
+    };
     return `<svg viewBox="0 0 ${largura} ${altura}" aria-hidden="true">
-      ${ligacoes.map(([i, j, ordem = 1]) => ({ 1: [0], 2: [-5, 5], 3: [-8, 0, 8] }[ordem]).map(dv => traco(atomos[i], atomos[j], dv, ordem)).join("")).join("")}
+      ${ligacoes.map(([i, j, ordem = 1]) => compartilhados ? compartilhado(atomos[i], atomos[j], ordem)
+        : ({ 1: [0], 2: [-5, 5], 3: [-8, 0, 8] }[ordem]).map(dv => traco(atomos[i], atomos[j], dv, ordem)).join("")).join("")}
       ${atomos.map(a => `<circle cx="${a.x}" cy="${Y(a)}" r="${r}" fill="${this.COR[a.s][0]}" stroke="${this.COR[a.s][1]}" stroke-width="1.5"/>
         <text x="${a.x}" y="${Y(a) + 5.5}" text-anchor="middle" font-size="${a.s.length > 1 ? 14 : 16}" font-weight="800" fill="${a.s === "C" ? "#fff" : "#0A1322"}" font-family="Bricolage Grotesque, sans-serif">${a.s}</text>
         ${a.pares.map(l => par(a.x, Y(a), l)).join("")}`).join("")}
@@ -6503,8 +6520,10 @@ const Cena10 = {
     },
     // moléculas em fórmula de traços, com o nome embaixo
     formula(nome, atomos, ligacoes, largura, altura) {
-      return `<span class="c10-mol">${Cena86.desenho({ largura, atomos, ligacoes, altura })}<span class="c10-mol-nome">${nome}</span></span>`;
+      return `<span class="c10-mol">${Cena86.desenho({ largura, atomos, ligacoes, altura, compartilhados: this.compartilhados })}<span class="c10-mol-nome">${nome}</span></span>`;
     },
+    // as figuras feitas dentro de fn() representam as ligações por pares de elétrons compartilhados (sem traços)
+    emPares(fn) { this.compartilhados = true; try { return fn(); } finally { this.compartilhados = false; } },
     HCl() { return this.formula("HCl", [{ x: 34, s: "H", pares: [] }, { x: 100, s: "Cl", pares: ["cima", "dir", "baixo"] }], [[0, 1]], 140); },
     O2()  { return this.formula("O<sub>2</sub>", [{ x: 40, s: "O", pares: ["cima", "baixo"] }, { x: 100, s: "O", pares: ["cima", "baixo"] }], [[0, 1, 2]], 140); },
     N2()  { return this.formula("N<sub>2</sub>", [{ x: 40, s: "N", pares: ["esq"] }, { x: 100, s: "N", pares: ["dir"] }], [[0, 1, 3]], 140); },
@@ -7399,7 +7418,7 @@ const Cena7A = {
 };
 
 /* ---------- O placar do Resumo Interativo ----------
-   Cada questão (10.1 a 10.11) e cada exemplo de Lewis vale um ponto: acertando de primeira, o ponto inteiro;
+   Cada questão (10.1 a 10.11C) e cada exemplo de Lewis vale um ponto: acertando de primeira, o ponto inteiro;
    depois de um erro, meio; depois de mais erros, um quarto. A nota (1 a 10) é sobre o que foi respondido.
    No fim, um cartão com a nota, uma mensagem positiva e os temas em que houve erro, para estudar mais. */
 const Placar = {
@@ -7408,7 +7427,7 @@ const Placar = {
     [/^dialogo10_[1-4]$/, "Regra do octeto e estabilidade dos gases nobres"],
     [/^dialogo10_[5-7]$/, "Ligação covalente e o que são moléculas"],
     [/^dialogo10_8$/, "Substâncias moleculares, cristais iônicos e cristais metálicos"],
-    [/^dialogo10_(9|10|11)$/, "Ligações covalentes simples, duplas e triplas"],
+    [/^dialogo10_(9|10|11[ABC]?)$/, "Ligações covalentes simples, duplas e triplas"],
     [/^lewis_/, "Estruturas de Lewis e a Regra de Hund"]
   ],
   zerar() { this.itens = {}; },
