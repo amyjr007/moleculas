@@ -1201,7 +1201,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v162 · 08/10/2026</span>
+    <span class="versao" id="versao">v163 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2899,17 +2899,30 @@ const NARRACOES = [
   // como montar a estrutura de Lewis de uma molécula poliatômica: a fórmula genérica AB₄ e o passo 1
   { id: "dialogo11_1", titulo: "O passo a passo", num: 50, src: "audio/audio_moleculas_11.1.mp3", esperaPlay: true,
     inicio: () => Cena11.tela(),
+    // o passo 1 com a água (H₂O): os mesmos efeitos que eram do áudio 12, nos tempos do áudio novo (48,8s)
     eventos: [
       { tempo: 0.5,  acao: () => Cena111.abrir() },                        // título numa linha só, no topo; molécula e legenda saem girando
-      { tempo: 3,    acao: () => Cena111.formula() },                      // a fórmula genérica AB₄ aparece e pulsa
-      { tempo: 13,   acao: () => Cena111.passo1(4) },                      // "Passo 1: some todos os elétrons..." (até 17s)
-      { tempo: 19,   acao: () => Cena111.linha("4A = 4 elétrons", .55) },  // a lista das famílias, uma linha de cada vez
-      { tempo: 19.6, acao: () => Cena111.linha("5A = 5 elétrons", .55) },
-      { tempo: 20.2, acao: () => Cena111.linha("6A = 6 elétrons", .55) },
-      { tempo: 20.8, acao: () => Cena111.linha("7A = 7 elétrons", .55) },
-      ...Array.from({ length: 32 }, (_, k) => ({ tempo: 14 + k * .15, acao: () => Cena111.eletron(k) }))   // 32 elétrons embaixo, em sequência (2 fileiras de 16)
+      { tempo: 5,    acao: () => Cena111.formula(Cena12.FORMULA) },        // a fórmula da água, H₂O, aparece em cima e pulsa
+      { tempo: 11,   acao: () => Cena12.passo1(5) },                       // "Passo 1: Somar os elétrons de valência" (até 16s)
+      { tempo: 22.2, acao: () => Cena12.letra("O") },                      // o O cresce
+      { tempo: 23.6, acao: () => Cena12.familia("O", "6A") },              // "6A" em cima do O
+      ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 26 + k * .35, acao: () => Cena12.eletron("O", k) })),   // os 6 elétrons saem do O para a fileira (até 27,75s)
+      { tempo: 28.7, acao: () => Cena12.letra("O", false) },               // saíram todos: o O volta (o 6A fica)
+      { tempo: 29,   acao: () => Cena12.letra("H") },                      // o H cresce
+      { tempo: 30.8, acao: () => Cena12.familia("H", "1A") },              // "1A" em cima do H
+      { tempo: 33.5, acao: () => Cena12.eletron("H", 6) },                 // um elétron sai do H
+      { tempo: 35.5, acao: () => Cena12.letra("2") },                      // o "2" cresce
+      { tempo: 38,   acao: () => Cena12.eletron("H", 7) },                 // outro elétron sai do H
+      { tempo: 38.9, acao: () => { Cena12.letra("H", false); Cena12.letra("2", false); } },
+      { tempo: 41,   acao: () => Cena12.formula() },                       // a fórmula toda cresce
+      { tempo: 42.7, acao: () => Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7]) },   // os 8 elétrons brilham
+      { tempo: 44.3, acao: () => { Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7], false); Cena12.formula(false); } },
+      { tempo: 45,   acao: () => { Cena12.brilho([0, 1, 2, 3, 4, 5]); Cena12.letra("O"); } },          // os 6 do O
+      { tempo: 46.4, acao: () => { Cena12.brilho([0, 1, 2, 3, 4, 5], false); Cena12.letra("O", false);
+                                   Cena12.brilho([6, 7]); Cena12.letra("H"); Cena12.letra("2"); } }   // os 2 dos H
     ],
-    aoFim: () => { ui.semPlay(true); ui.modoEntendi(true); } },   // no lugar do play, o "Entendi" leva ao 11.2
+    // tudo volta ao normal; no lugar do play, o "Entendi" leva ao 11.2
+    aoFim: () => { Cena12.brilho([6, 7], false); Cena12.letra("H", false); Cena12.letra("2", false); ui.semPlay(true); ui.modoEntendi(true); } },
   // passo 2: o esqueleto da molécula (A no meio, os quatro B em cruz e as ligações)
   { id: "dialogo11_2", titulo: "O passo a passo: passo 2", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
     inicio: () => Cena11.tela(),
@@ -6695,10 +6708,10 @@ const Cena111 = {
     if (!this.$(".c111-corpo")) Palco.adicionar(`<div class="c111-corpo"></div>`);
   },
   corpo() { if (!this.$(".c111-corpo")) this.abrir(); return this.$(".c111-corpo"); },
-  // 3s: a fórmula genérica AB₄ aparece e depois pulsa
-  formula() {
+  // 3s: a fórmula genérica AB₄ aparece e depois pulsa · html: outra fórmula no lugar (o 11.1 novo usa a da água, H₂O)
+  formula(html = `<p class="c111-formula">AB<sub>4</sub></p>`) {
     const c = this.corpo(); if (c.querySelector(".c111-formula")) return;
-    c.insertAdjacentHTML("beforeend", `<p class="c111-formula">AB<sub>4</sub></p>`);
+    c.insertAdjacentHTML("beforeend", html);
     const f = c.querySelector(".c111-formula");
     Palco.animar(f, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1)" }], { duracao: .45, easing: "cubic-bezier(.3,1.4,.5,1)" })
       .finished.then(() => Palco.animar(f, [{ transform: "scale(1)", textShadow: "0 0 0 rgba(255,194,75,0)" },
@@ -6915,7 +6928,8 @@ const Cena12 = {
     const f = this.$(".c111-formula");
     if (f && !f.querySelector(".c12-l")) f.outerHTML = this.FORMULA;
   },
-  corpo() { this.tela(); return this.$(".c111-corpo"); },
+  // (no áudio 11.1 a tela é a das moléculas poliatômicas, com o corpo do 11.1: os efeitos do 12 acontecem nela)
+  corpo() { if (this.$(".c113-titulo") || !this.$(".c111-corpo")) this.tela(); return this.$(".c111-corpo"); },
   // 1,8s: o passo 1, digitado
   passo1(dur) {
     const c = this.corpo(); if (c.querySelector(".c111-passo")) return;
