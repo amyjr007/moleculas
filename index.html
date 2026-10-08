@@ -475,13 +475,14 @@
   .c11-mol { position: absolute; left: 0; right: 0; top: 17%; bottom: 14%; z-index: 2; }
   .c11-mol canvas { display: block; width: 100%; height: 100%; }
   /* 11.1: o copo de água 3D no centro (e, depois do toque, a molécula que sai dele) */
-  .c11-copo { position: absolute; left: 0; right: 0; top: 12%; bottom: 27%; z-index: 2; -webkit-tap-highlight-color: transparent; }
+  .c11-copo { position: absolute; left: 0; right: 0; top: 4%; bottom: 27%; z-index: 2; -webkit-tap-highlight-color: transparent; }
   .c11-copo canvas { display: block; width: 100%; height: 100%; }
   /* convite ao toque: um halo que pulsa sobre o copo (o fundo do estúdio 3D é opaco; como o do cilindro de gás) */
   .c11-copo.chama { cursor: pointer; }
   .c11-copo.chama::before { content: ""; position: absolute; left: 22%; right: 22%; top: 18%; bottom: 10%; border-radius: 50%; pointer-events: none; z-index: 1;
     background: radial-gradient(closest-side, rgba(163,219,247,.3), rgba(163,219,247,0)); animation: c71Chama 1.8s ease-in-out infinite; }
   .c11-riso { font-size: .85em; margin-left: .15em; }
+  .c11-voa { position: absolute; z-index: 6; margin: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; pointer-events: none; box-sizing: border-box; }
   .c4-op:has(.c11-riso) { white-space: nowrap; min-width: 0; padding-inline: .55em; font-size: clamp(1.15rem, 2.3vmin + .6rem, 1.8rem); }   /* "H₂O 😂" numa linha só, as três cabendo */
   .c11-titulo.uma-linha { white-space: nowrap; }
   /* 11.1: a fórmula genérica, o passo 1 e a lista das famílias, em coluna embaixo do título */
@@ -1215,7 +1216,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v173 · 08/10/2026</span>
+    <span class="versao" id="versao">v174 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2936,7 +2937,9 @@ const NARRACOES = [
     aoFim: () => ui.semPlay(true) },                                       // quem leva adiante é a resposta: o 11.1B
   // a resposta: começa junto com a fanfarra do acerto (os eventos ainda vão ser definidos)
   { id: "dialogo11_1B", titulo: "Resposta: H₂O", src: "audio/audio_moleculas_11.1B.mp3", semNav: true, extra: true,
-    eventos: [],
+    eventos: [
+      { tempo: 4,    acao: () => Cena11Copo.formulaSobe() }            // a opção marcada vira o H₂O no topo; a molécula, pequena, ao lado (até 5s)
+    ],
     aoFim: () => ui.semPlay(true) },   // (por enquanto sem play: o que vem depois ainda vai ser refeito — o 11.2 antigo está guardado)
   // passo 2 com a água: o esqueleto (o O no centro, um H de cada lado) — os efeitos do antigo 12.1, no áudio novo (53,6s)
   { id: "dialogo11_2", titulo: "O passo a passo: passo 2", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
@@ -6854,7 +6857,7 @@ const Cena11Copo = {
         const u = ctx.mol.userData;
         ctx.rotulos = [[u.O, u.rO, rotulo("O", "#FFFFFF")], ...u.Hs.map(h => [h, u.rH, rotulo("H", "#0A1322")])];
       },
-      ativo(ctx) { return ctx.t0 !== undefined && ctx.tAcao - ctx.t0 < cena.SAIDA + .2; },
+      ativo(ctx) { return (ctx.t0 !== undefined && ctx.tAcao - ctx.t0 < cena.SAIDA + .2) || (ctx.t1 !== undefined && ctx.tAcao - ctx.t1 < cena.ENCOLHE + .2); },
       ajustar(ctx) {
         const T = ctx.THREE, tg = Math.tan(T.MathUtils.degToRad(14));
         // o copo inteiro no meio, com folga em volta
@@ -6883,6 +6886,12 @@ const Cena11Copo = {
           m.quaternion.setFromEuler(new T.Euler((1 - k) * Math.PI * .8, (1 - k) * Math.PI * 4, (1 - k) * Math.PI * .5));
           m.scale.setScalar(ctx.escMol * (.12 + .88 * k));
         }
+        // 11.1B: a molécula encolhe e vai para o lado esquerdo da fórmula, lá no topo
+        if (ctx.t1 !== undefined) {
+          const q0 = Math.min((ctx.tAcao - ctx.t1) / cena.ENCOLHE, 1), q = q0 * q0 * (3 - 2 * q0);
+          m.position.lerpVectors(ctx.centro, ctx.pPeq, q);
+          m.scale.setScalar(ctx.escMol + (ctx.escPeq - ctx.escMol) * q);
+        }
         u.nuvem.material.opacity = 0;
         m.updateMatrixWorld();
         const pos = new T.Vector3(), paraCam = new T.Vector3();
@@ -6896,6 +6905,42 @@ const Cena11Copo = {
         });
       }
     };
+  },
+  // 4s → 5s do 11.1B: a opção marcada sobe até o topo e vira a fórmula de antes (H₂O grande, em âmbar, no lugar de sempre),
+  // enquanto a molécula encolhe e fica pequena e discreta do lado esquerdo dela. A pergunta e as outras opções saem
+  ENCOLHE: 1,
+  formulaSobe() {
+    const corpo = this.$(".c111-corpo"); if (!corpo || corpo.querySelector(".c111-formula")) return;
+    corpo.insertAdjacentHTML("afterbegin", Cena12.FORMULA);
+    const f = corpo.querySelector(".c111-formula"); f.style.visibility = "hidden";
+    const P = Palco.el.getBoundingClientRect(), fr = f.getBoundingClientRect();
+    this.encolher(fr);
+    const quiz = this.$(".c72-quiz"), b = quiz && (quiz.querySelector(".c4-op.certa") || quiz.querySelector(".c4-op"));
+    if (quiz) Palco.animar(quiz, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => quiz.remove(), () => {});
+    if (!b) { f.style.visibility = ""; return; }
+    // um voo: a cópia da opção sai do lugar dela e se transforma na fórmula no caminho
+    const br = b.getBoundingClientRect(), s = parseFloat(getComputedStyle(f).fontSize) / parseFloat(getComputedStyle(b).fontSize);
+    Palco.adicionar(`<div class="c4-op c11-voa" style="left:${br.left - P.left}px;top:${br.top - P.top}px;width:${br.width}px;height:${br.height}px">${b.innerHTML}</div>`);
+    const v = Palco.el.lastElementChild; b.style.visibility = "hidden";
+    const dx = fr.left + fr.width / 2 - (br.left + br.width / 2), dy = fr.top + fr.height / 2 - (br.top + br.height / 2);
+    const de = getComputedStyle(b);
+    Palco.animar(v, [{ transform: "translate(0px,0px) scale(1)", backgroundColor: de.backgroundColor, borderColor: de.borderColor, color: "#fff" },
+      { transform: `translate(${dx}px,${dy}px) scale(${s})`, backgroundColor: "rgba(20,33,52,0)", borderColor: "rgba(163,219,247,0)", color: "#FFC24B" }],
+      { duracao: this.ENCOLHE, easing: "cubic-bezier(.5,0,.3,1)" }).finished.then(() => { v.remove(); f.style.visibility = ""; }, () => {});
+    // o emoji some no caminho (e deixa de ocupar lugar: o H₂O fica no centro)
+    const riso = v.querySelector(".c11-riso");
+    if (riso) Palco.animar(riso, [{ opacity: 1, fontSize: ".85em", marginLeft: ".15em" }, { opacity: 0, fontSize: "0em", marginLeft: "0em" }], { duracao: this.ENCOLHE * .6, easing: "ease-in" });
+  },
+  // o lugar da molécula pequena: à esquerda da fórmula (fr), da altura dela, no plano dos átomos (z = 0)
+  encolher(fr) {
+    const ctx = this.ctx; if (!ctx) return;
+    const T = ctx.THREE, cv = ctx.renderer.domElement.getBoundingClientRect();
+    const meio = fr.height * .45, x = fr.left - cv.left - 14 - meio, y = fr.top + fr.height / 2 - cv.top;
+    const ray = new T.Raycaster(); ray.setFromCamera(new T.Vector2(x / cv.width * 2 - 1, -(y / cv.height * 2 - 1)), ctx.camera);
+    const p = new T.Vector3(); if (!ray.ray.intersectPlane(new T.Plane(new T.Vector3(0, 0, 1), 0), p)) return;
+    ctx.pPeq = p;
+    ctx.escPeq = meio * (2 * ctx.meiaLargura / cv.width);   // (a molécula tem cerca de 1 unidade de cada lado do centro)
+    ctx.t1 = ctx.tAcao;
   },
   // 9,6s do 11.1A: "Qual a fórmula da água?", digitada; as três opções (iguais, todas certas) entram quando ela termina
   pergunta() {
