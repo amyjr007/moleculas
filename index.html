@@ -1201,7 +1201,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v157 · 08/10/2026</span>
+    <span class="versao" id="versao">v158 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2780,8 +2780,8 @@ const NARRACOES = [
       { tempo: 12,   acao: () => Cena77.texto("tripla", "Ligação covalente tripla", 1.7) }   // digitado até 13,7s
     ] },
   // mais um exemplo antes do resumo: volta do mundo quântico do N₂ e o cubo traz o cilindro de cloreto de hidrogênio
-  // (fora da navegação rápida, como as narrações do exemplo 04: o resumo entra nela pelas suas três partes — 35, 36 e 37)
-  { id: "dialogo10", titulo: "Exemplo 04: cloreto de hidrogênio", src: "audio/audio_moleculas_10.mp3", semNav: true,
+  // (na navegação rápida é o 35: o exemplo 04 começa aqui; as narrações seguintes dele ficam fora dela, e o resumo entra pelas suas três partes — 36, 37 e 38)
+  { id: "dialogo10", titulo: "Exemplo 04: cloreto de hidrogênio", num: 35, src: "audio/audio_moleculas_10.mp3",
     // pela navegação rápida: parte do N₂ formado (em traços), no mundo quântico
     inicio: () => Cena75.montarPronta("nitrogenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); Cena86.tracos(); }),
     eventos: [
@@ -2823,8 +2823,8 @@ const NARRACOES = [
     eventos: [],
     aoFim: () => CenaHCl.paraResumo() },                           // zoom out e o cubo traz o "Resumo Interativo", com os botões
   // 1ª questão do resumo
-  // as três partes do resumo na navegação rápida: 35 (10.1 a 10.7), 36 (10.8 a 10.11) e 37 (10.12)
-  { id: "dialogo10_1", titulo: "Resumo interativo", num: 35, src: "audio/audio_moleculas_10.1.mp3",
+  // as três partes do resumo na navegação rápida: 36 (10.1 a 10.7), 37 (10.8 a 10.11) e 38 (10.12)
+  { id: "dialogo10_1", titulo: "Resumo interativo", num: 36, src: "audio/audio_moleculas_10.1.mp3",
     inicio: () => { Cena10.montar(); Placar.zerar(); },   // o quiz começa: placar zerado
     eventos: [
       { tempo: 4.4,  acao: () => Cena10.questao("Segundo Lewis, os átomos se ligam pra adquirir...?", 2.6) }
@@ -2854,7 +2854,7 @@ const NARRACOES = [
       () => [[Cena10.FIG.O3(), 1], [Cena10.FIG.CO2(), 0], [Cena10.FIG.N2(), 0]], true]
   ].map(([n, inicio, dur, texto, opcoes, imagens], k) => {
     const id = "dialogo" + n.replace(".", "_"), prox = "dialogo10_" + (k + 3);
-    const parte = n === "10.8" ? { titulo: "Quiz de moléculas", num: 36 } : { titulo: "Resumo: questão " + (k + 2), semNav: true };
+    const parte = n === "10.8" ? { titulo: "Quiz de moléculas", num: 37 } : { titulo: "Resumo: questão " + (k + 2), semNav: true };
     const sobre = k >= 6, tit = sobre ? "Sobre moléculas e ligações" : "Resumo Interativo";
     return { id, ...parte, src: `audio/audio_moleculas_${n}.mp3`,
       inicio: () => Cena10.montar(tit),
@@ -2866,7 +2866,7 @@ const NARRACOES = [
       aoFim: () => { ui.semPlay(true); Cena10.opcoes(typeof opcoes === "function" ? opcoes() : opcoes, id, prox, { imagens }); } };
   }),
   // 3ª parte do resumo: a estrutura de Lewis (os eventos virão depois)
-  { id: "dialogo10_12", titulo: "Quiz de estrutura de Lewis", num: 37, src: "audio/audio_moleculas_10.12.mp3",
+  { id: "dialogo10_12", titulo: "Quiz de estrutura de Lewis", num: 38, src: "audio/audio_moleculas_10.12.mp3",
     inicio: () => { Cena10.montar("Sobre moléculas e ligações"); Cena1012.resolvido = false; },
     eventos: [
       { tempo: 0,    acao: () => Cena10.limpar() },                // a resposta anterior sai
@@ -2875,7 +2875,7 @@ const NARRACOES = [
     ],
     aoFim: () => ui.semPlay(true) },                               // sem play: o aluno monta a estrutura e confirma
   // capítulo novo: as moléculas poliatômicas (os eventos virão depois)
-  { id: "dialogo11", titulo: "As moléculas poliatômicas", src: "audio/audio_moleculas_11.mp3", esperaPlay: true,
+  { id: "dialogo11", titulo: "As moléculas poliatômicas", num: 49, src: "audio/audio_moleculas_11.mp3", esperaPlay: true,
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 3.8,  acao: () => { Cena11.ctl && Cena11.ctl.transformar("cloro"); Cena11.legenda("Molécula diatômica"); } },   // vira o Cl₂; a legenda surge
@@ -2889,7 +2889,7 @@ const NARRACOES = [
     ],
     aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "Bora"); } },   // no lugar do play, o botão "Bora" leva ao próximo áudio
   // como montar a estrutura de Lewis de uma molécula poliatômica: a fórmula genérica AB₄ e o passo 1
-  { id: "dialogo11_1", titulo: "O passo a passo", src: "audio/audio_moleculas_11.1.mp3", esperaPlay: true,
+  { id: "dialogo11_1", titulo: "O passo a passo", num: 50, src: "audio/audio_moleculas_11.1.mp3", esperaPlay: true,
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 0.5,  acao: () => Cena111.abrir() },                        // título numa linha só, no topo; molécula e legenda saem girando
@@ -2926,7 +2926,7 @@ const NARRACOES = [
     aoFim: () => Player.seguirSozinho() },   // emenda direto no 11.3A
   // continuação do passo 3: entra sozinha, sem o botão de play; em 1s pausa para a festa e só então o play aparece.
   // Na navegação rápida (50) começa em 9s, com a tela já montada como ela está nesse ponto
-  { id: "dialogo11_3A", titulo: "A molécula de água", src: "audio/audio_moleculas_11.3A.mp3", num: 50, entrada: 9,
+  { id: "dialogo11_3A", titulo: "A molécula de água", src: "audio/audio_moleculas_11.3A.mp3", num: 51, entrada: 9,
     inicio: () => { if (Player.desde >= 9) Cena113.telaAntes(); else { Cena11.tela(); ui.semPlay(true); } },
     eventos: [
       { tempo: 1,    acao: () => Cena113.festa() },   // pausa; aplausos, fanfarra e confetes; depois o play para continuar
