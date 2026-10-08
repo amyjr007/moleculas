@@ -1201,7 +1201,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v158 · 08/10/2026</span>
+    <span class="versao" id="versao">v159 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2820,8 +2820,16 @@ const NARRACOES = [
     // o aluno arrasta um átomo até o outro: o encaixe faz a festa, o par vira um traço e vem a 10F
     aoFim: () => { ui.semPlay(true); Cena75.liberar(true, "hcl"); } },
   { id: "dialogo10F", titulo: "A ligação do HCl", src: "audio/audio_moleculas_10F.mp3", semNav: true, extra: true,
-    eventos: [],
-    aoFim: () => CenaHCl.paraResumo() },                           // zoom out e o cubo traz o "Resumo Interativo", com os botões
+    eventos: [
+      { tempo: 6.6,  acao: () => Cena78.pulsarTraco() },           // o traço pulsa 2 vezes
+      { tempo: 7.3,  acao: () => Cena78.pulsarTraco() },
+      { tempo: 12,   acao: () => Cena78.pulsarTraco() },           // o traço pulsa
+      { tempo: 12.7, acao: () => Cena78.pulsarPar("B", "cima") },  // os pares do Cl: o de cima,
+      { tempo: 13.4, acao: () => Cena78.pulsarPar("B", "fora") },  // o de trás (do lado de fora)
+      { tempo: 14,   acao: () => Cena78.pulsarPar("B", "baixo") }, // e o de baixo
+      { tempo: 21,   acao: () => CenaHCl.paraResumo() }            // zoom out e o cubo traz o "Resumo Interativo", com os botões
+    ],
+    aoFim: () => ui.semPlay(true) },                               // quem leva adiante são os botões do resumo
   // 1ª questão do resumo
   // as três partes do resumo na navegação rápida: 36 (10.1 a 10.7), 37 (10.8 a 10.11) e 38 (10.12)
   { id: "dialogo10_1", titulo: "Resumo interativo", num: 36, src: "audio/audio_moleculas_10.1.mp3",
@@ -6349,9 +6357,8 @@ const CenaHCl = {
       depois: () => { if (NARRACOES[Player.indice].id === "dialogo10D") Player.seguirSozinho(); } });
   },
 
-  // fim da 10F: zoom out (de volta ao cilindro de HCl), o cubo traz o "Resumo Interativo" e, com ele parado, os botões
+  // 21s da 10F: zoom out (de volta ao cilindro de HCl), o cubo traz o "Resumo Interativo" e, com ele parado, os botões
   paraResumo() {
-    ui.semPlay(true);
     Cena8.sair(1.5);
     this.esperar(1.8).then(() => { Cena10.girar(); return this.esperar(1.4); })
       .then(() => { if (NARRACOES[Player.indice].id === "dialogo10F") Cena10.botoes(); }, () => {});
