@@ -1217,7 +1217,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v179 · 08/10/2026</span>
+    <span class="versao" id="versao">v180 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2951,16 +2951,16 @@ const NARRACOES = [
       { tempo: 15.7, acao: () => Cena12.familia("O", "6A") },              // "6A" em cima do O
       ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 18.1 + k * .35, acao: () => Cena12.eletron("O", k) })),   // os 6 elétrons saem do O para a fileira (até 19,85s)
       { tempo: 20.8, acao: () => Cena12.letra("O", false) },               // saíram todos: o O volta (o 6A fica)
-      { tempo: 21.1,   acao: () => Cena12.letra("H") },                      // o H cresce
+      { tempo: 21.1, acao: () => Cena12.letra("H") },                      // o H cresce
       { tempo: 22.9, acao: () => Cena12.familia("H", "1A") },              // "1A" em cima do H
       { tempo: 25.6, acao: () => Cena12.eletron("H", 6) },                 // um elétron sai do H
       { tempo: 27.6, acao: () => Cena12.letra("2") },                      // o "2" cresce
-      { tempo: 30.1,   acao: () => Cena12.eletron("H", 7) },                 // outro elétron sai do H
+      { tempo: 30.1, acao: () => Cena12.eletron("H", 7) },                 // outro elétron sai do H
       { tempo: 31,   acao: () => { Cena12.letra("H", false); Cena12.letra("2", false); } },
-      { tempo: 33.1,   acao: () => Cena12.formula() },                       // a fórmula toda cresce
+      { tempo: 33.1, acao: () => Cena12.formula() },                         // a fórmula toda cresce
       { tempo: 34.8, acao: () => { Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7]); Cena12.conta("total"); } },   // os 8 elétrons brilham; em cima, "= 8 e⁻"
       { tempo: 36.4, acao: () => { Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7], false); Cena12.formula(false); } },
-      { tempo: 37.1,   acao: () => { Cena12.brilho([0, 1, 2, 3, 4, 5]); Cena12.letra("O"); Cena12.conta("esq"); } },   // os 6 do O; "6 e⁻" à esquerda
+      { tempo: 37.1, acao: () => { Cena12.brilho([0, 1, 2, 3, 4, 5]); Cena12.letra("O"); Cena12.conta("esq"); } },   // os 6 do O; "6 e⁻" à esquerda
       { tempo: 38.5, acao: () => { Cena12.brilho([0, 1, 2, 3, 4, 5], false); Cena12.letra("O", false);
                                    Cena12.brilho([6, 7]); Cena12.letra("H"); Cena12.letra("2"); Cena12.conta("mais"); } }   // os 2 dos H; "+ 2 e⁻" fecha a conta
     ],
