@@ -1215,7 +1215,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v171 · 08/10/2026</span>
+    <span class="versao" id="versao">v172 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6818,7 +6818,14 @@ const Cena11Copo = {
         const mats = { O: mat(Quantico.CORES.O), H: mat(Quantico.CORES.H), ligacao: mat(Quantico.CORES.ligacao), nuvem: halo };
         const geo = { esfera: new T.SphereGeometry(1, 48, 32), bastao: new T.CylinderGeometry(.13, .13, 1, 24, 1, true) };
         ctx.mol = Quantico.agua(mats, geo);
-        ctx.mol.userData.bastoes.forEach(b => { b.visible = false; });   // sem os bastões das ligações
+        // sem os bastões das ligações: os H encostam no O (um pouco embutidos nele), para os átomos continuarem ligados
+        const um = ctx.mol.userData;
+        um.bastoes.forEach(b => { b.visible = false; });
+        um.Hs.forEach((h, i) => {
+          const dir = h.position.clone().sub(um.O.position).normalize();
+          h.position.copy(um.O.position).addScaledVector(dir, (um.rO + um.rH) * .86);
+          um.baseH[i] = h.position.clone();
+        });
         ctx.mol.visible = false;
         ctx.cena.add(ctx.mol);
         // o símbolo dentro de cada bola (sempre de frente para a câmera, na superfície da esfera)
