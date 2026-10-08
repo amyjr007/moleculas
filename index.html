@@ -1206,7 +1206,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v168 · 08/10/2026</span>
+    <span class="versao" id="versao">v169 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2911,7 +2911,7 @@ const NARRACOES = [
     ],
     aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "Bora"); } },   // no lugar do play, o botão "Bora" leva ao próximo áudio
   // como montar a estrutura de Lewis de uma molécula poliatômica: a fórmula genérica AB₄ e o passo 1
-  { id: "dialogo11_1", titulo: "A molécula de água", num: 51, src: "audio/audio_moleculas_11.1.mp3", esperaPlay: true,
+  { id: "dialogo11_1", titulo: "A molécula de água", num: 50, src: "audio/audio_moleculas_11.1.mp3", esperaPlay: true,
     inicio: () => Cena11.tela(),
     // o passo 1 com a água (H₂O): os mesmos efeitos que eram do áudio 12, nos tempos do áudio novo (48,8s)
     eventos: [
@@ -2960,7 +2960,7 @@ const NARRACOES = [
     eventos: ["cima", "dir", "baixo", "esq"].flatMap((lado, b) => [0, 1, 2].map(p => ({ tempo: 1 + (b * 3 + p) * .75, acao: () => Cena113.par(lado, p, b * 3 + p) }))),
     aoFim: () => Player.seguirSozinho() },   // emenda direto no 11.3A
   // continuação do passo 3: entra sozinha, sem o botão de play; em 1s pausa para a festa e só então o play aparece.
-  // Fora da navegação rápida (o 51 agora abre o 11.1). Se entrar nela em 9s (entrada), a tela já vem montada como ela está nesse ponto
+  // Fora da navegação rápida (o 50 agora abre o 11.1). Se entrar nela em 9s (entrada), a tela já vem montada como ela está nesse ponto
   { id: "dialogo11_3A", titulo: "A molécula de água", src: "audio/audio_moleculas_11.3A.mp3", semNav: true, entrada: 9,
     inicio: () => { if (Player.desde >= 9) Cena113.telaAntes(); else { Cena11.tela(); ui.semPlay(true); } },
     eventos: [
