@@ -1206,7 +1206,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v166 · 08/10/2026</span>
+    <span class="versao" id="versao">v167 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6901,18 +6901,24 @@ const Cena113 = {
       ui.semPlay(false); ui.atualizarBotao(false);
     });
   },
-  // a tela do 11.3A em 9s, montada direto (navegação rápida): título numa linha, AB₄, passo 2 e o esqueleto com os pares
+  // a tela do 11.3A em 9s, montada direto (navegação rápida), igual à que o caminho todo deixa: título numa linha,
+  // H₂O (com o 1A e o 6A, do 11.1), passo 2, o esqueleto com os pares e, embaixo, os 8 elétrons enfileirados com o "8 e⁻"
   telaAntes() {
     Palco.mostrar(`<h2 class="c0-titulo c11-titulo uma-linha" data-t="${Cena11.TITULO}" style="visibility:hidden">${Cena11.TITULO}</h2>`);
     const h = Palco.el.querySelector(".c11-titulo"), de = parseFloat(getComputedStyle(h).fontSize);
     h.style.fontSize = `${Math.min(de * .75, de * Palco.el.clientWidth * .92 / Math.max(h.scrollWidth, 1))}px`;
     h.style.visibility = "";
     Cena11.marcarTitulo();
-    Palco.adicionar(`<div class="c111-corpo"><p class="c111-formula">AB<sub>4</sub></p>
+    Palco.adicionar(`<div class="c111-corpo">${Cena12.FORMULA}
       <p class="c111-passo"><span class="c111-rotulo">Passo 2:</span> Organize o esqueleto da molécula</p></div>`);
+    Cena12.familia("H", "1A"); Cena12.familia("O", "6A");
     const s = Cena112.completo();
     Object.keys(Cena112.POS).forEach((lado, b) => [0, 1, 2].forEach(p => this.alvos(lado, p).forEach((pt, j) => this.pousar(s, 2 * (b * 3 + p) + j, pt))));
-    Palco.animacoes().forEach(a => a.finish());   // tudo já no lugar, sem os átomos surgindo
+    // os 8 elétrons já na fileira, e a conta só com o total
+    [...Cena12.fila().querySelectorAll(".c12-e")].forEach(e => { e.style.opacity = ""; e.dataset.ok = "1"; });
+    Cena12.conta("total"); Cena12.conta("so");
+    // tudo já no lugar, sem os átomos surgindo (as animações sem fim, como um cursor piscando, ficam como estão)
+    Palco.animacoes().forEach(a => { try { a.finish(); } catch (_) {} });
   },
   // 11.3A, 10,5s: o bloco vira como um cubo (para a esquerda); na face nova, "Exemplo 01" no lugar do título e H₂O no lugar de AB₄
   virar() {
