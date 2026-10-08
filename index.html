@@ -1215,7 +1215,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v172 · 08/10/2026</span>
+    <span class="versao" id="versao">v173 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2933,7 +2933,11 @@ const NARRACOES = [
     eventos: [
       { tempo: 9.6,  acao: () => Cena11Copo.pergunta() }                   // "Qual a fórmula da água?" — três opções iguais, todas certas
     ],
-    aoFim: () => ui.semPlay(true) },                                       // quem leva adiante é a resposta (o 11.1B, quando o áudio chegar)
+    aoFim: () => ui.semPlay(true) },                                       // quem leva adiante é a resposta: o 11.1B
+  // a resposta: começa junto com a fanfarra do acerto (os eventos ainda vão ser definidos)
+  { id: "dialogo11_1B", titulo: "Resposta: H₂O", src: "audio/audio_moleculas_11.1B.mp3", semNav: true, extra: true,
+    eventos: [],
+    aoFim: () => ui.semPlay(true) },   // (por enquanto sem play: o que vem depois ainda vai ser refeito — o 11.2 antigo está guardado)
   // passo 2 com a água: o esqueleto (o O no centro, um H de cada lado) — os efeitos do antigo 12.1, no áudio novo (53,6s)
   { id: "dialogo11_2", titulo: "O passo a passo: passo 2", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
     inicio: () => Cena11.tela(),
@@ -3603,11 +3607,15 @@ const Copo = {
     const luz = new THREE.DirectionalLight(0xffffff, 1.4); luz.position.set(-3, 6, 4); cena.add(luz);
 
     // fundo de estúdio atrás do copo, com faixas de luz: é ele que a água desvia (refração visível)
-    const fundo = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), new THREE.MeshBasicMaterial({ map: this.fundoEstudio() }));
-    fundo.position.set(0, 3, -3.2); cena.add(fundo);
-    // piso escuro e sombra de contato
-    const piso = new THREE.Mesh(new THREE.PlaneGeometry(40, 30), new THREE.MeshStandardMaterial({ color: 0x0c1524, roughness: .55, metalness: 0 }));
-    piso.rotation.x = -Math.PI / 2; cena.add(piso);
+    // (roteiro.semFundo: só o copo, sobre o fundo do próprio palco — o 11.1)
+    if (!(roteiro && roteiro.semFundo)) {
+      const fundo = new THREE.Mesh(new THREE.PlaneGeometry(26, 16), new THREE.MeshBasicMaterial({ map: this.fundoEstudio() }));
+      fundo.position.set(0, 3, -3.2); cena.add(fundo);
+      // piso escuro
+      const piso = new THREE.Mesh(new THREE.PlaneGeometry(40, 30), new THREE.MeshStandardMaterial({ color: 0x0c1524, roughness: .55, metalness: 0 }));
+      piso.rotation.x = -Math.PI / 2; cena.add(piso);
+    }
+    // sombra de contato
     const copo = new THREE.Group(); cena.add(copo);           // vidro + água + sombra: pode ser deslocado de lado
     const sombra = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: this.gradiente("rgba(0,0,0,.75)", "rgba(0,0,0,0)"), transparent: true, depthWrite: false }));
     sombra.rotation.x = -Math.PI / 2; sombra.position.y = .003; copo.add(sombra);
@@ -4919,7 +4927,8 @@ const Cena71 = {
     const texto = outra ? outra.texto : "Qual a fórmula desse gás?";
     const opcoes = outra ? outra.opcoes : [[x, 0], [`${x}<sub>2</sub>`, 1], [`${x}<sub>3</sub>`, 0]];
     // antes(seguir): o que acontece depois da festa do acerto e antes da narração da resposta (ela entra no seguir())
-    this.perg = { tipo, de: outra ? outra.de : g.pergunta[0], para: outra ? outra.para : g.pergunta[1], antes: outra && outra.antes };
+    // junto: a narração da resposta começa junto com a festa (aplausos e fanfarra), sem esperar ela acabar
+    this.perg = { tipo, de: outra ? outra.de : g.pergunta[0], para: outra ? outra.para : g.pergunta[1], antes: outra && outra.antes, junto: outra && outra.junto };
     Palco.adicionar(`
       <div class="c72-quiz${opcoes.some(([h]) => h.replace(/<[^>]+>/g, "").length > 8) ? " longas" : ""}">
         <p class="c72-pergunta">${texto}</p>
@@ -4963,6 +4972,11 @@ const Cena71 = {
     const sons = ["audio/vfx/applause.mp3", "audio/funfare.mp3"].map(src => { const a = new Audio(src); a.play().catch(() => {}); return a; });
     const fim = a => new Promise(r => { a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 15000); });
     const indice = NARRACOES.findIndex(n => n.id === perg.de), cena = this.$(".c72-quiz");
+    if (perg.junto) {   // a resposta começa já, com a festa tocando
+      const prox = NARRACOES.findIndex(n => n.id === perg.para);
+      if (prox >= 0) { Player.terminou = false; Player.irPara(prox, true); }
+      return;
+    }
     Promise.all(sons.map(fim)).then(() => {
       if (Player.indice !== indice || !cena.isConnected) return;   // saiu da cena no meio da festa
       const prox = NARRACOES.findIndex(n => n.id === perg.para);
@@ -6812,6 +6826,7 @@ const Cena11Copo = {
     const cena = this;
     return {
       indice: -1,   // (não segue o tempo de nenhum áudio)
+      semFundo: true,   // só o copo, sobre o fundo do palco
       montar(ctx) {
         const T = ctx.THREE, mat = cor => new T.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
         const halo = new T.SpriteMaterial({ map: Quantico.textura([[0, "rgba(163,219,247,.55)"], [1, "rgba(163,219,247,0)"]]), transparent: true, depthWrite: false, opacity: 0 });
@@ -6886,7 +6901,8 @@ const Cena11Copo = {
   pergunta() {
     if (this.$(".c72-quiz")) return;
     const op = 'H<sub>2</sub>O <span class="c11-riso" aria-label="risos">😂</span>';
-    Cena71.pergunta("nitrogenio", { texto: "", opcoes: [[op, 1], [op, 1], [op, 1]], de: "dialogo11_1A", para: "dialogo11_1B" });
+    // acertou (sempre): a festa e, junto com ela, o 11.1B
+    Cena71.pergunta("nitrogenio", { texto: "", opcoes: [[op, 1], [op, 1], [op, 1]], de: "dialogo11_1A", para: "dialogo11_1B", junto: true });
     const p = this.$(".c72-pergunta"), caixa = this.$(".c72-quiz .c4-opcoes");
     caixa.style.visibility = "hidden";
     Palco.digitar(p, "Qual a fórmula da água?", 1.4);
