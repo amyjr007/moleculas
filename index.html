@@ -1217,7 +1217,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v175 · 08/10/2026</span>
+    <span class="versao" id="versao">v176 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6918,6 +6918,7 @@ const Cena11Copo = {
     const corpo = this.$(".c111-corpo"); if (!corpo || corpo.querySelector(".c111-formula")) return;
     corpo.insertAdjacentHTML("afterbegin", Cena12.FORMULA);
     const f = corpo.querySelector(".c111-formula"); f.style.visibility = "hidden";
+    f.style.translate = `0 ${-Palco.el.clientHeight * .053}px`;   // um pouco mais alta (35px numa tela de 655px; ajuste da professora)
     const P = Palco.el.getBoundingClientRect(), fr = f.getBoundingClientRect();
     this.encolher(fr);
     const quiz = this.$(".c72-quiz"), b = quiz && (quiz.querySelector(".c4-op.certa") || quiz.querySelector(".c4-op"));
