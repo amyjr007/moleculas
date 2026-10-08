@@ -1201,7 +1201,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v161 · 08/10/2026</span>
+    <span class="versao" id="versao">v162 · 08/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2859,7 +2859,7 @@ const NARRACOES = [
     ["10.10", 1,  2.5, "Qual dessas moléculas tem uma ligação covalente dupla?",
       () => [[Cena10.FIG.HCl(), 0], [Cena10.FIG.O2(), 1], [Cena10.FIG.N2(), 0]], true],
     ["10.11", 1,  3,   "Qual dessas moléculas tem uma ligação covalente simples e uma dupla?",
-      () => [[Cena10.FIG.CH2O(), 1], [Cena10.FIG.CO2(), 0], [Cena10.FIG.N2(), 0]], true]
+      () => [[Cena10.FIG.OCl2(), 1], [Cena10.FIG.CO2(), 0], [Cena10.FIG.N2(), 0]], true]
   ].map(([n, inicio, dur, texto, opcoes, imagens], k) => {
     const id = "dialogo" + n.replace(".", "_"), prox = "dialogo10_" + (k + 3);
     const parte = n === "10.8" ? { titulo: "Quiz de moléculas", num: 37 } : { titulo: "Resumo: questão " + (k + 2), semNav: true };
@@ -6495,7 +6495,10 @@ const Cena10 = {
     O3()  { return this.formula("O<sub>3</sub>", [{ x: 34, s: "O", pares: ["cima", "baixo"] }, { x: 100, s: "O", pares: ["cima"] }, { x: 166, s: "O", pares: ["cima", "dir", "baixo"] }], [[0, 1, 2], [1, 2]], 200); },
     // CH₂O (formaldeído): o O em cima do C (ligação dupla, com os dois pares dele dos lados); os dois H nas simples, um de cada lado
     CH2O() { return this.formula("CH<sub>2</sub>O", [{ x: 80, y: 18, s: "O", pares: ["esq", "dir"] }, { x: 80, y: 68, s: "C", pares: [] },
-      { x: 26, y: 68, s: "H", pares: [] }, { x: 134, y: 68, s: "H", pares: [] }], [[1, 0, 2], [2, 1], [1, 3]], 160, 90); }
+      { x: 26, y: 68, s: "H", pares: [] }, { x: 134, y: 68, s: "H", pares: [] }], [[1, 0, 2], [2, 1], [1, 3]], 160, 90); },
+    // OCl₂: Cl–O–Cl, o mesmo desenho do áudio 8.6 (duas ligações simples), na largura dos outros cartões
+    OCl2() { return this.formula("OCl<sub>2</sub>", [{ x: 34, s: "Cl", pares: ["cima", "esq", "baixo"] }, { x: 100, s: "O", pares: ["cima", "baixo"] },
+      { x: 166, s: "Cl", pares: ["cima", "dir", "baixo"] }], [[0, 1], [1, 2]], 200); }
   }
 };
 
