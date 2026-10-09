@@ -1280,7 +1280,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v196 · 09/10/2026</span>
+    <span class="versao" id="versao">v197 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8018,7 +8018,7 @@ const Cena113F = {
 
 /* ---------- Narração 11.3C: a água em 3D ----------
    Aos 17,3s, a molécula do caderno sai em fade e entra a água em 3D, com a geometria certa (angular, 104,5°) e os
-   dois pares não ligantes do O organizados (cada par numa nuvem, apontando para cima, um para cada lado do plano
+   dois pares não ligantes do O organizados (só os elétrons de cada par, apontando para cima, um para cada lado do plano
    dos H). Ela gira sozinha; com o dedo, gira para os lados e inclina; solta, volta a girar depois de um instante. */
 const Cena113C = {
   $(sel) { return Palco.el.querySelector(sel); },
@@ -8059,7 +8059,6 @@ const Cena113C = {
       c.scale.set(1, d.length(), 1); c.position.copy(O).add(H).multiplyScalar(.5); c.quaternion.setFromUnitVectors(Y, d.normalize()); mol.add(c);
     });
     // os dois pares não ligantes: para cima, abertos para a frente e para trás (o plano perpendicular ao dos H)
-    const nuvemMat = new T.MeshPhysicalMaterial({ color: 0xA3DBF7, transparent: true, opacity: .3, roughness: .2, depthWrite: false, emissive: 0x5FB4E0, emissiveIntensity: .6 });
     const eMat = new T.MeshBasicMaterial({ color: 0xD3EFFC });
     const brilhoTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
       gr.addColorStop(0, "rgba(211,239,252,1)"); gr.addColorStop(.35, "rgba(163,219,247,.5)"); gr.addColorStop(1, "rgba(163,219,247,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new T.CanvasTexture(c); })();
@@ -8067,9 +8066,7 @@ const Cena113C = {
     const abre = 54.75 * Math.PI / 180;   // metade do ângulo entre os pares (o tetraedro: 109,5°)
     [-1, 1].forEach(s => {
       const dir = new T.Vector3(0, Math.cos(abre), s * Math.sin(abre)).normalize();
-      const nuvem = new T.Mesh(esf, nuvemMat);
-      nuvem.scale.set(.42, .62, .42); nuvem.position.copy(O).addScaledVector(dir, 1.15); nuvem.quaternion.setFromUnitVectors(Y, dir); mol.add(nuvem);
-      [-1, 1].forEach(lado => {
+      [-1, 1].forEach(lado => {   // só os dois elétrons do par (sem nuvem em volta), com o brilho deles
         const e = new T.Mesh(new T.SphereGeometry(.11, 20, 14), eMat);
         e.position.copy(O).addScaledVector(dir, 1.3).add(new T.Vector3(lado * .2, 0, 0)); mol.add(e);
         const h = new T.Sprite(halo); h.scale.setScalar(.5); h.position.copy(e.position); mol.add(h);
