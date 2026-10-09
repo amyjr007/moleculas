@@ -1267,7 +1267,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v190 · 09/10/2026</span>
+    <span class="versao" id="versao">v191 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3061,7 +3061,7 @@ const NARRACOES = [
       { tempo: 36,   acao: () => Cena121.pulsarAtomo(["meio"], 1) },       // o O
       { tempo: 39,   acao: () => Cena121.pulsarAtomo(["dir"], 3) },        // o H da direita pulsa 3 vezes
       { tempo: 42,   acao: () => Cena113P.engrossar("dir") },              // a ligação dele engrossa (até 45s)
-      { tempo: 45,   acao: () => { Cena113P.engrossar("dir", false); Cena113P.estabilizar("dir"); } },   // volta; o H explode em verde, para de tremer: "estável" + "right"
+      { tempo: 45,   acao: () => { Cena113P.engrossar("dir", false); Cena113P.estabilizar("dir"); } },   // volta; em cima do H aparece "estável" (ele já se acalmou no 11.2)
       { tempo: 47,   acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda engrossa (até 49,5s)
       { tempo: 49.5, acao: () => { Cena113P.engrossar("esq", false); Cena113P.estabilizar("esq"); } },  // o mesmo com o H da esquerda
       { tempo: 52,   acao: () => Cena121.pulsarAtomo(["meio"], 2) },       // o O pulsa 2 vezes
@@ -7698,8 +7698,9 @@ const Cena112L = {
     if (feitas) { const z = this.$(".c84-toques"); if (z) z.remove(); }
     Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.1, fill: "none" }).finished.then(() => {
       if (!s.isConnected) return;
-      // (o H continua instável: ele só se acalma no passo 3, no 11.3)
-      if (feitas) this.explodir();
+      this.acalmar(lado);   // a ligação pronta: o H se acalma (bola de energia verde e o "right")
+      // as duas prontas: a explosão da molécula vem 0,6s depois do "right" do H (para os dois sons não se atropelarem)
+      if (feitas) Palco.animar(s, [{}, {}], { duracao: .6, fill: "none" }).finished.then(() => { if (s.isConnected) this.explodir(); }, () => {});
     }, () => {});
   },
   // ordem errada: os átomos tocados tremem em vermelho e aparece o aviso, embaixo do "Átomo central"
@@ -7718,13 +7719,28 @@ const Cena112L = {
     Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: .08 }, { opacity: 1, offset: .82 }, { opacity: 0 }], { duracao: 2.6, easing: "linear" })
       .finished.then(() => av.remove(), () => {});
   },
-  // as duas ligações: a molécula inteira explode em brilho (clarão, onda e faíscas douradas), com o "right"; depois o "Passo 3"
+  // o átomo se acalma: uma bola de energia verde sai dele num instante (discreta), ele para de tremer e toca o "right" (som = false: sem som)
+  acalmar(lado, som = true) {
+    const g = this.g(lado); if (!g || !g.classList.contains("c112-inst")) return;
+    this.instavel(lado, false);
+    const s = Cena121.svg(), sim = lado === "meio" ? "O" : "H", r = Cena121.RAIO[sim], x = Cena121.POS[lado];
+    if (!s.querySelector("#c112-verde")) s.insertAdjacentHTML("afterbegin", `<defs><radialGradient id="c112-verde"><stop offset="0%" stop-color="#B9F5D0" stop-opacity=".95"/>` +
+      `<stop offset="55%" stop-color="#6EE7A0" stop-opacity=".6"/><stop offset="100%" stop-color="#34D07F" stop-opacity="0"/></radialGradient></defs>`);
+    s.insertAdjacentHTML("beforeend", `<circle cx="${x}" cy="25" r="${r}" fill="url(#c112-verde)" style="pointer-events:none;transform-origin:${x}px 25px"/>`);
+    const bola = s.lastElementChild;
+    Palco.animar(bola, [{ transform: "scale(.9)", opacity: 1 }, { transform: "scale(2.6)", opacity: 0 }], { duracao: .5, easing: "cubic-bezier(.2,.7,.3,1)" }).finished.then(() => bola.remove(), () => {});
+    Palco.animar(g, [{ filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }, { filter: "drop-shadow(0 0 7px rgba(110,231,160,1))", offset: .25 }, { filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }],
+      { duracao: .6, easing: "ease-out", fill: "none" });
+    if (som) try { const a = new Audio("audio/vfx/right.mp3"); a.play().catch(() => {}); } catch (_) {}
+  },
+  // as duas ligações: a molécula inteira explode em brilho (clarão, onda e faíscas douradas), com a fanfarra e confetes; depois o 11.2A
   explodir() {
-    // (os átomos continuam instáveis: os H se acalmam no 11.3 e o O, com os pares do 11.3B)
+    // (o O continua instável: ele se acalma com os pares do 11.3B)
     const av = this.$(".c84-aviso"); if (av) { av.getAnimations().forEach(a => a.cancel()); av.remove(); }   // um aviso de erro ainda na tela sai
     const s = Cena121.svg(), P = Palco.el.getBoundingClientRect(), r = s.getBoundingClientRect();
     const cx = r.left + r.width / 2 - P.left, cy = r.top + r.height / 2 - P.top;
-    try { const a = new Audio("audio/vfx/right.mp3"); a.play().catch(() => {}); } catch (_) {}
+    let fanfarra = null; try { fanfarra = new Audio("audio/funfare.mp3"); fanfarra.play().catch(() => {}); } catch (_) {}
+    Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
     Vibra.tocar("toqueEletron");
     Palco.animar(s, [{ scale: "1", filter: "drop-shadow(0 0 0 rgba(255,214,120,0)) brightness(1)" },
       { scale: "1.1", filter: "drop-shadow(0 0 14px rgba(255,214,120,1)) drop-shadow(0 0 34px rgba(255,194,75,.85)) brightness(1.6)", offset: .25 },
@@ -7745,8 +7761,9 @@ const Cena112L = {
         { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d + 30}px) scale(0)`, opacity: 0 }], { duracao: .9 + Math.random() * .7, atraso: Math.random() * .15, easing: "cubic-bezier(.15,.8,.3,1)" })
         .finished.then(() => f.remove(), () => {});
     }
-    // depois do "right": o 11.2A (se o 11.2 ainda estiver falando, entra quando ele acabar)
-    Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.4, fill: "none" }).finished.then(() => {
+    // depois da fanfarra: o 11.2A (se o 11.2 ainda estiver falando, entra quando ele acabar)
+    const acabou = new Promise(r => { if (!fanfarra) return r(); fanfarra.addEventListener("ended", r, { once: true }); fanfarra.addEventListener("error", r, { once: true }); setTimeout(r, 6000); });
+    Promise.all([acabou, Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.4, fill: "none" }).finished]).then(() => {
       if (s.isConnected && NARRACOES[Player.indice] && NARRACOES[Player.indice].id === "dialogo11_2") Player.seguirSozinho();
     }, () => {});
   }
@@ -7779,23 +7796,18 @@ const Cena113P = {
     l.style.strokeWidth = fim.strokeWidth; l.style.filter = fim.filter;   // (o estado final fica no estilo; a animação só faz a passagem)
     Palco.animar(l, ligar ? [normal, grossa] : [grossa, normal], { duracao: .4, easing: "ease-out", fill: "none" });
   },
-  // o átomo fica estável: explode em verde (liberando a instabilidade), para de tremer, ganha um brilho verde,
-  // "estável" aparece em cima dele em fade, e toca o "right"
+  // o átomo estável. Um H (11.3): só aparece "estável" em cima dele, em fade (ele já se acalmou ao ganhar a ligação, no 11.2).
+  // O O (fim do 11.3B): a bola de energia verde e ele para de tremer (sem o "right": a festa já tem os sons dela)
   estabilizar(lado) {
     const g = Cena112L.g(lado); if (!g || g.dataset.estavel) return;
     g.dataset.estavel = "1";
-    Cena112L.instavel(lado, false);
+    Cena112L.acalmar(lado, false);
     const sim = lado === "meio" ? "O" : "H", r = Cena121.RAIO[sim], x = Cena121.POS[lado];
-    Cena112L.estouro(x, 25, r, .8, ["#6EE7A0", "#B9F5D0", "#fff", "#34D07F"]);
-    Palco.animar(g, [{ filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }, { filter: "drop-shadow(0 0 9px rgba(110,231,160,1)) drop-shadow(0 0 18px rgba(110,231,160,.7))", offset: .3 },
-      { filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }], { duracao: 1.4, easing: "ease-out", fill: "none" });
     if (lado !== "meio") {
       Cena121.svg().insertAdjacentHTML("beforeend", `<text class="c113-estavel" x="${x}" y="${25 - r - 7}" text-anchor="middle" font-size="9" font-weight="800" fill="#6EE7A0"
         font-family="Bricolage Grotesque, sans-serif" style="filter:drop-shadow(0 0 3px rgba(110,231,160,.8))">estável</text>`);
       Palco.animar(Cena121.svg().lastElementChild, [{ opacity: 0 }, { opacity: 1 }], { duracao: .6, easing: "ease-out" });
-      try { const a = new Audio("audio/vfx/right.mp3"); a.play().catch(() => {}); } catch (_) {}   // (o O se acalma na festa do 11.3B, que já tem os sons dela)
     }
-    Vibra.tocar("toqueEletron");
   },
   // 60s: a pergunta, digitada; as três opções entram quando ela termina (acima da fileira, como no 12.3)
   pergunta() {
