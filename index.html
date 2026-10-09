@@ -592,6 +592,19 @@
     /* o texto do passo (o do passo 2 é longo): em duas linhas */
     .c111-passo { width: min(100%, 60ch); text-wrap: balance; }
   }
+  /* celular em pé: ajustes medidos pela professora numa tela de 356 × 655 (em proporção do palco, como os do tablet) */
+  @media (orientation: portrait) and (max-width: 600px) {
+    /* o copo (11.1) e a molécula que sai dele (11.1A em diante): menores e mais baixos, no mesmo lugar o tempo todo */
+    .c11-copo, .c11-copo.solto { translate: calc(var(--pw, 356px) * .001) calc(var(--ph, 655px) * .154); scale: .825; }
+    /* 11.1A: a pergunta e as opções sobem */
+    .c72-quiz.c11a .c72-pergunta { translate: calc(var(--pw, 356px) * .013) calc(var(--ph, 655px) * -.079); }
+    .c72-quiz.c11a .c4-opcoes { translate: calc(var(--pw, 356px) * -.007) calc(var(--ph, 655px) * -.044); }
+    /* os botões "Passo 2" (fim do 11.1C) e "Passo 3" (fim do 11.2), mais altos */
+    .c11-passo-bt.n2 { translate: calc(var(--pw, 356px) * .004) calc(var(--ph, 655px) * -.145); }
+    .c11-passo-bt.n3 { translate: calc(var(--pw, 356px) * -.007) calc(var(--ph, 655px) * -.074); }
+    /* a conta dos elétrons ("4 e⁻"), na tela do capítulo 11 */
+    .c11-titulo ~ .c12-fila .c12-conta { translate: calc(var(--pw, 356px) * -.021) calc(var(--ph, 655px) * -.008); }
+  }
   .c10-cartao-nome { font-weight: 800; font-size: clamp(1.3rem, 2.6vmin + .7rem, 1.9rem); color: #fff; margin-bottom: .3em !important; }
   .c10-cartao-tit { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--celeste); font-size: clamp(.9rem, 1.4vmin + .55rem, 1.2rem); }
   .c10-cartao-nota { font-weight: 800; line-height: 1; color: var(--ambar); font-size: clamp(4rem, 12vmin, 6.5rem); text-shadow: 0 0 30px rgba(255,194,75,.5); margin: .1em 0 .15em !important; }
@@ -1250,7 +1263,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v184 · 09/10/2026</span>
+    <span class="versao" id="versao">v185 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3020,7 +3033,7 @@ const NARRACOES = [
       { tempo: 15,   acao: () => Cena112L.atomo("O") },                    // o O no centro, com estouro de faíscas, instável
       { tempo: 16.5, acao: () => Cena121.central(1) },                     // "Átomo central" (até 17,5s)
       { tempo: 19,   acao: () => Cena112L.atomo("H", "esq") },             // o H da esquerda, instável
-      { tempo: 22,   acao: () => Cena112L.atomo("H", "dir") },             // o H da direita, instável
+      { tempo: 22,   acao: () => { Cena112L.atomo("H", "dir"); Cena121.tirarCentral(); } },   // o H da direita, instável; "Átomo central" sai em fade
       { tempo: 24,   acao: () => Cena112L.liberar() }                      // o aluno faz as ligações
     ],
     aoFim: () => ui.semPlay(true) },   // sem play: quem leva ao 11.3 é o botão "Passo 3", depois das duas ligações
@@ -7005,7 +7018,7 @@ const Cena11Copo = {
   // (o mesmo botão, com outro número, no fim do 11.1C — "Passo 2" — e do 11.2 — "Passo 3")
   botaoPasso1(n = 1) {
     if (this.$(".c11-passo-bt")) return;
-    Palco.adicionar(`<div class="c10-botoes c11-passo-bt"><button class="c10-bt">Passo ${n}</button></div>`);
+    Palco.adicionar(`<div class="c10-botoes c11-passo-bt n${n}"><button class="c10-bt">Passo ${n}</button></div>`);
     const caixa = this.$(".c11-passo-bt"), b = caixa.querySelector(".c10-bt");
     Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }], { duracao: .45, easing: "cubic-bezier(.3,1.4,.5,1)" });
     b.addEventListener("click", () => {
