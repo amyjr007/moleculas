@@ -602,6 +602,12 @@
     /* 11.1A: "Qual a fórmula da água?" e as três opções, mais baixas */
     .c72-quiz.c11a .c72-pergunta { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * .08); }
     .c72-quiz.c11a .c4-opcoes { translate: calc(var(--pw, 965px) * .005) calc(var(--ph, 448px) * .127); }
+    /* 11.3: "Quantos elétrons faltam?" e as opções mais baixas e menores (as caixas das opções 20% menores) */
+    .c72-quiz.c113p .c72-pergunta { translate: calc(var(--pw, 965px) * -.005) calc(var(--ph, 448px) * .139); font-size: calc(clamp(1.2rem, 2.8vmin + .55rem, 2.1rem) * .78); }
+    .c72-quiz.c113p .c4-opcoes { translate: calc(var(--pw, 965px) * .003) calc(var(--ph, 448px) * .167); }
+    .c72-quiz.c113p .c4-op { font-size: calc(clamp(1.35rem, 2.6vmin + .7rem, 2rem) * .8); min-width: calc(clamp(84px, 20vw, 118px) * .8); }
+    /* a conta dos elétrons ("4 e⁻") na tela do capítulo 11, um pouco mais baixa */
+    .c11-titulo ~ .c12-fila .c12-conta { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * .012); }
     /* o texto do passo (o do passo 2 é longo): em duas linhas; a letra 19% menor (ajuste da professora no passo 3, vale para os três) */
     .c111-passo { width: min(100%, 60ch); text-wrap: balance; font-size: calc(clamp(1.15rem, 2.6vmin + .55rem, 1.9rem) * 1.11 * .81); }
   }
@@ -1280,7 +1286,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v201 · 09/10/2026</span>
+    <span class="versao" id="versao">v202 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3046,7 +3052,7 @@ const NARRACOES = [
     eventos: [
       { tempo: 1,    acao: () => Cena121.apagar(.3) },                     // o "Passo 1: ..." se apaga até sobrar "Passo " (até 1,3s)
       { tempo: 1.3,  acao: () => Cena121.numero("2:") },                   // "2:" no lugar do 1
-      { tempo: 4,    acao: () => Cena121.texto(" Organize o esqueleto da molécula no espaço. E depois liga o centro aos átomos das extremidades.", 6) },   // até 10s
+      { tempo: 4,    acao: () => Cena121.texto(" Organize o esqueleto da molécula no espaço. E depois ligue o centro aos átomos das extremidades.", 6) },   // até 10s
       { tempo: 15,   acao: () => Cena112L.atomo("O") },                    // o O no centro, com estouro de faíscas, instável
       { tempo: 16.5, acao: () => Cena121.central(1) },                     // "Átomo central" (até 17,5s)
       { tempo: 19,   acao: () => Cena112L.atomo("H", "esq") },             // o H da esquerda, instável
@@ -3065,7 +3071,7 @@ const NARRACOES = [
     eventos: [
       { tempo: 0,    acao: () => Cena121.apagar(.6) },                     // o "2: ..." se apaga até sobrar "Passo "
       { tempo: 0.7,  acao: () => Cena121.numero("3:") },                   // "3:"
-      { tempo: 1.2,  acao: () => Cena121.texto(" Os elétrons que sobram são distribuídos na molécula até que todos estejam estáveis", 6.1) },   // até 7,3s
+      { tempo: 1.2,  acao: () => Cena121.texto(" Os elétrons que sobram são distribuídos na molécula até que todos estejam estáveis.", 6.1) },   // até 7,3s
       { tempo: 11.1, acao: () => Cena113P.brilhar("todos", 1) },           // os 4 elétrons da fileira brilham por 1s
       { tempo: 35.5, acao: () => Cena121.pulsarAtomo(["esq"], 1) },        // o H da esquerda pulsa
       { tempo: 36.4, acao: () => Cena121.pulsarAtomo(["dir"], 1) },        // o da direita
@@ -3141,7 +3147,7 @@ const NARRACOES = [
     eventos: [
       { tempo: 0,    acao: () => Cena121.apagar() },                 // o passo 1 se apaga até sobrar "Passo "
       { tempo: 1,    acao: () => Cena121.numero("2:") },             // "2:"
-      { tempo: 1.9,  acao: () => Cena121.texto(" Montar o esqueleto da molécula", 2.6) },
+      { tempo: 1.9,  acao: () => Cena121.texto(" Montar o esqueleto da molécula.", 2.6) },
       { tempo: 8.8,  acao: () => Cena121.atomo("O") },               // o O, centralizado embaixo dos elétrons
       { tempo: 10.2, acao: () => Cena121.central(.8) },              // "Átomo central" (até 11s)
       { tempo: 13.8, acao: () => Cena121.atomo("H", "esq") },        // os dois H, um de cada lado, em linha
@@ -6911,7 +6917,7 @@ const Cena111 = {
   passo1(dur) {
     const c = this.corpo(); if (c.querySelector(".c111-passo")) return;
     c.insertAdjacentHTML("beforeend", `<p class="c111-passo"></p>`);
-    Palco.digitar(c.querySelector(".c111-passo"), [{ classe: "c111-rotulo", texto: "Passo 1:" }, { texto: " Some todos os elétrons das camadas de valência" }], dur);
+    Palco.digitar(c.querySelector(".c111-passo"), [{ classe: "c111-rotulo", texto: "Passo 1:" }, { texto: " Some todos os elétrons das camadas de valência." }], dur);
   },
   // 19s em diante: uma linha da lista das famílias, digitada
   linha(texto, dur) {
@@ -7285,7 +7291,7 @@ const Cena113 = {
     h.style.visibility = "";
     Cena11.marcarTitulo();
     Palco.adicionar(`<div class="c111-corpo">${Cena12.FORMULA}
-      <p class="c111-passo"><span class="c111-rotulo">Passo 2:</span> Organize o esqueleto da molécula</p></div>`);
+      <p class="c111-passo"><span class="c111-rotulo">Passo 2:</span> Organize o esqueleto da molécula.</p></div>`);
     Cena12.familia("H", "1A"); Cena12.familia("O", "6A");
     const s = Cena112.completo();
     Object.keys(Cena112.POS).forEach((lado, b) => [0, 1, 2].forEach(p => this.alvos(lado, p).forEach((pt, j) => this.pousar(s, 2 * (b * 3 + p) + j, pt))));
@@ -7341,7 +7347,7 @@ const Cena12 = {
   passo1(dur) {
     const c = this.corpo(); if (c.querySelector(".c111-passo")) return;
     c.insertAdjacentHTML("beforeend", `<p class="c111-passo"></p>`);
-    Palco.digitar(c.querySelector(".c111-passo"), [{ classe: "c111-rotulo", texto: "Passo 1:" }, { texto: " Somar os elétrons de valência" }], dur);
+    Palco.digitar(c.querySelector(".c111-passo"), [{ classe: "c111-rotulo", texto: "Passo 1:" }, { texto: " Somar os elétrons de valência." }], dur);
   },
   // uma letra da fórmula ("H", "2" ou "O") cresce com brilho (ligar = false: volta)
   letra(l, ligar = true) {
@@ -7675,6 +7681,7 @@ const Cena112L = {
     const g = this.g(lado), r = Cena121.RAIO[sim], x = Cena121.POS[lado];
     this.instavel(lado, true);
     this.estouro(x, 25, r, sim === "O" ? 1 : .7);
+    try { const a = new Audio("audio/vfx/flip.mp3"); a.play().catch(() => {}); } catch (_) {}   // o som de quando o átomo aparece
     Vibra.tocar("toqueEletron");
     return g;
   },
