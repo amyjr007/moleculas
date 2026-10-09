@@ -1280,7 +1280,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v199 · 09/10/2026</span>
+    <span class="versao" id="versao">v200 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3066,22 +3066,21 @@ const NARRACOES = [
       { tempo: 0,    acao: () => Cena121.apagar(.6) },                     // o "2: ..." se apaga até sobrar "Passo "
       { tempo: 0.7,  acao: () => Cena121.numero("3:") },                   // "3:"
       { tempo: 1.2,  acao: () => Cena121.texto(" Os elétrons que sobram são distribuídos na molécula até que todos estejam estáveis", 6.1) },   // até 7,3s
-      { tempo: 11.6, acao: () => Cena113P.brilhar("todos", 1) },           // os 4 elétrons da fileira brilham por 1s
-      { tempo: 13.3, acao: () => Cena113P.brilhar(0, .9) },                // um par brilha
-      { tempo: 13.7, acao: () => Cena113P.brilhar(1, .9) },                // o outro par
-      { tempo: 34,   acao: () => Cena121.pulsarAtomo(["esq"], 1) },        // o H da esquerda pulsa
-      { tempo: 35,   acao: () => Cena121.pulsarAtomo(["dir"], 1) },        // o da direita
-      { tempo: 36,   acao: () => Cena121.pulsarAtomo(["meio"], 1) },       // o O
+      { tempo: 11.1, acao: () => Cena113P.brilhar("todos", 1) },           // os 4 elétrons da fileira brilham por 1s
+      { tempo: 35.5, acao: () => Cena121.pulsarAtomo(["esq"], 1) },        // o H da esquerda pulsa
+      { tempo: 36.4, acao: () => Cena121.pulsarAtomo(["dir"], 1) },        // o da direita
+      { tempo: 37,   acao: () => Cena121.pulsarAtomo(["meio"], 1) },       // o O
       { tempo: 39,   acao: () => Cena121.pulsarAtomo(["dir"], 3) },        // o H da direita pulsa 3 vezes
-      { tempo: 42,   acao: () => Cena113P.engrossar("dir") },              // a ligação dele brilha (até 45s)
-      { tempo: 45,   acao: () => { Cena113P.engrossar("dir", false); Cena113P.estabilizar("dir"); } },   // volta; em cima do H aparece "estável" (ele já se acalmou no 11.2)
-      { tempo: 47,   acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda brilha (até 49,5s)
-      { tempo: 49.5, acao: () => { Cena113P.engrossar("esq", false); Cena113P.estabilizar("esq"); } },  // o mesmo com o H da esquerda
-      { tempo: 52,   acao: () => Cena121.pulsarAtomo(["meio"], 2) },       // o O pulsa 2 vezes
-      { tempo: 54.1, acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda brilha
-      { tempo: 55,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir"); } },   // ela apaga; a da direita brilha
-      { tempo: 57,   acao: () => Cena113P.engrossar("esq") },              // as duas brilham
-      { tempo: 65,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir", false); Cena113P.pergunta(); } }   // apagam; "Quantos elétrons faltam?"
+      { tempo: 42.4, acao: () => Cena113F.escurecer(["meio", "esq", "lig-esq"]) },   // escurece 90% o resto: só o H da direita e a ligação dele ficam normais
+      { tempo: 47,   acao: () => Cena113P.estabilizar("dir") },            // em cima do H da direita aparece "estável" (ele já se acalmou no 11.2)
+      { tempo: 49,   acao: () => { Cena113F.escurecer(["dir", "lig-dir"]); Cena113F.escurecer(["esq", "lig-esq"], false); } },   // inverte: só o H da esquerda e a ligação dele
+      { tempo: 51,   acao: () => Cena113P.piscarLigacao("esq") },          // a ligação dele pulsa (um brilho rápido)
+      { tempo: 52,   acao: () => { Cena113P.estabilizar("esq"); Cena121.pulsarAtomo(["meio"], 2); } },   // "estável" em cima do H da esquerda; o O pulsa 2 vezes
+      { tempo: 54.9, acao: () => { Cena113F.escurecer(["esq", "dir"]); Cena113F.escurecer(["meio", "lig-esq", "lig-dir"], false); } },   // os H apagam; o O e as ligações acendem
+      { tempo: 58.3, acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda brilha
+      { tempo: 59.2, acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir"); } },   // ela apaga; a da direita brilha
+      { tempo: 61.3, acao: () => Cena113P.engrossar("esq") },              // as duas brilham
+      { tempo: 65,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir", false); Cena113F.escurecer(["esq", "dir"], false); Cena113P.pergunta(); } }   // apagam; os H voltam; "Quantos elétrons faltam?"
     ],
     aoFim: () => ui.semPlay(true) },   // quem leva adiante é a resposta certa (o 11.3A)
   // depois do acerto (16s): no fim, o aluno toca em cima e embaixo do O (um par por toque, um par em cada lado);
@@ -7858,6 +7857,11 @@ const Cena113P = {
   engrossar(lado, ligar = true) {
     const l = Palco.el.querySelector(`.c121-esqueleto .lig [data-l="${lado}"]`); if (!l || l.classList.contains("brilha") === ligar) return;
     l.classList.toggle("brilha", ligar);
+  },
+  // a ligação dá um pulso de brilho (acende e apaga)
+  piscarLigacao(lado) {
+    this.engrossar(lado);
+    Palco.animar(Cena121.svg(), [{}, {}], { duracao: .7, fill: "none" }).finished.then(() => this.engrossar(lado, false), () => {});
   },
   // o átomo estável. Um H (11.3): só aparece "estável" em cima dele, em fade (ele já se acalmou ao ganhar a ligação, no 11.2).
   // O O (fim do 11.3B): a bola de energia verde e ele para de tremer (sem o "right": a festa já tem os sons dela)
