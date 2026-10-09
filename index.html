@@ -1280,7 +1280,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v198 · 09/10/2026</span>
+    <span class="versao" id="versao">v199 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6629,10 +6629,12 @@ const Cena10 = {
     [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
       { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
     caixa.addEventListener("click", e => {
-      if (!e.target.closest(".c10-bt") || caixa.classList.contains("usado")) return;
+      const b = e.target.closest(".c10-bt");
+      if (!b || caixa.classList.contains("usado")) return;
       caixa.classList.add("usado");
-      Vibra.tocar("toqueEletron");
-      Palco.animar(caixa, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => caixa.remove(), () => {});
+      // o tocado espoca; o outro some em fade
+      [...caixa.children].filter(x => x !== b).forEach(x => Palco.animar(x, [{ opacity: 1 }, { opacity: 0 }], { duracao: .3 }));
+      Espoca.botao(b).then(() => caixa.remove());
       Player.seguirSozinho();
     });
   },
@@ -7118,8 +7120,7 @@ const Cena11Copo = {
     b.addEventListener("click", () => {
       if (caixa.classList.contains("usado")) return;
       caixa.classList.add("usado");
-      Vibra.tocar("toqueEletron");
-      Palco.animar(caixa, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => caixa.remove(), () => {});
+      Espoca.botao(b).then(() => caixa.remove());   // o balão espoca
       Player.seguirSozinho(true);   // (o "Passo 3" pode vir antes do fim do 11.2: corta o resto do áudio)
     });
   },
@@ -8310,8 +8311,10 @@ const Placar = {
     const c = Palco.el.lastElementChild;
     const nm = c.querySelector(".c10-cartao-nome"); if (nm) nm.textContent = Aluno.nome;   // (textContent: o nome entra como texto, nunca como HTML)
     // Refazer: o quiz recomeça da 1ª questão · Continuar: o próximo capítulo (as moléculas poliatômicas)
-    c.querySelector(".c10-refaz").addEventListener("click", () => {
-      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo10_1"), false);
+    c.querySelector(".c10-refaz").addEventListener("click", e => {
+      c.querySelectorAll("button").forEach(b => b.disabled = true);
+      // espoca primeiro (o recomeço limpa o palco, e o balão sumiria antes de estourar)
+      Espoca.botao(e.currentTarget).then(() => { Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo10_1"), false); });
     });
     c.querySelector(".c10-continua").addEventListener("click", () => {
       c.querySelectorAll("button").forEach(b => b.disabled = true);
@@ -9054,6 +9057,34 @@ function noTablet() { return matchMedia("(orientation: landscape) and (min-heigh
   if (window.ResizeObserver) new ResizeObserver(marcar).observe(Palco.el); else addEventListener("resize", marcar);
 })();
 
+/* ---------- O botão que espoca ----------
+   Os botões que chamam um áudio novo (fora o play: "Passo N", "Entendi"/"Bora"/"OK", "Vamo sim!"/"Por favor!", "Refazer")
+   espocam como um balão ao toque: incham, estouram (somem crescendo), soltam um anel e gotinhas da cor deles.
+   O efeito é da interface (não para na pausa). Devolve uma promessa que se cumpre quando o balão já estourou. */
+const Espoca = {
+  botao(b) {
+    const r = b && b.getBoundingClientRect(); if (!r || !r.width) return Promise.resolve();
+    const cs = getComputedStyle(b), cor = cs.backgroundColor && cs.backgroundColor !== "rgba(0, 0, 0, 0)" ? cs.backgroundColor : "#FFC24B";
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const camada = (css) => { const el = document.createElement("div"); el.style.cssText = `position:fixed;pointer-events:none;z-index:300;${css}`; document.body.appendChild(el); return el; };
+    // o anel que se abre no lugar do balão
+    const anel = camada(`left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;border-radius:${cs.borderRadius};border:3px solid ${cor};box-sizing:border-box`);
+    anel.animate([{ transform: "scale(1)", opacity: .95 }, { transform: "scale(1.55)", opacity: 0 }], { duration: 420, easing: "cubic-bezier(.2,.7,.3,1)" }).finished.then(() => anel.remove());
+    // as gotinhas: saem da borda do balão para fora
+    for (let i = 0; i < 14; i++) {
+      const a = i / 14 * Math.PI * 2 + Math.random() * .3, ex = Math.cos(a) * r.width / 2, ey = Math.sin(a) * r.height / 2;
+      const d = 18 + Math.random() * 26, tam = 4 + Math.random() * 5, c = i % 3 ? cor : "#FFFFFF";
+      const g = camada(`left:${cx + ex - tam / 2}px;top:${cy + ey - tam / 2}px;width:${tam}px;height:${tam}px;border-radius:50%;background:${c};box-shadow:0 0 6px ${c}`);
+      g.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d}px) scale(.2)`, opacity: 0 }],
+        { duration: 380 + Math.random() * 180, easing: "cubic-bezier(.15,.8,.3,1)" }).finished.then(() => g.remove());
+    }
+    Vibra.tocar("toqueEletron");
+    // o balão: incha e estoura
+    return b.animate([{ transform: "scale(1)", opacity: 1, filter: "brightness(1)" }, { transform: "scale(1.16)", opacity: 1, filter: "brightness(1.25)", offset: .5 },
+      { transform: "scale(1.4)", opacity: 0, filter: "brightness(1.5)" }], { duration: 240, easing: "ease-out", fill: "forwards" }).finished.catch(() => {});
+  }
+};
+
 /* ---------- O nome do aluno: pedido ao tocar em "Iniciar"; aparece nos cartões das notas ---------- */
 const Aluno = {
   nome: (() => { try { return localStorage.getItem("moleculas-aluno") || ""; } catch (_) { return ""; } })(),
@@ -9090,7 +9121,12 @@ const pausarAoSair = () => { if (Player.fonte && !Player.fonte.paused) Player.pa
 document.addEventListener("visibilitychange", () => { if (document.hidden) pausarAoSair(); });
 addEventListener("pagehide", pausarAoSair);
 document.getElementById("btnQuiz").addEventListener("click", () => Quiz.abrir());
-document.getElementById("btnEntendi").addEventListener("click", () => { ui.modoEntendi(false); Player.seguirSozinho(); });
+// "Entendi" / "Bora" / "OK": espoca e some (a animação sai depois, para ele voltar inteiro na próxima vez)
+document.getElementById("btnEntendi").addEventListener("click", e => {
+  const b = e.currentTarget; if (b.dataset.espocando) return; b.dataset.espocando = "1";
+  Player.seguirSozinho();
+  Espoca.botao(b).then(() => { ui.modoEntendi(false); b.getAnimations().forEach(a => a.cancel()); delete b.dataset.espocando; });
+});
 
 /* ---------- Navegação rápida (sumário) ---------- */
 const gaveta = document.getElementById("gaveta");
