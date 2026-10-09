@@ -1267,7 +1267,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v187 · 09/10/2026</span>
+    <span class="versao" id="versao">v188 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -7322,6 +7322,7 @@ const Cena12 = {
     const voo = Palco.el.lastElementChild;
     // sai de dentro da letra (cresce) e faz um lançamento oblíquo: sobe de lado e cai em parábola até o lugar
     const H = Math.max(60, Math.abs(dy) * .5), sai = .15, q = [{ transform: "translate(0px,0px) scale(0)", opacity: 0, offset: 0 }];
+    Cena74.somSalto(voo, sai);   // o som do salto ("electron_jumping"), quando ele sai da letra
     for (let i = 0; i <= 16; i++) {
       const t = i / 16;
       q.push({ transform: `translate(${dx * t}px,${dy * t - 4 * H * t * (1 - t)}px) scale(${1.4 - .4 * t})`, opacity: 1, offset: sai + (1 - sai) * t });
@@ -7380,7 +7381,7 @@ const Cena12 = {
 const Cena121 = {
   $(sel) { return Palco.el.querySelector(sel); },
   POS: { meio: 100, esq: 24, dir: 176 },
-  RAIO: { O: 21, H: 21 * .8 },
+  RAIO: { O: 21 * 1.2, H: 21 * .8 },   // (o O, átomo central, 20% maior; o H continua com o tamanho de antes)
   // o texto do passo se apaga de trás para frente até sobrar "Passo " (em dur segundos)
   apagar(dur = .8) {
     const corpo = Cena12.corpo();
@@ -7837,7 +7838,7 @@ const Cena113P = {
    Cabem dois em cada lado; o terceiro: o O treme em verde e aparece "Organize os elétrons em pares". */
 const Cena124 = {
   $(sel) { return Palco.el.querySelector(sel); },
-  LUGAR: { cima: [[95.5, -6], [104.5, -6]], baixo: [[95.5, 56], [104.5, 56]] },   // os pares em cima e embaixo do O
+  LUGAR: { cima: [[95.5, -9], [104.5, -9]], baixo: [[95.5, 59], [104.5, 59]] },   // os pares em cima e embaixo do O (afastados para o O 20% maior)
   pergunta() {
     Cena71.pergunta("nitrogenio", { texto: "Quantos pares faltam pro octeto?", opcoes: [["1", 0], ["2", 1], ["3", 0]], de: "dialogo12_3", para: "dialogo12_4" });
     const q = this.$(".c72-quiz"); if (q) q.classList.add("c123");
