@@ -1267,7 +1267,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v188 · 09/10/2026</span>
+    <span class="versao" id="versao">v189 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3056,15 +3056,19 @@ const NARRACOES = [
       { tempo: 11.6, acao: () => Cena113P.brilhar("todos", 1) },           // os 4 elétrons da fileira brilham por 1s
       { tempo: 13.3, acao: () => Cena113P.brilhar(0, .9) },                // um par brilha
       { tempo: 13.7, acao: () => Cena113P.brilhar(1, .9) },                // o outro par
-      { tempo: 20,   acao: () => Cena121.pulsarAtomo(["esq"], 1) },        // o H da esquerda pulsa
-      { tempo: 20.5, acao: () => Cena121.pulsarAtomo(["dir"], 1) },        // o da direita
-      { tempo: 25,   acao: () => Cena121.pulsarAtomo(["dir"], 2) },        // o H da direita pulsa 2 vezes
-      { tempo: 28.6, acao: () => Cena121.pulsarLigacao("dir", 2) },        // a ligação dele pulsa 2 vezes
-      { tempo: 33.5, acao: () => Cena121.pulsarAtomo(["esq"], 2) },        // o H da esquerda pulsa 2 vezes
-      { tempo: 37.8, acao: () => Cena121.pulsarAtomo(["meio"], 2) },       // o O pulsa 2 vezes
-      { tempo: 40.5, acao: () => Cena121.pulsarLigacao("dir", 1) },        // a ligação da direita pulsa
-      { tempo: 41.2, acao: () => Cena121.pulsarLigacao("esq", 1) },        // a da esquerda
-      { tempo: 44.5, acao: () => Cena113P.pergunta() }                     // "Quantos elétrons faltam?", digitada; as opções entram depois
+      { tempo: 34,   acao: () => Cena121.pulsarAtomo(["esq"], 1) },        // o H da esquerda pulsa
+      { tempo: 35,   acao: () => Cena121.pulsarAtomo(["dir"], 1) },        // o da direita
+      { tempo: 36,   acao: () => Cena121.pulsarAtomo(["meio"], 1) },       // o O
+      { tempo: 39,   acao: () => Cena121.pulsarAtomo(["dir"], 3) },        // o H da direita pulsa 3 vezes
+      { tempo: 42,   acao: () => Cena113P.engrossar("dir") },              // a ligação dele engrossa (até 45s)
+      { tempo: 45,   acao: () => { Cena113P.engrossar("dir", false); Cena113P.estabilizar("dir"); } },   // volta; o H explode em verde, para de tremer: "estável" + "right"
+      { tempo: 47,   acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda engrossa (até 49,5s)
+      { tempo: 49.5, acao: () => { Cena113P.engrossar("esq", false); Cena113P.estabilizar("esq"); } },  // o mesmo com o H da esquerda
+      { tempo: 52,   acao: () => Cena121.pulsarAtomo(["meio"], 2) },       // o O pulsa 2 vezes
+      { tempo: 54.1, acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda engrossa
+      { tempo: 55,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir"); } },   // ela volta; a da direita engrossa
+      { tempo: 57,   acao: () => Cena113P.engrossar("esq") },              // as duas grossas
+      { tempo: 60,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir", false); Cena113P.pergunta(); } }   // voltam; "Quantos elétrons faltam?"
     ],
     aoFim: () => ui.semPlay(true) },   // quem leva adiante é a resposta certa (o 11.3B)
   // depois do acerto: no fim, o aluno toca em cima e embaixo do O (um par por toque, um par em cada lado)
@@ -7625,14 +7629,15 @@ const Cena112L = {
     }
   },
   // o estouro da entrada: clarão, onda e faíscas saindo em volta (no próprio desenho, em unidades do viewBox)
-  estouro(x, y, r, forca) {
+  // cores: as das faíscas (a primeira é a da onda) — o padrão é o da instabilidade; o verde é o da estabilidade (11.3)
+  estouro(x, y, r, forca, cores = ["#FFC24B", "#FF7A66", "#fff", "#FF4646"]) {
     const s = Cena121.svg(); s.insertAdjacentHTML("beforeend", `<g class="c112-fx" style="pointer-events:none"></g>`);
     const fx = s.lastElementChild, o = `transform-origin:${x}px ${y}px`;
-    fx.insertAdjacentHTML("beforeend", `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" style="${o}"/><circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="#FFC24B" stroke-width="2" style="${o}"/>`);
+    fx.insertAdjacentHTML("beforeend", `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" style="${o}"/><circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${cores[0]}" stroke-width="2" style="${o}"/>`);
     const [clarao, onda] = fx.children, dur = .55 + .35 * forca;
     Palco.animar(clarao, [{ transform: "scale(.4)", opacity: .95 }, { transform: `scale(${1.6 + forca})`, opacity: 0 }], { duracao: dur * .7, easing: "ease-out" });
     Palco.animar(onda, [{ transform: "scale(1)", opacity: 1, strokeWidth: 3 }, { transform: `scale(${2.2 + 1.4 * forca})`, opacity: 0, strokeWidth: .5 }], { duracao: dur, easing: "cubic-bezier(.2,.7,.3,1)" });
-    const n = Math.round(10 + 8 * forca), cores = ["#FFC24B", "#FF7A66", "#fff", "#FF4646"];
+    const n = Math.round(10 + 8 * forca);
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2 + Math.random() * .4, d = r * (1.8 + Math.random() * 1.6 * (1 + forca));
       fx.insertAdjacentHTML("beforeend", `<circle cx="${x}" cy="${y}" r="${1.2 + Math.random() * 1.2}" fill="${cores[i % cores.length]}" style="filter:drop-shadow(0 0 2px ${cores[i % cores.length]})"/>`);
@@ -7692,7 +7697,7 @@ const Cena112L = {
     if (feitas) { const z = this.$(".c84-toques"); if (z) z.remove(); }
     Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.1, fill: "none" }).finished.then(() => {
       if (!s.isConnected) return;
-      this.instavel(lado, false);
+      // (o H continua instável: ele só se acalma no passo 3, no 11.3)
       if (feitas) this.explodir();
     }, () => {});
   },
@@ -7714,7 +7719,7 @@ const Cena112L = {
   },
   // as duas ligações: a molécula inteira explode em brilho (clarão, onda e faíscas douradas), com o "right"; depois o "Passo 3"
   explodir() {
-    ["meio", "esq", "dir"].forEach(l => this.instavel(l, false));
+    // (os átomos continuam instáveis: os H se acalmam no 11.3 e o O, com os pares do 11.3B)
     const av = this.$(".c84-aviso"); if (av) { av.getAnimations().forEach(a => a.cancel()); av.remove(); }   // um aviso de erro ainda na tela sai
     const s = Cena121.svg(), P = Palco.el.getBoundingClientRect(), r = s.getBoundingClientRect();
     const cx = r.left + r.width / 2 - P.left, cy = r.top + r.height / 2 - P.top;
@@ -7764,7 +7769,34 @@ const Cena113P = {
     Cena12.brilho(ks);
     Palco.animar(Cena12.fila(), [{}, {}], { duracao: dur, fill: "none" }).finished.then(() => Cena12.brilho(ks, false), () => {});
   },
-  // 44,5s: a pergunta, digitada; as três opções entram quando ela termina (acima da fileira, como no 12.3)
+  // a ligação de um lado engrossa, com brilho, e fica assim até voltar (ligar = false)
+  engrossar(lado, ligar = true) {
+    const l = Palco.el.querySelector(`.c121-esqueleto .lig [data-l="${lado}"]`); if (!l || l.classList.contains("grossa") === ligar) return;
+    l.classList.toggle("grossa", ligar);
+    const normal = { strokeWidth: 5, filter: "drop-shadow(0 0 0 rgba(255,255,255,0))" }, grossa = { strokeWidth: 9, filter: "drop-shadow(0 0 4px rgba(255,255,255,.95))" };
+    const fim = ligar ? grossa : normal;
+    l.style.strokeWidth = fim.strokeWidth; l.style.filter = fim.filter;   // (o estado final fica no estilo; a animação só faz a passagem)
+    Palco.animar(l, ligar ? [normal, grossa] : [grossa, normal], { duracao: .4, easing: "ease-out", fill: "none" });
+  },
+  // o átomo fica estável: explode em verde (liberando a instabilidade), para de tremer, ganha um brilho verde,
+  // "estável" aparece em cima dele em fade, e toca o "right"
+  estabilizar(lado) {
+    const g = Cena112L.g(lado); if (!g || g.dataset.estavel) return;
+    g.dataset.estavel = "1";
+    Cena112L.instavel(lado, false);
+    const sim = lado === "meio" ? "O" : "H", r = Cena121.RAIO[sim], x = Cena121.POS[lado];
+    Cena112L.estouro(x, 25, r, .8, ["#6EE7A0", "#B9F5D0", "#fff", "#34D07F"]);
+    Palco.animar(g, [{ filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }, { filter: "drop-shadow(0 0 9px rgba(110,231,160,1)) drop-shadow(0 0 18px rgba(110,231,160,.7))", offset: .3 },
+      { filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }], { duracao: 1.4, easing: "ease-out", fill: "none" });
+    if (lado !== "meio") {
+      Cena121.svg().insertAdjacentHTML("beforeend", `<text class="c113-estavel" x="${x}" y="${25 - r - 7}" text-anchor="middle" font-size="9" font-weight="800" fill="#6EE7A0"
+        font-family="Bricolage Grotesque, sans-serif" style="filter:drop-shadow(0 0 3px rgba(110,231,160,.8))">estável</text>`);
+      Palco.animar(Cena121.svg().lastElementChild, [{ opacity: 0 }, { opacity: 1 }], { duracao: .6, easing: "ease-out" });
+      try { const a = new Audio("audio/vfx/right.mp3"); a.play().catch(() => {}); } catch (_) {}   // (o O se acalma na festa do 11.3B, que já tem os sons dela)
+    }
+    Vibra.tocar("toqueEletron");
+  },
+  // 60s: a pergunta, digitada; as três opções entram quando ela termina (acima da fileira, como no 12.3)
   pergunta() {
     if (this.$(".c72-quiz")) return;
     const e = n => `${n} e<sup>−</sup>`;
@@ -7824,6 +7856,7 @@ const Cena113P = {
     Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: .95, fill: "none" }).finished.then(() => {
       if (!s.isConnected) return;
       const av = this.$(".c84-aviso"); if (av) { av.getAnimations().forEach(a => a.cancel()); av.remove(); }   // um aviso de erro ainda na tela sai
+      this.estabilizar("meio");   // com o octeto completo, o O para de tremer (estouro verde)
       Cena121.verde("applause");
       try { const a = new Audio("audio/funfare.mp3"); a.play().catch(() => {}); } catch (_) {}
       Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
