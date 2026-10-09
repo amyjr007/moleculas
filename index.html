@@ -1263,7 +1263,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v185 · 09/10/2026</span>
+    <span class="versao" id="versao">v186 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3036,12 +3036,39 @@ const NARRACOES = [
       { tempo: 22,   acao: () => { Cena112L.atomo("H", "dir"); Cena121.tirarCentral(); } },   // o H da direita, instável; "Átomo central" sai em fade
       { tempo: 24,   acao: () => Cena112L.liberar() }                      // o aluno faz as ligações
     ],
-    aoFim: () => ui.semPlay(true) },   // sem play: quem leva ao 11.3 é o botão "Passo 3", depois das duas ligações
-  // passo 3: os elétrons de baixo saltam aos pares para os átomos B (3 pares em cada), de 1s a 10s
+    aoFim: () => ui.semPlay(true) },   // sem play: quem leva adiante são as duas ligações (a explosão chama o 11.2A)
+  // a molécula completou (depois do "right" da explosão): o 11.2A; no fim, o botão "Passo 3" leva ao 11.3
+  { id: "dialogo11_2A", titulo: "Passo 2 concluído", src: "audio/audio_moleculas_11.2A.mp3", semNav: true, extra: true,
+    eventos: [],
+    aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1(3); } },
+  // passo 3 (48s): os elétrons que sobram (os 4 da fileira) vão para a molécula até todos ficarem estáveis.
+  // Em 44,5s, "Quantos elétrons faltam?" (o certo: 4 e⁻); o acerto traz a festa do quiz e depois o 11.3B
   { id: "dialogo11_3", titulo: "O passo a passo: passo 3", src: "audio/audio_moleculas_11.3.mp3", semNav: true,
-    inicio: () => Cena11.tela(),
-    eventos: ["cima", "dir", "baixo", "esq"].flatMap((lado, b) => [0, 1, 2].map(p => ({ tempo: 1 + (b * 3 + p) * .75, acao: () => Cena113.par(lado, p, b * 3 + p) }))),
-    aoFim: () => Player.seguirSozinho() },   // emenda direto no 11.3A
+    inicio: () => { if (!Cena12.$(".c111-corpo")) { Cena11.tela(); Cena111.abrir(); } },   // (vindo do 11.2A, a tela já está pronta)
+    eventos: [
+      { tempo: 0,    acao: () => Cena121.apagar(.6) },                     // o "2: ..." se apaga até sobrar "Passo "
+      { tempo: 0.7,  acao: () => Cena121.numero("3:") },                   // "3:"
+      { tempo: 1.2,  acao: () => Cena121.texto(" Os elétrons que sobram são distribuídos na molécula até que todos estejam estáveis", 6.1) },   // até 7,3s
+      { tempo: 11.6, acao: () => Cena113P.brilhar("todos", 1) },           // os 4 elétrons da fileira brilham por 1s
+      { tempo: 13.3, acao: () => Cena113P.brilhar(0, .9) },                // um par brilha
+      { tempo: 13.7, acao: () => Cena113P.brilhar(1, .9) },                // o outro par
+      { tempo: 20,   acao: () => Cena121.pulsarAtomo(["esq"], 1) },        // o H da esquerda pulsa
+      { tempo: 20.5, acao: () => Cena121.pulsarAtomo(["dir"], 1) },        // o da direita
+      { tempo: 25,   acao: () => Cena121.pulsarAtomo(["dir"], 2) },        // o H da direita pulsa 2 vezes
+      { tempo: 28.6, acao: () => Cena121.pulsarLigacao("dir", 2) },        // a ligação dele pulsa 2 vezes
+      { tempo: 33.5, acao: () => Cena121.pulsarAtomo(["esq"], 2) },        // o H da esquerda pulsa 2 vezes
+      { tempo: 37.8, acao: () => Cena121.pulsarAtomo(["meio"], 2) },       // o O pulsa 2 vezes
+      { tempo: 40.5, acao: () => Cena121.pulsarLigacao("dir", 1) },        // a ligação da direita pulsa
+      { tempo: 41.2, acao: () => Cena121.pulsarLigacao("esq", 1) },        // a da esquerda
+      { tempo: 44.5, acao: () => Cena113P.pergunta() }                     // "Quantos elétrons faltam?", digitada; as opções entram depois
+    ],
+    aoFim: () => ui.semPlay(true) },   // quem leva adiante é a resposta certa (o 11.3B)
+  // depois do acerto: no fim, o aluno toca em cima e embaixo do O (um par por toque, um par em cada lado)
+  { id: "dialogo11_3B", titulo: "Os pares que faltam", src: "audio/audio_moleculas_11.3B.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 0,    acao: () => Cena113P.tirarQuiz() }                    // a pergunta e as opções saem em fade
+    ],
+    aoFim: () => { ui.semPlay(true); Cena113P.liberar(); } },
   // continuação do passo 3: entra sozinha, sem o botão de play; em 1s pausa para a festa e só então o play aparece.
   // Fora da navegação rápida (o 50 agora abre o 11.1). Se entrar nela em 9s (entrada), a tela já vem montada como ela está nesse ponto
   { id: "dialogo11_3A", titulo: "A molécula de água", src: "audio/audio_moleculas_11.3A.mp3", semNav: true, entrada: 9,
@@ -7665,7 +7692,7 @@ const Cena112L = {
     }, () => {});
   },
   // ordem errada: os átomos tocados tremem em vermelho e aparece o aviso, embaixo do "Átomo central"
-  erro(lados) {
+  erro(lados, msg = "Ligue do centro pras pontas") {
     lados.forEach(l => {
       const g = this.g(l); if (!g) return;
       Palco.animar(g, [0, -5, 5, -4, 4, -2, 0].map((x, i, a) => ({ translate: `${x}px 0`, filter: `drop-shadow(0 0 ${i === 0 || i === a.length - 1 ? 0 : 9}px rgba(255,60,60,.95))` })),
@@ -7675,7 +7702,7 @@ const Cena112L = {
     const P = Palco.el.getBoundingClientRect(), ref = this.$(".c121-central") || Cena121.svg(), r = ref.getBoundingClientRect();
     let av = this.$(".c84-aviso");
     if (!av) { Palco.adicionar(`<p class="c84-aviso" style="top:${r.bottom - P.top + 10}px"></p>`); av = this.$(".c84-aviso"); }
-    av.textContent = "Ligue do centro pras pontas";
+    av.textContent = msg;
     av.getAnimations().forEach(a => a.cancel());
     Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: .08 }, { opacity: 1, offset: .82 }, { opacity: 0 }], { duracao: 2.6, easing: "linear" })
       .finished.then(() => av.remove(), () => {});
@@ -7707,7 +7734,96 @@ const Cena112L = {
         { transform: `translate(${Math.cos(a) * d}px,${Math.sin(a) * d + 30}px) scale(0)`, opacity: 0 }], { duracao: .9 + Math.random() * .7, atraso: Math.random() * .15, easing: "cubic-bezier(.15,.8,.3,1)" })
         .finished.then(() => f.remove(), () => {});
     }
-    Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.4, fill: "none" }).finished.then(() => { if (s.isConnected) Cena11Copo.botaoPasso1(3); }, () => {});
+    // depois do "right": o 11.2A (se o 11.2 ainda estiver falando, entra quando ele acabar)
+    Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.4, fill: "none" }).finished.then(() => {
+      if (s.isConnected && NARRACOES[Player.indice] && NARRACOES[Player.indice].id === "dialogo11_2") Player.seguirSozinho();
+    }, () => {});
+  }
+};
+
+/* ---------- Narrações 11.3 e 11.3B: passo 3, os elétrons que sobram ----------
+   11.3: os 4 elétrons que ficaram na fileira brilham (todos, depois par a par); em 44,5s, "Quantos elétrons faltam?"
+   (o certo: 4 e⁻; o acerto traz a festa do quiz e o 11.3B). Fim do 11.3B: cada toque em cima ou embaixo do O joga
+   um par da fileira para lá; cabe um par em cada lado. Os dois no lugar: brilho verde, confetes, aplausos e fanfarra. */
+const Cena113P = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  // os elétrons ainda na fileira (índices entre os filhos dela)
+  livres() {
+    return [...Cena12.fila().children].map((el, k) => [el, k])
+      .filter(([el]) => el.classList.contains("c12-e") && !el.style.opacity && el.style.visibility !== "hidden").map(([, k]) => k);
+  },
+  // qual: "todos" ou o par (0 = os dois primeiros, 1 = os dois seguintes); acendem e apagam depois de dur segundos
+  brilhar(qual, dur) {
+    const l = this.livres(), ks = qual === "todos" ? l : l.slice(qual * 2, qual * 2 + 2);
+    if (!ks.length) return;
+    Cena12.brilho(ks);
+    Palco.animar(Cena12.fila(), [{}, {}], { duracao: dur, fill: "none" }).finished.then(() => Cena12.brilho(ks, false), () => {});
+  },
+  // 44,5s: a pergunta, digitada; as três opções entram quando ela termina (acima da fileira, como no 12.3)
+  pergunta() {
+    if (this.$(".c72-quiz")) return;
+    const e = n => `${n} e<sup>−</sup>`;
+    Cena71.pergunta("nitrogenio", { texto: "", opcoes: [[e(2), 0], [e(4), 1], [e(6), 0]], de: "dialogo11_3", para: "dialogo11_3B" });
+    const q = this.$(".c72-quiz"); q.classList.add("c113p");
+    const p = q.querySelector(".c72-pergunta"), caixa = q.querySelector(".c4-opcoes");
+    caixa.style.visibility = "hidden";
+    Palco.digitar(p, "Quantos elétrons faltam?", 1.2);
+    Palco.animar(caixa, [{}, {}], { duracao: 1.3, fill: "none" }).finished.then(() => {
+      caixa.style.visibility = "";
+      [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
+        { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
+    }, () => {});
+  },
+  tirarQuiz() {
+    const q = this.$(".c72-quiz"); if (!q || q.classList.contains("saindo")) return;
+    q.classList.add("saindo");
+    Palco.animar(q, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => q.remove(), () => {});
+  },
+  // fim do 11.3B: os toques valem
+  liberar() {
+    this.tirarQuiz();
+    if (this.$(".c84-toques")) return;
+    this.lados = { cima: 0, baixo: 0 };
+    Palco.el.querySelectorAll(".c121-esqueleto .c124-e").forEach(c => { this.lados[c.getAttribute("cy") < 25 ? "cima" : "baixo"] = 1; });
+    if (this.lados.cima && this.lados.baixo) return;
+    Palco.adicionar(`<div class="c84-toques" aria-label="Toque em cima ou embaixo do O para colocar os pares de elétrons"></div>`);
+    this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    Cena121.pulsarAtomo(["meio"], 1);   // convite: o O dá uma pulsada
+  },
+  toque(e) {
+    if (Palco.pausado) return;
+    const O = Cena112L.naTela("meio"); if (!O) return;
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top, dx = x - O.x, dy = y - O.y;
+    // só vale perto do O, em cima ou embaixo dele (dos lados ficam as ligações)
+    if (Math.hypot(dx, dy) > O.R * 5 || Math.abs(dy) < Math.abs(dx) * .8 || Math.abs(dy) < O.R * .4) return;
+    const lado = dy < 0 ? "cima" : "baixo";
+    Cena84.circulo(x, y, "");
+    if (this.lados[lado]) return Cena112L.erro(["meio"], "Só cabe um par em cada lado");
+    const ks = this.livres().slice(-2); if (ks.length < 2) return;
+    this.lados[lado] = 1;
+    Vibra.tocar("toqueEletron");
+    const fila = Cena12.fila(), s = Cena121.svg();
+    ks.forEach(k => { fila.children[k].style.visibility = "hidden"; });   // já saem da conta (um toque rápido no outro lado não pega os mesmos)
+    ks.reverse().forEach((k, j) => {
+      const alvo = Cena124.LUGAR[lado][j];
+      const pousar = () => s.querySelector(".at").insertAdjacentHTML("beforebegin",
+        `<circle class="c124-e" cx="${alvo[0]}" cy="${alvo[1]}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
+      Palco.animar(fila, [{}, {}], { duracao: .01, atraso: j * .08, fill: "none" }).finished.then(() => Cena124.voar(fila.children[k], alvo, .75, pousar), () => {});
+    });
+    if (this.lados.cima && this.lados.baixo) this.pronto();
+  },
+  // os dois pares no lugar: a conquista — brilho verde com aplausos, fanfarra e confetes
+  pronto() {
+    const z = this.$(".c84-toques"); if (z) z.remove();
+    const s = Cena121.svg();
+    Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: .95, fill: "none" }).finished.then(() => {
+      if (!s.isConnected) return;
+      const av = this.$(".c84-aviso"); if (av) { av.getAnimations().forEach(a => a.cancel()); av.remove(); }   // um aviso de erro ainda na tela sai
+      Cena121.verde("applause");
+      try { const a = new Audio("audio/funfare.mp3"); a.play().catch(() => {}); } catch (_) {}
+      Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+      Vibra.tocar("toqueEletron");
+    }, () => {});
   }
 };
 
