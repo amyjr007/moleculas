@@ -602,8 +602,8 @@
     /* 11.1A: "Qual a fórmula da água?" e as três opções, mais baixas */
     .c72-quiz.c11a .c72-pergunta { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * .08); }
     .c72-quiz.c11a .c4-opcoes { translate: calc(var(--pw, 965px) * .005) calc(var(--ph, 448px) * .127); }
-    /* o texto do passo (o do passo 2 é longo): em duas linhas */
-    .c111-passo { width: min(100%, 60ch); text-wrap: balance; }
+    /* o texto do passo (o do passo 2 é longo): em duas linhas; a letra 19% menor (ajuste da professora no passo 3, vale para os três) */
+    .c111-passo { width: min(100%, 60ch); text-wrap: balance; font-size: calc(clamp(1.15rem, 2.6vmin + .55rem, 1.9rem) * 1.11 * .81); }
   }
   /* celular em pé: ajustes medidos pela professora numa tela de 356 × 655 (em proporção do palco, como os do tablet) */
   @media (orientation: portrait) and (max-width: 600px) {
@@ -1280,7 +1280,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v200 · 09/10/2026</span>
+    <span class="versao" id="versao">v201 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
