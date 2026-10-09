@@ -1267,7 +1267,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v189 · 09/10/2026</span>
+    <span class="versao" id="versao">v190 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3074,7 +3074,8 @@ const NARRACOES = [
   // depois do acerto: no fim, o aluno toca em cima e embaixo do O (um par por toque, um par em cada lado)
   { id: "dialogo11_3B", titulo: "Os pares que faltam", src: "audio/audio_moleculas_11.3B.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 0,    acao: () => Cena113P.tirarQuiz() }                    // a pergunta e as opções saem em fade
+      { tempo: 0,    acao: () => Cena113P.tirarQuiz() },                   // a pergunta e as opções saem em fade
+      { tempo: 5,    acao: () => Cena113P.fila(true) }                     // os 4 elétrons de baixo e o "4 e⁻" voltam em fade
     ],
     aoFim: () => { ui.semPlay(true); Cena113P.liberar(); } },
   // continuação do passo 3: entra sozinha, sem o botão de play; em 1s pausa para a festa e só então o play aparece.
@@ -7801,6 +7802,7 @@ const Cena113P = {
     if (this.$(".c72-quiz")) return;
     const e = n => `${n} e<sup>−</sup>`;
     Cena71.pergunta("nitrogenio", { texto: "", opcoes: [[e(2), 0], [e(4), 1], [e(6), 0]], de: "dialogo11_3", para: "dialogo11_3B" });
+    this.fila(false);   // os 4 elétrons de baixo e o "4 e⁻" somem enquanto a pergunta está na tela (voltam aos 5s do 11.3B)
     const q = this.$(".c72-quiz"); q.classList.add("c113p");
     const p = q.querySelector(".c72-pergunta"), caixa = q.querySelector(".c4-opcoes");
     caixa.style.visibility = "hidden";
@@ -7811,6 +7813,13 @@ const Cena113P = {
         { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
     }, () => {});
   },
+  // a fileira de baixo (os elétrons e a conta) some ou volta, em fade
+  fila(mostrar) {
+    const f = this.$(".c12-fila"); if (!f || (f.style.opacity === "0") === !mostrar) return;
+    const de = getComputedStyle(f).opacity;
+    f.style.opacity = mostrar ? "" : "0";
+    Palco.animar(f, [{ opacity: de }, { opacity: mostrar ? 1 : 0 }], { duracao: .5, easing: "ease-out", fill: "none" });
+  },
   tirarQuiz() {
     const q = this.$(".c72-quiz"); if (!q || q.classList.contains("saindo")) return;
     q.classList.add("saindo");
@@ -7818,7 +7827,7 @@ const Cena113P = {
   },
   // fim do 11.3B: os toques valem
   liberar() {
-    this.tirarQuiz();
+    this.tirarQuiz(); this.fila(true);
     if (this.$(".c84-toques")) return;
     this.lados = { cima: 0, baixo: 0 };
     Palco.el.querySelectorAll(".c121-esqueleto .c124-e").forEach(c => { this.lados[c.getAttribute("cy") < 25 ? "cima" : "baixo"] = 1; });
