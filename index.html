@@ -602,6 +602,12 @@
     /* 11.1A: "Qual a fórmula da água?" e as três opções, mais baixas */
     .c72-quiz.c11a .c72-pergunta { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * .08); }
     .c72-quiz.c11a .c4-opcoes { translate: calc(var(--pw, 965px) * .005) calc(var(--ph, 448px) * .127); }
+    /* os cilindros de gás (cloro, oxigênio, nitrogênio, HCl) e o "Exemplo 0N" em cima deles, mais baixos (ajuste no 7.1A, vale para todos) */
+    /* (com o id do palco: estas classes são definidas mais abaixo, e a regra de lá venceria) */
+    #conteudoPalco .c71-cilindro { translate: calc(-50% + var(--pw, 965px) * .006) calc(var(--ph, 448px) * .144); }
+    #conteudoPalco .c71-exemplo { translate: calc(-50% + var(--pw, 965px) * -.003) calc(var(--ph, 448px) * .037); }
+    /* "Cada átomo tem que ter 8 elétrons de valência" numa linha só */
+    #conteudoPalco .c73-octeto { width: auto; white-space: nowrap; }
     /* áudio 4 (depois que "Fórmula Molecular" aparece): a molécula, a fórmula, a frase e as opções mais altas */
     #conteudoPalco:has(> .c4-formula) > .c3-quantico { translate: 0 calc(var(--ph, 448px) * -.019); transition: translate .6s ease; }
     #conteudoPalco > .c4-formula { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * -.07); }
@@ -1291,7 +1297,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v203 · 09/10/2026</span>
+    <span class="versao" id="versao">v204 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
