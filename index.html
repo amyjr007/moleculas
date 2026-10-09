@@ -725,6 +725,14 @@
   .dev-versao.ligado { color: var(--preto); background: var(--ambar); box-shadow: 0 0 16px rgba(255,194,75,.6); }
   .dev-camada { position: absolute; inset: 0; z-index: 50; touch-action: none; cursor: move; outline: 2px dashed rgba(255,194,75,.55); outline-offset: -2px; }
   .dev-alvo { outline: 2px solid var(--ambar) !important; outline-offset: 3px; }
+  .dev-barra { position: absolute; left: 12px; bottom: calc(100% + 6px); z-index: 61; display: none; gap: 4px; padding: 5px; border-radius: 12px;
+    background: rgba(13,20,33,.92); border: 1px solid rgba(255,194,75,.6); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+  .dev-barra.on { display: flex; }
+  .dev-barra button { min-width: 38px; height: 38px; padding: 0 9px; border-radius: 9px; border: 0; cursor: pointer;
+    background: rgba(255,255,255,.08); color: #F4F7FB; font: 800 .85rem/1 var(--display); touch-action: manipulation; }
+  .dev-barra button:active { background: var(--ambar); color: var(--preto); }
+  .dev-barra .dev-nome { align-self: center; max-width: 11em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    color: var(--ambar); font: 700 .7rem/1 var(--display); padding: 0 6px; }
   .dev-aviso { position: fixed; left: 50%; bottom: 60px; translate: -50% 0; z-index: 200; padding: .55em 1.1em; border-radius: 999px;
     background: var(--ambar); color: var(--preto); font: 800 .95rem/1 var(--display); box-shadow: 0 10px 30px rgba(0,0,0,.4); pointer-events: none; }
   .nav-rapida-barra {
@@ -1217,7 +1225,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v181 · 08/10/2026</span>
+    <span class="versao" id="versao">v182 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -1263,6 +1271,15 @@
 
   <nav class="nav-rapida-barra">
     <span class="dev-versao" id="devVersao" title="Segure para editar a tela; segure de novo para copiar os ajustes"></span>
+    <div class="dev-barra" id="devBarra" role="toolbar" aria-label="Editor de tela">
+      <span class="dev-nome" id="devNome">toque em algo</span>
+      <button data-dev="menor" title="Diminuir">−</button>
+      <button data-dev="maior" title="Aumentar">+</button>
+      <button data-dev="grupo" title="Selecionar o bloco de fora (ex.: a figura inteira)">⬚</button>
+      <button data-dev="desfazer" title="Desfazer o ajuste deste elemento">↺</button>
+      <button data-dev="copiar" title="Copiar os ajustes">Copiar</button>
+      <button data-dev="sair" title="Fechar o editor (copia os ajustes)">✕</button>
+    </div>
     <button class="btn-nav-rapida" id="btnNavRapida" aria-haspopup="dialog" aria-controls="gaveta">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
         <path d="M6 15l6-6 6 6"/>
@@ -8265,13 +8282,18 @@ function mostrarTela(tela) {
   });
 }
 
-/* ---------- Ferramenta de desenvolvimento: ajustar a posição e o tamanho dos textos na tela ----------
-   Segurar a versão (canto esquerdo, na altura da navegação rápida) liga o editor: arrastar um texto o move;
-   a pinça (dois dedos) muda o tamanho da letra. Segurar de novo desliga e copia para a área de transferência
-   o que mudou (deslocamento e tamanho, em px e em % da tela), com a narração e o tempo do áudio. */
+/* ---------- Ferramenta de desenvolvimento: ajustar a posição e o tamanho dos textos, imagens e moléculas ----------
+   Segurar a versão (canto esquerdo, na altura da navegação rápida) liga o editor e abre a barra de edição:
+   arrastar move o elemento; a pinça (dois dedos), a rodinha do mouse ou os botões − / + mudam o tamanho
+   (nos textos, a letra; nas imagens, desenhos e cenas 3D das moléculas, a escala). "⬚" passa para o bloco de fora
+   (a figura inteira, a caixa da molécula), "↺" desfaz o elemento escolhido. Segurar de novo (ou "✕") desliga e copia
+   para a área de transferência o que mudou (em px e em % da tela), com a narração e o tempo do áudio. */
 const Dev = {
-  ligado: false, ajustes: new Map(), toques: new Map(),
+  ligado: false, ajustes: new Map(), toques: new Map(), sel: null, fixo: false,
   ALVOS: "h1, h2, h3, p, figcaption, .c1012-sim, .c86-formula, .c4-opcoes, .c10-botoes, .c1012-botoes, .c11-legenda, .c71-exemplo",
+  // imagens, desenhos e moléculas: o tamanho muda pela escala (scale), não pela letra
+  VISUAIS: "img, svg:not(svg svg), canvas, figure, [class*='-cena'], [class*='-mol'], [class*='-foto'], [class*='-atomo']",
+  visual(el) { return !el.matches(this.ALVOS); },
   iniciar() {
     const v = document.getElementById("devVersao"), orig = document.getElementById("versao");
     v.textContent = orig ? orig.textContent : "";
@@ -8280,6 +8302,30 @@ const Dev = {
     v.addEventListener("pointerdown", () => { timer = setTimeout(() => { timer = null; this.alternar(); }, 650); });
     ["pointerup", "pointerleave", "pointercancel"].forEach(ev => v.addEventListener(ev, () => { clearTimeout(timer); timer = null; }));
     v.addEventListener("contextmenu", e => e.preventDefault());
+    document.getElementById("devBarra").addEventListener("click", e => {
+      const b = e.target.closest("[data-dev]"); if (!b) return;
+      const acao = b.dataset.dev;
+      if (acao === "sair") return this.alternar();
+      if (acao === "copiar") return this.copiar();
+      if (!this.sel || !this.sel.isConnected) return this.aviso("Toque antes em um elemento");
+      if (acao === "maior" || acao === "menor") this.redimensionar(this.sel, acao === "maior" ? 1.05 : 1 / 1.05);
+      else if (acao === "grupo") {
+        const pai = this.sel.parentElement;
+        if (!pai || pai === Palco.el || !Palco.el.contains(pai)) return this.aviso("Já é o bloco de fora");
+        this.escolher(pai); this.fixo = true;
+      } else if (acao === "desfazer") this.desfazer(this.sel);
+    });
+  },
+  escolher(el) {
+    document.querySelectorAll(".dev-alvo").forEach(x => x !== el && x.classList.remove("dev-alvo"));
+    this.sel = el; this.fixo = false;
+    if (el) el.classList.add("dev-alvo");
+    document.getElementById("devNome").textContent = el ? this.nome(el) : "toque em algo";
+  },
+  nome(el) {
+    const cls = typeof el.className === "string" ? el.className : (el.className && el.className.baseVal) || "";
+    const lista = cls.trim().split(/\s+/).filter(c => c && c !== "dev-alvo");
+    return el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") + (lista.length ? "." + lista.join(".") : "");
   },
   aviso(txt) {
     const a = document.createElement("div"); a.className = "dev-aviso"; a.textContent = txt; document.body.appendChild(a);
@@ -8295,19 +8341,37 @@ const Dev = {
       c.className = "dev-camada"; palco.appendChild(c); this.camada = c;
       c.addEventListener("pointerdown", e => this.baixa(e)); c.addEventListener("pointermove", e => this.move(e));
       ["pointerup", "pointercancel"].forEach(ev => c.addEventListener(ev, e => this.sobe(e)));
-      this.aviso("Editor ligado: arraste ou faça pinça nos textos");
+      c.addEventListener("wheel", e => { e.preventDefault(); if (this.sel) this.redimensionar(this.sel, e.deltaY < 0 ? 1.05 : 1 / 1.05); }, { passive: false });
+      document.getElementById("devBarra").classList.add("on");
+      this.aviso("Editor ligado: arraste ou faça pinça em textos, imagens e moléculas");
     } else {
       if (this.camada) this.camada.remove();
-      document.querySelectorAll(".dev-alvo").forEach(el => el.classList.remove("dev-alvo"));
+      this.toques.clear(); this.pinca = null;
+      this.escolher(null);
+      document.getElementById("devBarra").classList.remove("on");
       this.copiar();
     }
+  },
+  // − / + e rodinha: a letra (texto) ou a escala (imagem, desenho, molécula) multiplicada pelo fator
+  redimensionar(el, fator) {
+    const d = this.dados(el);
+    if (d.vis) d.s = Math.max(.1, Math.round(d.s * fator * 1000) / 1000);
+    else d.f = Math.max(6, Math.round(d.f * fator * 10) / 10);
+    this.aplicar(el, d);
+  },
+  desfazer(el) {
+    const d = this.ajustes.get(el); if (!d) return;
+    el.style.translate = d.st0.translate; el.style.fontSize = d.st0.fontSize; el.style.scale = d.st0.scale;
+    this.ajustes.delete(el);
   },
   // o texto sob o dedo (a camada do editor fica de fora da busca)
   // pelo retângulo na tela (muitos textos têm pointer-events: none e não aparecem no "elementsFromPoint");
   // havendo mais de um, o menor (o mais específico), com uma folga de 10px em volta para o dedo
+  // textos e imagens/moléculas entram na disputa; vale o retângulo na tela, então um texto por cima de uma cena 3D ganha
   achar(x, y) {
     let melhor = null, area = Infinity;
-    Palco.el.querySelectorAll(this.ALVOS).forEach(el => {
+    Palco.el.querySelectorAll(this.ALVOS + ", " + this.VISUAIS).forEach(el => {
+      if (el === this.camada || el.closest(".dev-camada")) return;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height || getComputedStyle(el).visibility === "hidden" || +getComputedStyle(el).opacity === 0) return;
       if (x < r.left - 10 || x > r.right + 10 || y < r.top - 10 || y > r.bottom + 10) return;
@@ -8320,27 +8384,39 @@ const Dev = {
       // o translate calculado vem como foi escrito ("-50% -100%"): a porcentagem vira px pelo tamanho do próprio elemento
       const cs = getComputedStyle(el), tr = (cs.translate === "none" ? "0px 0px" : cs.translate).split(" ")
         .map((v, i) => v.endsWith("%") ? parseFloat(v) / 100 * (i ? el.offsetHeight : el.offsetWidth) : parseFloat(v));
-      this.ajustes.set(el, { tx0: tr[0] || 0, ty0: tr[1] || 0, dx: 0, dy: 0, f0: parseFloat(cs.fontSize), f: parseFloat(cs.fontSize) });
+      const s0 = cs.scale === "none" ? 1 : parseFloat(cs.scale) || 1, r = el.getBoundingClientRect();
+      this.ajustes.set(el, { tx0: tr[0] || 0, ty0: tr[1] || 0, dx: 0, dy: 0, f0: parseFloat(cs.fontSize), f: parseFloat(cs.fontSize),
+        vis: this.visual(el), s0, s: s0, w0: r.width, h0: r.height,
+        st0: { translate: el.style.translate, fontSize: el.style.fontSize, scale: el.style.scale } });
     }
     return this.ajustes.get(el);
   },
-  aplicar(el, d) { el.style.translate = `${d.tx0 + d.dx}px ${d.ty0 + d.dy}px`; el.style.fontSize = `${d.f}px`; },
+  aplicar(el, d) {
+    el.style.translate = `${d.tx0 + d.dx}px ${d.ty0 + d.dy}px`;
+    if (d.vis) el.style.scale = String(d.s); else el.style.fontSize = `${d.f}px`;
+  },
   baixa(e) {
-    this.camada.setPointerCapture(e.pointerId);
-    const el = this.toques.size ? [...this.toques.values()][0].el : this.achar(e.clientX, e.clientY);
+    try { this.camada.setPointerCapture(e.pointerId); } catch (_) {}
+    let el = this.toques.size ? [...this.toques.values()][0].el : null;
+    if (!el) {
+      // o bloco escolhido com "⬚" continua valendo enquanto o dedo cair dentro dele
+      const r = this.fixo && this.sel && this.sel.isConnected ? this.sel.getBoundingClientRect() : null;
+      el = r && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom ? this.sel : this.achar(e.clientX, e.clientY);
+    }
     if (!el) return;
-    document.querySelectorAll(".dev-alvo").forEach(x => x !== el && x.classList.remove("dev-alvo")); el.classList.add("dev-alvo");
+    if (el !== this.sel) this.escolher(el);
     const d = this.dados(el);
     this.toques.set(e.pointerId, { el, x: e.clientX, y: e.clientY });
-    if (this.toques.size === 2) { const [a, b] = [...this.toques.values()]; this.pinca = { el, dist: Math.hypot(a.x - b.x, a.y - b.y), f: d.f }; }
+    if (this.toques.size === 2) { const [a, b] = [...this.toques.values()]; this.pinca = { el, dist: Math.hypot(a.x - b.x, a.y - b.y), f: d.f, s: d.s }; }
   },
   move(e) {
     const tq = this.toques.get(e.pointerId); if (!tq) return;
     const d = this.dados(tq.el);
     if (this.toques.size >= 2 && this.pinca) {
       tq.x = e.clientX; tq.y = e.clientY;
-      const [a, b] = [...this.toques.values()], dist = Math.hypot(a.x - b.x, a.y - b.y);
-      d.f = Math.max(6, Math.round(this.pinca.f * dist / Math.max(this.pinca.dist, 1) * 10) / 10);
+      const [a, b] = [...this.toques.values()], k = Math.hypot(a.x - b.x, a.y - b.y) / Math.max(this.pinca.dist, 1);
+      if (d.vis) d.s = Math.max(.1, Math.round(this.pinca.s * k * 1000) / 1000);
+      else d.f = Math.max(6, Math.round(this.pinca.f * k * 10) / 10);
     } else {
       d.dx += e.clientX - tq.x; d.dy += e.clientY - tq.y; tq.x = e.clientX; tq.y = e.clientY;
     }
@@ -8355,15 +8431,19 @@ const Dev = {
       `Tela (palco): ${Math.round(P.width)} × ${Math.round(P.height)} px`, ""];
     let k = 0;
     this.ajustes.forEach((d, el) => {
-      if (!el.isConnected || (!d.dx && !d.dy && d.f === d.f0)) return;
+      if (!el.isConnected || (!d.dx && !d.dy && d.f === d.f0 && d.s === d.s0)) return;
       k++;
-      const nome = el.tagName.toLowerCase() + (el.className && typeof el.className === "string" ? "." + el.className.trim().split(/\s+/).filter(c => c !== "dev-alvo").join(".") : "");
+      // o que identifica: o texto, ou (imagem/desenho/molécula) o arquivo, o alt ou o aria-label
+      const src = el.getAttribute("src") || (el.querySelector && el.querySelector("img") ? el.querySelector("img").getAttribute("src") : "");
       const texto = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 60);
-      linhas.push(`${k}. ${nome} "${texto}"`);
+      const ident = d.vis ? [el.getAttribute("aria-label") || el.getAttribute("alt"), src, texto].filter(Boolean).join(" · ") : texto;
+      linhas.push(`${k}. ${this.nome(el)}${d.vis ? " [imagem/molécula]" : ""} "${ident}"`);
       if (d.dx || d.dy) linhas.push(`   mover: x ${d.dx >= 0 ? "+" : ""}${Math.round(d.dx)}px (${(d.dx / P.width * 100).toFixed(1)}% da largura), y ${d.dy >= 0 ? "+" : ""}${Math.round(d.dy)}px (${(d.dy / P.height * 100).toFixed(1)}% da altura)`);
       if (d.f !== d.f0) linhas.push(`   fonte: ${d.f0.toFixed(1)}px → ${d.f.toFixed(1)}px (×${(d.f / d.f0).toFixed(2)})`);
+      if (d.s !== d.s0) { const k2 = d.s / d.s0;
+        linhas.push(`   tamanho: ×${k2.toFixed(2)} (escala ${d.s0} → ${d.s}) · ${Math.round(d.w0)}×${Math.round(d.h0)}px → ${Math.round(d.w0 * k2)}×${Math.round(d.h0 * k2)}px (largura ${(d.w0 / P.width * 100).toFixed(1)}% → ${(d.w0 * k2 / P.width * 100).toFixed(1)}% da tela)`); }
     });
-    if (!k) linhas.push("(nenhum texto foi mexido)");
+    if (!k) linhas.push("(nada foi mexido)");
     return linhas.join("\n");
   },
   copiar() {
