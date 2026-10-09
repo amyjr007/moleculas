@@ -1280,7 +1280,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v195 · 09/10/2026</span>
+    <span class="versao" id="versao">v196 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -7997,13 +7997,18 @@ const Cena113F = {
   caderno() {
     const s = this.$(".c121-esqueleto"); if (!s || s.dataset.caderno) return;
     s.dataset.caderno = "1";
-    const cor = "#F4F7FB", fonte = "Bricolage Grotesque, sans-serif";
-    const simbolo = (x, t) => `<text x="${x}" y="25" text-anchor="middle" dominant-baseline="central" font-size="24" font-weight="700" fill="${cor}" font-family="${fonte}">${t}</text>`;
-    const ponto = (x, y) => `<circle cx="${x}" cy="${y}" r="1.9" fill="${cor}"/>`;
-    s.innerHTML = `<g class="caderno" stroke="${cor}" stroke-width="2.2" stroke-linecap="round">
-        <line x1="36" y1="25" x2="88" y2="25"/><line x1="112" y1="25" x2="164" y2="25"/></g>
-      ${simbolo(24, "H")}${simbolo(100, "O")}${simbolo(176, "H")}
-      ${ponto(95.5, 8)}${ponto(104.5, 8)}${ponto(95.5, 42)}${ponto(104.5, 42)}`;
+    // (ajuste da professora: símbolos e pares 41% maiores e traços 30% mais curtos — os H chegam mais perto do O)
+    const cor = "#F4F7FB", fonte = "Bricolage Grotesque, sans-serif", K = 1.41;
+    const simbolo = (x, t) => `<text x="${x}" y="25" text-anchor="middle" dominant-baseline="central" font-size="${24 * K}" font-weight="700" fill="${cor}" font-family="${fonte}">${t}</text>`;
+    const ponto = (x, y) => `<circle cx="${x}" cy="${y}" r="${1.9 * K}" fill="${cor}"/>`;
+    const traco = 52 * .7, borda = 13, folga = 4, hMeio = 11.5;   // o traço; meia largura do O; o vão até a letra; meia largura do H
+    const xe = 100 - borda - folga, xd = 100 + borda + folga;     // onde os traços encostam no O
+    const hEsq = xe - traco - folga - hMeio, hDir = xd + traco + folga + hMeio;
+    const dx = 4.5 * K, dy = 17 * K;                                // os pares, em cima e embaixo do O
+    s.innerHTML = `<g class="caderno" stroke="${cor}" stroke-width="${2.2 * 1.2}" stroke-linecap="round">
+        <line x1="${xe - traco}" y1="25" x2="${xe}" y2="25"/><line x1="${xd}" y1="25" x2="${xd + traco}" y2="25"/></g>
+      ${simbolo(hEsq, "H")}${simbolo(100, "O")}${simbolo(hDir, "H")}
+      ${ponto(100 - dx, 25 - dy)}${ponto(100 + dx, 25 - dy)}${ponto(100 - dx, 25 + dy)}${ponto(100 + dx, 25 + dy)}`;
     s.setAttribute("aria-label", "Estrutura de Lewis da água: H–O–H, com dois pares de elétrons no oxigênio");
     delete s.dataset.apagado;
     Palco.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: 1, easing: "ease-out", fill: "none" });
