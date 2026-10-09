@@ -1280,7 +1280,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v197 · 09/10/2026</span>
+    <span class="versao" id="versao">v198 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3081,7 +3081,7 @@ const NARRACOES = [
       { tempo: 54.1, acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda brilha
       { tempo: 55,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir"); } },   // ela apaga; a da direita brilha
       { tempo: 57,   acao: () => Cena113P.engrossar("esq") },              // as duas brilham
-      { tempo: 60,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir", false); Cena113P.pergunta(); } }   // apagam; "Quantos elétrons faltam?"
+      { tempo: 65,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir", false); Cena113P.pergunta(); } }   // apagam; "Quantos elétrons faltam?"
     ],
     aoFim: () => ui.semPlay(true) },   // quem leva adiante é a resposta certa (o 11.3A)
   // depois do acerto (16s): no fim, o aluno toca em cima e embaixo do O (um par por toque, um par em cada lado);
