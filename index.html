@@ -484,6 +484,8 @@
   .c11-riso { font-size: .85em; margin-left: .15em; }
   .c11-passo-bt { top: auto; bottom: 9%; translate: none; }   /* o botão "Passo 1" do fim do 11.1B: centralizado embaixo */
   .c11-voa { position: absolute; z-index: 6; margin: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; pointer-events: none; box-sizing: border-box; }
+  .c11-voa-txt { display: block; line-height: 1; letter-spacing: .02em; transform-origin: 50% 50%; }   /* o "H₂O" que voa da opção até a fórmula */
+  .c11-voa-txt sub { font-size: .58em; vertical-align: -.25em; }
   .c4-op:has(.c11-riso) { white-space: nowrap; min-width: 0; padding-inline: .55em; font-size: clamp(1.15rem, 2.3vmin + .6rem, 1.8rem); }   /* "H₂O 😂" numa linha só, as três cabendo */
   .c11-titulo.uma-linha { white-space: nowrap; }
   /* 11.1: a fórmula genérica, o passo 1 e a lista das famílias, em coluna embaixo do título */
@@ -541,7 +543,11 @@
   .c112-faisca { position: absolute; z-index: 5; pointer-events: none; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; }
   .c112-onda { position: absolute; z-index: 5; pointer-events: none; border-radius: 50%; translate: -50% -50%; border: 3px solid rgba(255,214,120,.95);
     box-shadow: 0 0 24px rgba(255,194,75,.8), inset 0 0 24px rgba(255,194,75,.6); }
-  @media (prefers-reduced-motion: reduce) { .c112-inst, .c112-sel { animation: none; } }
+  /* 11.3: a ligação em destaque brilha (acende e apaga suave; enquanto acesa, o brilho respira) */
+  .c121-esqueleto .lig line { transition: filter .45s ease, stroke .45s ease; }
+  .c121-esqueleto .lig line.brilha { stroke: #F2FBFF; filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 7px rgba(163,219,247,1)) drop-shadow(0 0 14px rgba(163,219,247,.85)); animation: c113Brilho 1.1s ease-in-out .45s infinite alternate; }
+  @keyframes c113Brilho { to { filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px rgba(163,219,247,1)) drop-shadow(0 0 22px rgba(163,219,247,1)); } }
+  @media (prefers-reduced-motion: reduce) { .c112-inst, .c112-sel, .c121-esqueleto .lig line.brilha { animation: none; } }
   .c121-central { margin-top: .4em !important; min-height: 1.3em; font-family: var(--display); font-weight: 700; color: var(--celeste); font-size: calc(clamp(1.05rem, 2.2vmin + .5rem, 1.7rem) * 1.1); }
   .c113-voo { position: absolute; z-index: 4; border-radius: 50%; background: var(--celeste); box-shadow: 0 0 8px 2px rgba(163,219,247,.7); pointer-events: none; }
   /* a lista: todas as linhas do mesmo tamanho, alinhadas pela esquerda (o bloco fica centralizado) e com números de largura igual */
@@ -1267,7 +1273,7 @@
       </form>
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <span class="versao" id="versao">v191 · 09/10/2026</span>
+    <span class="versao" id="versao">v192 · 09/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3060,15 +3066,15 @@ const NARRACOES = [
       { tempo: 35,   acao: () => Cena121.pulsarAtomo(["dir"], 1) },        // o da direita
       { tempo: 36,   acao: () => Cena121.pulsarAtomo(["meio"], 1) },       // o O
       { tempo: 39,   acao: () => Cena121.pulsarAtomo(["dir"], 3) },        // o H da direita pulsa 3 vezes
-      { tempo: 42,   acao: () => Cena113P.engrossar("dir") },              // a ligação dele engrossa (até 45s)
+      { tempo: 42,   acao: () => Cena113P.engrossar("dir") },              // a ligação dele brilha (até 45s)
       { tempo: 45,   acao: () => { Cena113P.engrossar("dir", false); Cena113P.estabilizar("dir"); } },   // volta; em cima do H aparece "estável" (ele já se acalmou no 11.2)
-      { tempo: 47,   acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda engrossa (até 49,5s)
+      { tempo: 47,   acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda brilha (até 49,5s)
       { tempo: 49.5, acao: () => { Cena113P.engrossar("esq", false); Cena113P.estabilizar("esq"); } },  // o mesmo com o H da esquerda
       { tempo: 52,   acao: () => Cena121.pulsarAtomo(["meio"], 2) },       // o O pulsa 2 vezes
-      { tempo: 54.1, acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda engrossa
-      { tempo: 55,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir"); } },   // ela volta; a da direita engrossa
-      { tempo: 57,   acao: () => Cena113P.engrossar("esq") },              // as duas grossas
-      { tempo: 60,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir", false); Cena113P.pergunta(); } }   // voltam; "Quantos elétrons faltam?"
+      { tempo: 54.1, acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda brilha
+      { tempo: 55,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir"); } },   // ela apaga; a da direita brilha
+      { tempo: 57,   acao: () => Cena113P.engrossar("esq") },              // as duas brilham
+      { tempo: 60,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir", false); Cena113P.pergunta(); } }   // apagam; "Quantos elétrons faltam?"
     ],
     aoFim: () => ui.semPlay(true) },   // quem leva adiante é a resposta certa (o 11.3B)
   // depois do acerto: no fim, o aluno toca em cima e embaixo do O (um par por toque, um par em cada lado)
@@ -7037,18 +7043,49 @@ const Cena11Copo = {
     const quiz = this.$(".c72-quiz"), b = quiz && (quiz.querySelector(".c4-op.certa") || quiz.querySelector(".c4-op"));
     if (quiz) Palco.animar(quiz, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => quiz.remove(), () => {});
     if (!b) { f.style.visibility = ""; return; }
-    // um voo: a cópia da opção sai do lugar dela e se transforma na fórmula no caminho
-    const br = b.getBoundingClientRect(), s = parseFloat(getComputedStyle(f).fontSize) / parseFloat(getComputedStyle(b).fontSize);
-    Palco.adicionar(`<div class="c4-op c11-voa" style="left:${br.left - P.left}px;top:${br.top - P.top}px;width:${br.width}px;height:${br.height}px">${b.innerHTML}</div>`);
-    const v = Palco.el.lastElementChild; b.style.visibility = "hidden";
-    const dx = fr.left + fr.width / 2 - (br.left + br.width / 2), dy = fr.top + fr.height / 2 - (br.top + br.height / 2);
-    const de = getComputedStyle(b);
-    Palco.animar(v, [{ transform: "translate(0px,0px) scale(1)", backgroundColor: de.backgroundColor, borderColor: de.borderColor, color: "#fff" },
-      { transform: `translate(${dx}px,${dy}px) scale(${s})`, backgroundColor: "rgba(20,33,52,0)", borderColor: "rgba(163,219,247,0)", color: "#FFC24B" }],
-      { duracao: this.ENCOLHE, easing: "cubic-bezier(.5,0,.3,1)" }).finished.then(() => { v.remove(); f.style.visibility = ""; }, () => {});
-    // o emoji some no caminho (e deixa de ocupar lugar: o H₂O fica no centro)
-    const riso = v.querySelector(".c11-riso");
-    if (riso) Palco.animar(riso, [{ opacity: 1, fontSize: ".85em", marginLeft: ".15em" }, { opacity: 0, fontSize: "0em", marginLeft: "0em" }], { duracao: this.ENCOLHE * .6, easing: "ease-in" });
+    // um voo: o "H₂O" da opção sai do lugar dele e vira a fórmula no caminho. Ele voa sozinho, medido pelas letras
+    // (de ponta a ponta do texto, nos dois lados), e no fim cruza em fade com a fórmula — sem salto na chegada.
+    // A caixa do botão e o emoji somem no lugar.
+    const br = b.getBoundingClientRect(), de = getComputedStyle(b), riso = b.querySelector(".c11-riso");
+    // as letras do "H₂O" na opção (sem o espaço e o emoji do fim)
+    const faixa = document.createRange(), nos = [...b.childNodes], fimNo = riso ? nos.indexOf(riso) : nos.length;
+    let ultimo = null; for (let k = fimNo - 1; k >= 0; k--) if (nos[k].textContent.trim()) { ultimo = nos[k]; break; }
+    faixa.setStart(b, 0);
+    if (ultimo && ultimo.nodeType === 3) faixa.setEnd(ultimo, ultimo.textContent.replace(/\s+$/, "").length); else faixa.setEndAfter(ultimo || b.lastChild);
+    const tr = faixa.getBoundingClientRect();
+    // as letras da fórmula (sem o espaço de cima, que é para as famílias)
+    const ls = [...f.querySelectorAll(".c12-l")].map(el => el.getBoundingClientRect());
+    const fu = ls.length ? { left: Math.min(...ls.map(r => r.left)), right: Math.max(...ls.map(r => r.right)), top: Math.min(...ls.map(r => r.top)), bottom: Math.max(...ls.map(r => r.bottom)) } : fr;
+    const html = [...nos.slice(0, fimNo)].map(n => n.nodeType === 3 ? n.textContent : n.outerHTML).join("").trim();
+    // a caixa do botão (vazia) some no lugar
+    Palco.adicionar(`<div class="c4-op c11-voa" style="left:${br.left - P.left}px;top:${br.top - P.top}px;width:${br.width}px;height:${br.height}px"></div>`);
+    const caixaV = Palco.el.lastElementChild; b.style.visibility = "hidden";
+    Palco.animar(caixaV, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.92)" }], { duracao: .35, easing: "ease-out" }).finished.then(() => caixaV.remove(), () => {});
+    // o emoji encolhe e some no lugar dele
+    if (riso) {
+      const rr = riso.getBoundingClientRect();
+      Palco.adicionar(`<span class="c11-voa" style="left:${rr.left - P.left}px;top:${rr.top - P.top}px;width:${rr.width}px;height:${rr.height}px;font-size:${getComputedStyle(riso).fontSize}">${riso.textContent}</span>`);
+      const e = Palco.el.lastElementChild;
+      Palco.animar(e, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(0)" }], { duracao: this.ENCOLHE * .45, easing: "ease-in" }).finished.then(() => e.remove(), () => {});
+    }
+    // o texto que voa: posto exatamente sobre as letras da opção
+    Palco.adicionar(`<span class="c11-voa c11-voa-txt" style="left:${tr.left - P.left}px;top:${tr.top - P.top}px;color:#fff">${html}</span>`);
+    const v = Palco.el.lastElementChild;
+    v.style.fontFamily = de.fontFamily; v.style.fontWeight = de.fontWeight; v.style.fontSize = de.fontSize;
+    const vr = v.getBoundingClientRect();
+    v.style.left = `${tr.left - P.left + (tr.left - vr.left) + (tr.width - vr.width) / 2}px`;
+    v.style.top = `${tr.top - P.top + (tr.top - vr.top) + (tr.height - vr.height) / 2}px`;
+    const s = (fu.right - fu.left) / Math.max(tr.width, 1);
+    const dx = (fu.left + fu.right) / 2 - (tr.left + tr.width / 2), dy = (fu.top + fu.bottom) / 2 - (tr.top + tr.height / 2);
+    const T = this.ENCOLHE;
+    Palco.animar(v, [{ transform: "translate(0px,0px) scale(1)", color: "#fff" }, { transform: `translate(${dx}px,${dy}px) scale(${s})`, color: "#FFC24B" }],
+      { duracao: T, easing: "cubic-bezier(.5,0,.3,1)" }).finished.then(() => v.remove(), () => {});
+    Palco.animar(v, [{ opacity: 1, offset: 0 }, { opacity: 1, offset: .8 }, { opacity: 0, offset: 1 }], { duracao: T, easing: "linear" });
+    // nos últimos 18% do voo, a fórmula aparece em fade por baixo do texto que chega
+    Palco.animar(f, [{ opacity: 0 }, { opacity: 0 }], { duracao: T * .8, fill: "none" }).finished.then(() => {
+      f.style.visibility = "";
+      Palco.animar(f, [{ opacity: 0 }, { opacity: 1 }], { duracao: T * .22, easing: "ease-out" });
+    }, () => {});
   },
   // fim do 11.1B: no lugar do play, um botão "Passo 1", centralizado embaixo; o toque nele leva ao 11.1C
   // (o mesmo botão, com outro número, no fim do 11.1C — "Passo 2" — e do 11.2 — "Passo 3")
@@ -7787,14 +7824,10 @@ const Cena113P = {
     Cena12.brilho(ks);
     Palco.animar(Cena12.fila(), [{}, {}], { duracao: dur, fill: "none" }).finished.then(() => Cena12.brilho(ks, false), () => {});
   },
-  // a ligação de um lado engrossa, com brilho, e fica assim até voltar (ligar = false)
+  // a ligação de um lado acende um brilho (sem mudar a espessura) e fica brilhando, pulsando de leve, até apagar (ligar = false)
   engrossar(lado, ligar = true) {
-    const l = Palco.el.querySelector(`.c121-esqueleto .lig [data-l="${lado}"]`); if (!l || l.classList.contains("grossa") === ligar) return;
-    l.classList.toggle("grossa", ligar);
-    const normal = { strokeWidth: 5, filter: "drop-shadow(0 0 0 rgba(255,255,255,0))" }, grossa = { strokeWidth: 9, filter: "drop-shadow(0 0 4px rgba(255,255,255,.95))" };
-    const fim = ligar ? grossa : normal;
-    l.style.strokeWidth = fim.strokeWidth; l.style.filter = fim.filter;   // (o estado final fica no estilo; a animação só faz a passagem)
-    Palco.animar(l, ligar ? [normal, grossa] : [grossa, normal], { duracao: .4, easing: "ease-out", fill: "none" });
+    const l = Palco.el.querySelector(`.c121-esqueleto .lig [data-l="${lado}"]`); if (!l || l.classList.contains("brilha") === ligar) return;
+    l.classList.toggle("brilha", ligar);
   },
   // o átomo estável. Um H (11.3): só aparece "estável" em cima dele, em fade (ele já se acalmou ao ganhar a ligação, no 11.2).
   // O O (fim do 11.3B): a bola de energia verde e ele para de tremer (sem o "right": a festa já tem os sons dela)
