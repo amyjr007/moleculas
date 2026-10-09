@@ -1,6 +1,6 @@
 /* Service worker do app. Guarda tudo na instalação: depois da primeira
    visita, o app abre inteiro sem internet. */
-const CACHE = 'moleculas-v192';
+const CACHE = 'moleculas-v193';
 const ARQUIVOS = [
   './',
   './index.html',
