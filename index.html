@@ -1312,7 +1312,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v205 · 09/10/2026</span>
+    <span class="versao" id="versao">v206 · 10/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3104,9 +3104,9 @@ const NARRACOES = [
       { tempo: 37,   acao: () => Cena121.pulsarAtomo(["meio"], 1) },       // o O
       { tempo: 39,   acao: () => Cena121.pulsarAtomo(["dir"], 3) },        // o H da direita pulsa 3 vezes
       { tempo: 42.4, acao: () => Cena113F.escurecer(["meio", "esq", "lig-esq"]) },   // escurece 90% o resto: só o H da direita e a ligação dele ficam normais
+      { tempo: 42.5, acao: () => Cena121.vaiVem("dir", 4.5, 3) },          // a ligação da direita fica transparente e o par vai e vem dentro dela (até 47s)
       { tempo: 47,   acao: () => Cena113P.estabilizar("dir") },            // em cima do H da direita aparece "estável" (ele já se acalmou no 11.2)
-      { tempo: 49,   acao: () => { Cena113F.escurecer(["dir", "lig-dir"]); Cena113F.escurecer(["esq", "lig-esq"], false); } },   // inverte: só o H da esquerda e a ligação dele
-      { tempo: 51,   acao: () => Cena113P.piscarLigacao("esq") },          // a ligação dele pulsa (um brilho rápido)
+      { tempo: 49,   acao: () => { Cena113F.escurecer(["dir", "lig-dir"]); Cena113F.escurecer(["esq", "lig-esq"], false); Cena121.vaiVem("esq", 3, 2); } },   // inverte: só o H da esquerda e a ligação dele, com o par indo e vindo (até 52s)
       { tempo: 52,   acao: () => { Cena113P.estabilizar("esq"); Cena121.pulsarAtomo(["meio"], 2); } },   // "estável" em cima do H da esquerda; o O pulsa 2 vezes
       { tempo: 54.9, acao: () => { Cena113F.escurecer(["esq", "dir"]); Cena113F.escurecer(["meio", "lig-esq", "lig-dir"], false); } },   // os H apagam; o O e as ligações acendem
       { tempo: 58.3, acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda brilha
