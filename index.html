@@ -1314,7 +1314,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v208 · 10/10/2026</span>
+    <span class="versao" id="versao">v209 · 10/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3149,7 +3149,8 @@ const NARRACOES = [
     ] },
   // Exemplo 02, a amônia (11s): o copo volta e a molécula de água entra nele; aos 7s a área do copo vira (face de cubo)
   // e a nova face traz um frasco de vidro fechado com amônia, um gás. No fim, o frasco chama o toque
-  { id: "dialogo12", titulo: "A amônia", src: "audio/audio_moleculas_12.mp3", semNav: true,
+  // na navegação rápida é o 51, e entra aos 7s (a virada para o frasco)
+  { id: "dialogo12", titulo: "A molécula de amônia", num: 51, entrada: 7, src: "audio/audio_moleculas_12.mp3",
     inicio: () => Cena12A.inicio(),
     eventos: [
       { tempo: 0,    acao: () => Cena12A.voltarCopo() },                   // sai a água em 3D (e o resto do 11.3); o copo volta e a molécula entra nele
@@ -7191,6 +7192,8 @@ const Cena12A = {
       if (el.dataset.saindo) return; el.dataset.saindo = "1";
       Palco.animar(el, [{ opacity: getComputedStyle(el).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => el.remove(), () => {});
     });
+    // pela navegação rápida (entra aos 7s): o copo já está lá, parado, com a água dentro — e a virada vem em seguida
+    if (Player.desde >= 7) { Palco.el.querySelectorAll(".c11-copo").forEach(c => c.remove()); Cena11Copo.mostrar(); return; }
     Cena11Copo.voltar();
   },
   // 7s: a área do copo vira (face de cubo, para a esquerda) e a nova face traz o frasco
