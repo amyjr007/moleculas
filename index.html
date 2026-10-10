@@ -1312,7 +1312,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v206 · 10/10/2026</span>
+    <span class="versao" id="versao">v207 · 10/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3128,6 +3128,7 @@ const NARRACOES = [
   { id: "dialogo11_3B", titulo: "A molécula de água", src: "audio/audio_moleculas_11.3B.mp3", semNav: true, extra: true,
     eventos: [
       { tempo: 3,    acao: () => Cena113F.festa(false) },                  // aplausos e confetes
+      { tempo: 5,    acao: () => Cena121.respiro(1, true) },               // o áudio pausa 1s (e continua sozinho)
       { tempo: 7,    acao: () => { Cena113F.brilhar(["lig-esq", "lig-dir"]); Cena113F.escurecer(["meio", "pares"]); } },   // as ligações brilham; O e pares escurecem (foco nos H)
       { tempo: 10.2, acao: () => { Cena113F.brilhar(["lig-esq", "lig-dir"], false); Cena113F.escurecer(["meio", "pares"], false); Cena113F.escurecer(["esq", "dir"]); } },   // os H escurecem (foco no O, nos pares e nas ligações)
       { tempo: 12.2, acao: () => Cena113F.brilhar(["lig-esq"]) },          // a ligação da esquerda brilha
@@ -3135,7 +3136,7 @@ const NARRACOES = [
       { tempo: 13.6, acao: () => { Cena113F.brilhar(["par-cima"], false); Cena113F.brilhar(["lig-dir"]); } },   // apaga; a ligação da direita
       { tempo: 14.4, acao: () => { Cena113F.brilhar(["lig-dir"], false); Cena113F.brilhar(["par-baixo"]); } },  // apaga; o par de baixo
       { tempo: 16,   acao: () => { Cena113F.brilhar(["par-baixo"], false); Cena113F.escurecer(["esq", "dir"], false); Cena113F.festa(true); } },   // tudo volta; aplausos e fanfarra
-      { tempo: 17,   acao: () => Cena113F.tirarPasso() },                  // o texto do passo 3 some em fade
+      { tempo: 17,   acao: () => { Cena113F.tirarPasso(); Cena121.respiro(1, true); } },   // o texto do passo 3 some em fade; o áudio pausa 1s
       { tempo: 30,   acao: () => Cena113F.tirarMolecula() }                // a molécula de bolas some em fade
     ],
     aoFim: () => Cena113F.caderno() },   // no lugar dela, em fade, a molécula como no caderno; o play volta e leva ao 11.3C
