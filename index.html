@@ -1354,7 +1354,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v221 · 11/10/2026</span>
+    <span class="versao" id="versao">v222 · 11/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3369,7 +3369,15 @@ const NARRACOES = [
       { tempo: 30,   acao: () => Cena113P.engrossar("esq") },
       { tempo: 30.5, acao: () => Cena113P.engrossar("baixo") }
     ],
-    aoFim: () => { ui.semPlay(true); Cena133.festaFinal(); } },
+    aoFim: () => { ui.semPlay(true); Cena133.festaFinal(); Cena11Copo.botaoPasso1("e", "Entendi"); } },   // o "Entendi" leva ao 13.6
+  // 3s: no fim, a molécula de bolas sai e entra a do caderno (plana); o "Entendi" leva ao 13.7
+  { id: "dialogo13_6", titulo: "O metano no caderno", src: "audio/audio_moleculas_13.6.mp3", semNav: true, extra: true,
+    eventos: [],
+    aoFim: () => { ui.semPlay(true); Cena12N.caderno(); } },
+  // 6s: no fim, a molécula do caderno se transforma na 3D (os H saem do plano para os cantos do tetraedro) e gira
+  { id: "dialogo13_7", titulo: "O metano em 3D", src: "audio/audio_moleculas_13.7.mp3", semNav: true, extra: true,
+    eventos: [],
+    aoFim: () => { ui.semPlay(true); Cena137.transformar(); } },
 
 ];
 
@@ -7783,7 +7791,7 @@ const Cena133 = {
       const g = Cena112L.g(l); g.getAnimations().forEach(a => a.finish());
       Cena112L.instavel(l, true);
     });
-    Palco.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: .5, easing: "ease-out" });
+    Palco.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: .5, easing: "ease-out", fill: "none" });   // (sem ficar preso no fim: os fades de depois precisam valer)
     Palco.el.querySelectorAll(".c133-at, .c133-slot").forEach(el =>
       Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5, easing: "ease-in" }).finished.then(() => el.remove(), () => {}));
   },
@@ -7837,6 +7845,86 @@ const Cena133 = {
     try { const e = new Audio("audio/vfx/error.mp3"); e.play().catch(() => {}); } catch (_) {}
     Vibra.tocar("toqueErrado");
     setTimeout(() => this.atomos.forEach(a => { if (a.slot) { this.slots[a.slot].ocupante = null; a.slot = null; } this.pos(a, a.origem); }), 450);
+  }
+};
+
+/* ---------- Narração 13.7: o metano do caderno vira 3D ----------
+   No fim do 13.7, a molécula 3D nasce exatamente em cima da do caderno, ainda plana (o C no meio, os H em cruz, do mesmo tamanho),
+   enquanto os símbolos se apagam; então os H saem do plano e vão para os cantos do tetraedro (109,5°) e a molécula começa a girar
+   (sozinha, e com o dedo). */
+const Cena137 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  L: 1.7, DUR: 2.6,   // a distância C–H (no 3D) e quanto dura a transformação
+  transformar() {
+    const s = this.$(".c121-esqueleto"); if (!s || this.$(".c137-3d") || !window.THREE) return;
+    const T = THREE, P = Palco.el.getBoundingClientRect(), m = s.getScreenCTM(); if (!m) return;
+    const [cx0, cy0] = Cena121.xy("meio"), [hx] = Cena121.xy("dir");
+    const pt = s.createSVGPoint(); pt.x = cx0; pt.y = cy0; const c = pt.matrixTransform(m);
+    const d = (hx - cx0) * m.a;                                     // a distância C–H do caderno, em px
+    const cx = c.x - P.left, cy = c.y - P.top, alto = 3.4 * d;      // o 3D: a faixa toda, centrada no C, com 1,7 d para cima e para baixo
+    Palco.adicionar(`<div class="c137-3d" aria-label="Molécula de metano em 3D: um tetraedro, com o C no meio e os quatro H nos cantos. Arraste para girar"
+      style="position:absolute;left:0;right:0;top:${cy - alto / 2}px;height:${alto}px;z-index:4"></div>`);
+    const caixa = this.$(".c137-3d");
+    let renderer;
+    try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return; }
+    renderer.outputEncoding = T.sRGBEncoding; renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    caixa.appendChild(renderer.domElement);
+    const cv = renderer.domElement; Object.assign(cv.style, { display: "block", width: "100%", height: "100%", touchAction: "none" });
+    const cena = new T.Scene(), fov = 35, camera = new T.PerspectiveCamera(fov, 1, .1, 100);
+    // a câmera fica a uma distância em que 1,7 (o C–H) vira exatamente d px: o 3D começa do tamanho do caderno
+    const dist = 3.4 * this.L / (2 * Math.tan(T.MathUtils.degToRad(fov / 2)));
+    cena.add(new T.HemisphereLight(0xdfefff, 0x1b2a40, .85));
+    const luz = new T.DirectionalLight(0xffffff, 1.2); luz.position.set(3, 5, 7); cena.add(luz);
+    const luz2 = new T.DirectionalLight(0xA3DBF7, .5); luz2.position.set(-6, -3, -4); cena.add(luz2);
+    const mat = cor => new T.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18, transparent: true, opacity: 0 });
+    const esf = new T.SphereGeometry(1, 48, 32), bas = new T.CylinderGeometry(.13, .13, 1, 24), Y = new T.Vector3(0, 1, 0);
+    const mol = new T.Group(); cena.add(mol);
+    const C = new T.Mesh(esf, mat(0x2A3038)); C.scale.setScalar(.62); mol.add(C);
+    // de onde cada H sai (o plano: em cima, à direita, embaixo, à esquerda) e para onde vai (os cantos do tetraedro)
+    const plano = [[0, 1, 0], [1, 0, 0], [0, -1, 0], [-1, 0, 0]].map(v => new T.Vector3(...v));
+    const tetra = [[0, 1, 0], [.943, -.333, 0], [-.471, -.333, .816], [-.471, -.333, -.816]].map(v => new T.Vector3(...v).normalize());
+    const Hs = plano.map(() => { const h = new T.Mesh(esf, mat(0xFFFFFF)); h.scale.setScalar(.38); mol.add(h); return h; });
+    const lig = plano.map(() => { const b = new T.Mesh(bas, mat(0xC8C8C8)); mol.add(b); return b; });
+    const mats = [C, ...Hs, ...lig].map(o => o.material);
+    const ajustar = () => { const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h; camera.position.set(0, 0, dist); camera.updateProjectionMatrix(); };
+    const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
+    // girar com o dedo (depois da transformação), como as outras moléculas 3D
+    let giroY = 0, giroX = 0, arraste = null, parado = 0;
+    cv.addEventListener("pointerdown", e => { if (t < this.DUR) return; arraste = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} cv.style.cursor = "grabbing"; });
+    cv.addEventListener("pointermove", e => {
+      if (!arraste) return;
+      giroY += (e.clientX - arraste.x) * .012; giroX = Math.max(-1.3, Math.min(1.3, giroX + (e.clientY - arraste.y) * .012));
+      arraste = { x: e.clientX, y: e.clientY };
+    });
+    const soltar = () => { arraste = null; parado = 1.5; cv.style.cursor = "grab"; };
+    cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
+    // os símbolos do caderno se apagam enquanto as bolas aparecem por cima deles (antes, solta qualquer animação já terminada
+    // que ainda esteja segurando a opacidade)
+    s.getAnimations().forEach(x => { if (x.playState === "finished") x.cancel(); });
+    Palco.animar(s, [{ opacity: 1 }, { opacity: 0 }], { duracao: .7, easing: "ease-in", fill: "none" }).finished.then(() => { s.style.opacity = "0"; }, () => {});
+    const suave = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+    const dir = new T.Vector3(), a = new T.Vector3();
+    let t = 0, antes = performance.now();
+    const quadro = agora => {
+      if (!cv.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora; t += dt;
+      const ap = suave(t / .6), k = suave((t - .5) / (this.DUR - .9));   // aparecer; a transformação (do plano ao tetraedro)
+      mats.forEach(x => { x.opacity = ap; });
+      Hs.forEach((h, i) => {
+        dir.copy(plano[i]).lerp(tetra[i], k).normalize();
+        h.position.copy(dir).multiplyScalar(this.L);
+        const b = lig[i]; a.copy(h.position);
+        b.scale.set(1, a.length(), 1); b.position.copy(a).multiplyScalar(.5); b.quaternion.setFromUnitVectors(Y, a.clone().normalize());
+      });
+      // depois da transformação: inclina um pouco e gira sozinho (na mão, segue o dedo)
+      const fim = suave((t - this.DUR) / 1);
+      if (t > this.DUR && !arraste && dt) { if (parado > 0) parado -= dt; else giroY += dt * .6; }
+      mol.rotation.set(giroX + .3 * fim, giroY, 0);
+      if (t > this.DUR && !arraste) cv.style.cursor = "grab";
+      renderer.render(cena, camera);
+      requestAnimationFrame(quadro);
+    };
+    requestAnimationFrame(quadro);
   }
 };
 
@@ -7977,6 +8065,12 @@ const Cena12N = {
     const s = this.$(".c121-esqueleto"); if (!s) return;
     Palco.animar(s, [{}, {}], { duracao: 1.05, fill: "none" }).finished.then(() => {
       Cena113F.caderno();
+      // o metano (desenho solto no palco, mais baixo): se o H de baixo for ficar atrás do "Entendi", o desenho sobe o que falta
+      if (Cena121.arranjo().central === "C") {
+        const Pr = Palco.el.getBoundingClientRect(), baixo = s.getBoundingClientRect().bottom - Pr.top, limite = Palco.el.clientHeight * .91 - 70;
+        const sobe = Math.max(0, baixo - limite);
+        if (sobe) { s.style.top = `${parseFloat(s.style.top) - sobe}px`; Palco.animar(s, [{ translate: `0 ${sobe}px` }, { translate: "0 0" }], { duracao: .6, easing: "ease-out", fill: "none" }); }
+      }
       return Palco.animar(s, [{}, {}], { duracao: 1.1, fill: "none" }).finished;
     }).then(() => Cena11Copo.botaoPasso1("e", "Entendi"), () => {});
   },
@@ -8873,7 +8967,18 @@ const Cena113F = {
     const xe = 100 - borda - folga, xd = 100 + borda + folga;     // onde os traços encostam no O
     const hEsq = xe - traco - folga - hMeio, hDir = xd + traco + folga + hMeio;
     const dx = 4.5 * K, dy = 17 * K;                                // os pares, em cima e embaixo do O
-    if (Cena121.arranjo().central === "N") {
+    if (Cena121.arranjo().central === "C") {
+      // o metano: o C no meio e os quatro H em cruz (nos mesmos lugares do desenho de bolas), ligados por traços
+      const P2 = Cena121.arranjo().pos, [cx, cy] = P2.meio, sy = (x, y, t) => simbolo(x, t).replace('y="25"', `y="${y}"`);
+      const mC = 15, mH = 12, gap = 4;   // meia largura do C e do H (no tamanho do caderno) e o vão até a letra
+      const linhas = ["cima", "dir", "baixo", "esq"].map(l => {
+        const [hx, hy] = P2[l], dx = Math.sign(hx - cx), dy = Math.sign(hy - cy);
+        return `<line x1="${cx + dx * (mC + gap)}" y1="${cy + dy * (mC + gap)}" x2="${hx - dx * (mH + gap)}" y2="${hy - dy * (mH + gap)}"/>`;
+      }).join("");
+      s.innerHTML = `<g class="caderno" stroke="${cor}" stroke-width="${2.2 * 1.2}" stroke-linecap="round">${linhas}</g>
+        ${sy(cx, cy, "C")}${["cima", "dir", "baixo", "esq"].map(l => sy(P2[l][0], P2[l][1], "H")).join("")}`;
+      s.setAttribute("aria-label", "Estrutura de Lewis do metano: o C ligado a quatro H");
+    } else if (Cena121.arranjo().central === "N") {
       // a amônia: H–N–H em linha, o terceiro H embaixo do N (traço vertical) e o par do N em cima
       const [cx, cy] = Cena121.xy("meio"), sy = (x, y, t) => simbolo(x, t).replace('y="25"', `y="${y}"`);
       const vy = cy + 12 + folga, hBaixo = vy + traco + folga + 12;
