@@ -189,7 +189,7 @@
     color: var(--celeste); font-size: 1.1rem;
     display: flex; align-items: center; gap: .5em;
   }
-  .marca svg { width: 32px; height: 33px; }
+  .marca svg { width: 36px; height: 36px; }
   .btn-home {
     display: flex; flex-direction: column; align-items: center; gap: 2px;
     color: var(--celeste);
@@ -1344,7 +1344,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v224 · 11/10/2026</span>
+    <span class="versao" id="versao">v225 · 11/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10052,14 +10052,20 @@ Dev.iniciar();
 
 // o cubo de átomos da capa: desenhado em 3D (projeção com perspectiva) e girado com o dedo/mouse
 const CuboCapa = {
-  ay: 40 * Math.PI / 180, ax: -24 * Math.PI / 180, vy: 0, vx: 0,
+  // a pose escolhida pela professora: amarelo no alto, corais nos lados, visto bem de cima
+  ay: 45 * Math.PI / 180, ax: -55 * Math.PI / 180, vy: 0, vx: 0,
+  // só as arestas do ícone (as pintadas de vermelho): o "V" de cima, as duas diagonais paralelas, a lateral direita e a de baixo
+  ARESTAS: [[3, 2], [3, 7], [2, 6], [1, 5], [7, 5], [0, 4]],
   CORES: ["#7C9CFF","#A3DBF7","#FF7A66","#FFC24B","#A3DBF7","#FFFFFF","#A3DBF7","#FF7A66"],
   ESCURAS: ["#4A5FB0","#4F8DB5","#B4473A","#B9801B","#4F8DB5","#8FA4BF","#4F8DB5","#B4473A"],
   iniciar() {
     const s = this.el = document.getElementById("logoCubo"); if (!s) return;
     this.V = []; for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) this.V.push([x, y, z]);
-    this.E = []; for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) if (this.V[i].filter((v, n) => v !== this.V[j][n]).length === 1) this.E.push([i, j]);
+    this.E = this.ARESTAS;
     this.desenhar();
+    // o ícone do topo da página 1 é o mesmo cubo, parado nessa pose
+    const sym = document.getElementById("logo");
+    if (sym) { sym.setAttribute("viewBox", "-20 -14 552 552"); sym.innerHTML = s.innerHTML; }
     let ult = null;
     s.addEventListener("pointerdown", e => { ult = { x: e.clientX, y: e.clientY, t: performance.now() }; this.vy = this.vx = 0; s.style.cursor = "grabbing";
       try { s.setPointerCapture(e.pointerId); } catch (_) {} });
@@ -10079,7 +10085,7 @@ const CuboCapa = {
     requestAnimationFrame(passo);
   },
   desenhar() {
-    const S = 128, cx = 256, cy = 262, ay = this.ay, ax = this.ax;
+    const S = 112, cx = 256, cy = 262, ay = this.ay, ax = this.ax;
     const P = this.V.map(([x, y, z]) => { const X = x * Math.cos(ay) + z * Math.sin(ay); let Z = -x * Math.sin(ay) + z * Math.cos(ay);
       const Y = y * Math.cos(ax) - Z * Math.sin(ax); Z = y * Math.sin(ax) + Z * Math.cos(ax); const k = 1 / (1 + Z * .08);
       return { x: cx + X * S * k, y: cy - Y * S * k, z: Z, k }; });
