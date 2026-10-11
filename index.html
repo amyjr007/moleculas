@@ -547,6 +547,19 @@
   .c13-faixa span { flex: 0 0 64px; display: grid; place-items: center; font: 800 1.5rem/1 var(--display); color: rgba(255,255,255,.5); transition: color .2s, transform .2s; }
   .c13-faixa span.atual { color: var(--ambar); transform: scale(1.35); text-shadow: 0 0 16px rgba(255,194,75,.6); }
   .c13-ok { min-width: 0; font-size: clamp(1rem, 1.6vmin + .55rem, 1.3rem); padding: .55em 1.4em; }
+  /* metano (13.3): o texto do total, os contornos dos lugares no centro e os átomos que o aluno arrasta */
+  .c13-total { white-space: nowrap; color: #fff; }
+  .c133-slot { position: absolute; z-index: 3; translate: -50% -50%; border-radius: 50%; border: 2px dashed rgba(163,219,247,.38); pointer-events: none;
+    background: radial-gradient(circle, rgba(163,219,247,.06), rgba(163,219,247,0) 70%); transition: border-color .3s, box-shadow .3s; }
+  .c133-at { position: absolute; z-index: 5; border-radius: 50%;   /* (centrado por margens: o tremor usa o translate) */ display: grid; place-items: center; touch-action: none; cursor: grab;
+    font: 800 1rem/1 var(--display); user-select: none; -webkit-user-select: none; }
+  .c133-at.C { background: radial-gradient(circle at 35% 30%, #8C96A6, #3B414C 55%, #1C2026); color: #fff; border: 2px solid #12161C; }
+  .c133-at.H { background: radial-gradient(circle at 35% 30%, #FFFFFF, #E4EAF1 55%, #A9B4C2); color: #0A1322; border: 2px solid #7C8BA0; }
+  .c133-at.instavel { animation: c75Treme .26s linear infinite, c133Halo 1.1s ease-in-out infinite; }
+  @keyframes c133Halo { 0%, 100% { box-shadow: 0 0 10px 2px rgba(255,70,70,.35); } 50% { box-shadow: 0 0 20px 7px rgba(255,70,70,.7); } }
+  .c133-at.pegando { cursor: grabbing; z-index: 6; animation: none; box-shadow: 0 10px 24px rgba(0,0,0,.5); }
+  .c133-at.estavel { animation: none; box-shadow: 0 0 16px 5px rgba(110,231,160,.75); }
+  @media (prefers-reduced-motion: reduce) { .c133-at.instavel { animation: none; box-shadow: 0 0 14px 4px rgba(255,70,70,.55); } }
   /* amônia (12.3): "5 e⁻" à esquerda (passando da moleculazinha, que fica colada na fórmula) e "1 e⁻" à direita, na cor da família */
   .c12n { position: relative; }
   .c12n-e { position: absolute; top: calc(50% + .2em); translate: 0 -50%; font-size: .36em; white-space: nowrap; letter-spacing: 0; text-shadow: 0 0 14px rgba(0,0,0,.6); }
@@ -1341,7 +1354,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v218 · 11/10/2026</span>
+    <span class="versao" id="versao">v219 · 11/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3318,6 +3331,18 @@ const NARRACOES = [
       { tempo: 26,   acao: () => Cena13C.pergunta("Quantos elétrons de valência no total a gente precisa para montar a molécula de metano?") }
     ],
     aoFim: () => ui.semPlay(true) },   // quem leva adiante é a resposta certa no carrossel
+  // depois do acerto (8), 23s: os elétrons descem para a fileira (4 do C, 4 dos H); o total brilha; aos 14-15s, o C e os
+  // quatro H na borda direita e os contornos no centro — o aluno monta o esqueleto arrastando os átomos
+  { id: "dialogo13_3", titulo: "Metano: os elétrons e o esqueleto", src: "audio/audio_moleculas_13.3mp3.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 0,    acao: () => Cena71.tirarPergunta() },                 // a pergunta e o carrossel saem em fade
+      ...[0, 1, 2, 3].map(k => ({ tempo: 1 + k * .25, acao: () => Cena12.eletron("C", k) })),           // 4 elétrons saem do C (1s → 2s)
+      ...[4, 5, 6, 7].map((k, j) => ({ tempo: 3 + j * .25, acao: () => Cena12.eletron("H", k) })),     // 4 dos H (3s → 4s)
+      { tempo: 6,    acao: () => Cena133.total() },                        // os 8 brilham por 1s, com "8 elétrons totais de valência"
+      { tempo: 14,   acao: () => Cena133.comecar() },                      // os contornos no centro e o C na borda direita (instável)
+      { tempo: 15,   acao: () => Cena133.hidrogenios() }                   // os quatro H embaixo dele
+    ],
+    aoFim: () => ui.semPlay(true) },   // sem play: o aluno monta o esqueleto
 
 ];
 
@@ -7607,6 +7632,131 @@ const Cena13A = Object.assign(Object.create(Cena12A), {
   }
 });
 
+/* ---------- Narração 13.3: os elétrons do metano e o esqueleto montado pelo aluno ----------
+   1s: 4 elétrons saem do C da fórmula para a fileira; 3s: 4 dos H (o mesmo salto e som dos outros exemplos). 6s: os 8 brilham
+   por 1s, com "8 elétrons totais de valência" (some junto). 14s: um C na borda direita (bola, instável); 15s: 4 H embaixo dele,
+   numa fileira vertical. No centro, contornos discretos: o lugar do meio e quatro em volta. O aluno arrasta os átomos para os
+   contornos (encaixa com um brilho e o "right"; pode tirar e pôr em outro). Com os cinco no lugar: certo (o C no meio) — a festa;
+   errado — a tela treme em verde, toca o "error" e os átomos voltam para a fileira. */
+const Cena133 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  LADOS: ["meio", "cima", "dir", "baixo", "esq"],
+  // 6s: os 8 elétrons brilham por 1s, com o texto em cima da fileira (os dois somem juntos)
+  total() {
+    const f = Cena12.fila(); if (f.querySelector(".c13-total")) return;
+    const ks = [0, 1, 2, 3, 4, 5, 6, 7];
+    Cena12.brilho(ks);
+    f.insertAdjacentHTML("beforeend", `<p class="c12-conta c13-total">8 elétrons totais de valência</p>`);
+    const t = f.lastElementChild;
+    Palco.animar(t, [{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 1, offset: .75 }, { opacity: 0 }], { duracao: 1.4, easing: "ease-in-out" })
+      .finished.then(() => t.remove(), () => {});
+    Palco.animar(f, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => Cena12.brilho(ks, false), () => {});
+  },
+  // as medidas (px do palco): o centro dos contornos, a distância até os de fora, os raios e a coluna da direita
+  medidas() {
+    const P = Palco.el, W = P.clientWidth, H = P.clientHeight, m = Math.min(W, H);
+    const rC = Math.max(20, Math.min(32, m * .055)), rH = rC * .8, d = Math.max(58, Math.min(108, m * .17));
+    return { W, H, cx: W / 2, cy: H * .6, d, rC, rH, xCol: W - rC - Math.max(34, W * .06), yCol: H * .22 };
+  },
+  // 14s: os contornos no centro e o C na borda direita
+  comecar() {
+    if (this.$(".c133-slot")) return;
+    const M = this.medidas();
+    this.slots = {}; this.atomos = []; this.feito = false;
+    const pos = { meio: [M.cx, M.cy], cima: [M.cx, M.cy - M.d], baixo: [M.cx, M.cy + M.d], esq: [M.cx - M.d, M.cy], dir: [M.cx + M.d, M.cy] };
+    this.LADOS.forEach(l => {
+      const [x, y] = pos[l], tam = 2 * (l === "meio" ? M.rC : M.rH) + 12;
+      Palco.adicionar(`<div class="c133-slot" data-l="${l}" style="left:${x}px;top:${y}px;width:${tam}px;height:${tam}px"></div>`);
+      const el = Palco.el.lastElementChild;
+      Palco.animar(el, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1)" }], { duracao: .5, atraso: this.LADOS.indexOf(l) * .08, easing: "ease-out" });
+      this.slots[l] = { el, x, y, ocupante: null };
+    });
+    this.atomo("C", M.xCol, M.yCol, M.rC);
+  },
+  // 15s: os quatro H, um embaixo do outro (logo abaixo do C)
+  hidrogenios() {
+    if (this.atomos.some(a => a.tipo === "H")) return;
+    const M = this.medidas(), y0 = M.yCol + M.rC + M.rH + 14;
+    [0, 1, 2, 3].forEach(k => setTimeout(() => this.atomo("H", M.xCol, y0 + k * (2 * M.rH + 10), M.rH), k * 120));
+  },
+  // um átomo (bola, instável) na fileira da direita, pronto para ser arrastado
+  atomo(tipo, x, y, r) {
+    Palco.adicionar(`<div class="c133-at ${tipo} instavel" role="button" aria-label="Átomo de ${tipo === "C" ? "carbono" : "hidrogênio"}: arraste até um dos lugares no centro"
+      style="left:${x}px;top:${y}px;width:${2 * r}px;height:${2 * r}px;margin:${-r}px 0 0 ${-r}px;font-size:${r * .95}px">${tipo}</div>`);
+    const el = Palco.el.lastElementChild, a = { el, tipo, origem: [x, y], slot: null };
+    this.atomos.push(a);
+    Palco.animar(el, [{ opacity: 0, transform: "scale(0)" }, { opacity: 1, transform: "scale(1.25)", offset: .65 }, { opacity: 1, transform: "scale(1)" }], { duracao: .5, easing: "ease-out" });
+    try { const s = new Audio("audio/vfx/flip.mp3"); s.play().catch(() => {}); } catch (_) {}
+    this.arrastavel(a);
+  },
+  pos(a, [x, y], anima = true) {
+    const de = [parseFloat(a.el.style.left), parseFloat(a.el.style.top)];
+    a.el.style.left = `${x}px`; a.el.style.top = `${y}px`;
+    if (anima && Math.hypot(x - de[0], y - de[1]) > 1)
+      Palco.animar(a.el, [{ transform: `translate(${de[0] - x}px, ${de[1] - y}px)` }, { transform: "translate(0px, 0px)" }], { duracao: .35, easing: "cubic-bezier(.3,1.2,.5,1)" });
+  },
+  // o arraste: o átomo segue o dedo; solto perto de um contorno vazio, encaixa; longe, volta para a fileira
+  arrastavel(a) {
+    let pega = null;
+    const P = () => Palco.el.getBoundingClientRect();
+    a.el.addEventListener("pointerdown", e => {
+      if (this.feito || this.conferindo || Palco.pausado) return;
+      const p = P(); pega = { dx: e.clientX - p.left - parseFloat(a.el.style.left), dy: e.clientY - p.top - parseFloat(a.el.style.top) };
+      try { a.el.setPointerCapture(e.pointerId); } catch (_) {}
+      a.el.classList.add("pegando");
+      if (a.slot) { this.slots[a.slot].ocupante = null; a.slot = null; }   // tirou de um lugar: o lugar fica livre
+      Vibra.tocar("pegar");
+    });
+    a.el.addEventListener("pointermove", e => {
+      if (!pega) return;
+      const p = P(); this.pos(a, [e.clientX - p.left - pega.dx, e.clientY - p.top - pega.dy], false);
+    });
+    const soltar = () => {
+      if (!pega) return; pega = null; a.el.classList.remove("pegando");
+      const x = parseFloat(a.el.style.left), y = parseFloat(a.el.style.top), M = this.medidas();
+      const alvo = this.LADOS.map(l => ({ l, s: this.slots[l] })).filter(o => !o.s.ocupante)
+        .map(o => ({ ...o, d: Math.hypot(o.s.x - x, o.s.y - y) })).sort((p, q) => p.d - q.d)[0];
+      if (alvo && alvo.d < M.d * .55) this.encaixar(a, alvo.l);
+      else this.pos(a, a.origem);
+    };
+    a.el.addEventListener("pointerup", soltar); a.el.addEventListener("pointercancel", soltar);
+  },
+  // encaixou: vai para o centro do contorno, com um brilho discreto e o "right"
+  encaixar(a, l) {
+    const s = this.slots[l]; s.ocupante = a; a.slot = l;
+    this.pos(a, [s.x, s.y]);
+    Palco.animar(s.el, [{ boxShadow: "0 0 0 0 rgba(110,231,160,0)", borderColor: "rgba(110,231,160,.9)" }, { boxShadow: "0 0 18px 4px rgba(110,231,160,.55)", offset: .3 },
+      { boxShadow: "0 0 0 0 rgba(110,231,160,0)", borderColor: "rgba(163,219,247,.38)" }], { duracao: .8, easing: "ease-out", fill: "none" });
+    try { const r = new Audio("audio/vfx/right.mp3"); r.volume = .6; r.play().catch(() => {}); } catch (_) {}
+    Vibra.tocar("toqueEletron");
+    if (this.LADOS.every(x => this.slots[x].ocupante)) { this.conferindo = true; Palco.animar(s.el, [{}, {}], { duracao: .6, fill: "none" }).finished.then(() => this.conferir(), () => {}); }
+  },
+  // os cinco no lugar: certo se o C está no meio (e os H em volta)
+  conferir() {
+    this.conferindo = false;
+    const certo = this.slots.meio.ocupante && this.slots.meio.ocupante.tipo === "C";
+    if (certo) {
+      this.feito = true;
+      this.atomos.forEach(a => { a.el.classList.remove("instavel"); a.el.classList.add("estavel"); a.el.style.cursor = "default"; });
+      Palco.adicionar(`<div class="c4-verde"></div>`);
+      const v = Palco.el.lastElementChild;
+      v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
+      Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+      ["audio/vfx/applause.mp3", "audio/funfare.mp3"].forEach(src => { try { const a = new Audio(src); a.play().catch(() => {}); } catch (_) {} });
+      Vibra.tocar("cloroCerta");
+      return;
+    }
+    // errado: a tela treme em verde, o "error", e os átomos voltam para a fileira
+    document.getElementById("palco").animate([0, -14, 12, -10, 8, -5, 3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 520, easing: "ease-out" });
+    Palco.adicionar(`<div class="c4-verde"></div>`);
+    const v = Palco.el.lastElementChild;
+    v.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }], { duration: 900, easing: "ease-out" }).finished.then(() => v.remove());
+    try { const e = new Audio("audio/vfx/error.mp3"); e.play().catch(() => {}); } catch (_) {}
+    Vibra.tocar("toqueErrado");
+    setTimeout(() => this.atomos.forEach(a => { if (a.slot) { this.slots[a.slot].ocupante = null; a.slot = null; } this.pos(a, a.origem); }), 450);
+  }
+};
+
 /* ---------- Narração 13.2: o carrossel do total de elétrons de valência ----------
    A pergunta, digitada; embaixo, "Total de elétrons de valência do CH₄" e um carrossel de 1 a 12 (as setas ou o arraste
    trocam o número) e "Confirmar". O 8 é o certo: a festa dos quizzes (e a narração seguinte, quando houver); outro número:
@@ -9905,6 +10055,15 @@ const Demo = {
         return this.tocar(q(".c1012-toques"), this.naJanela(C.x + dx, C.y + dy));
       };
       const ok = q(".c1012-ok:not(:disabled)"); return ok ? () => this.tocar(ok) : null;
+    }
+    // o esqueleto do metano: arrasta o C para o meio e cada H para um lugar em volta
+    if (q(".c133-at") && Cena133.atomos && !Cena133.feito && !Cena133.conferindo && this.esperando()) {
+      const certo = { C: ["meio"], H: ["cima", "dir", "baixo", "esq"] };
+      const a = Cena133.atomos.find(x => !x.slot || !certo[x.tipo].includes(x.slot));
+      if (a) {
+        const l = a.tipo === "C" ? "meio" : certo.H.find(x => !Cena133.slots[x].ocupante);
+        if (l) { const s = Cena133.slots[l]; return () => this.arrastar(a.el, this.centroDe(a.el), this.naJanela(s.x, s.y), 800); }
+      }
     }
     // o carrossel do metano: a seta até o número certo, e "Confirmar"
     const carr = q(".c13-carrossel:not(.respondido)");
