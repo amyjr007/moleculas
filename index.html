@@ -77,7 +77,9 @@
   }
   #capa.ativa { display: grid; }
   /* logo acima do título; entra com o mesmo "pop" dos átomos */
-  #capa .logo-capa { display: block; width: clamp(52px, 5vw + 24px, 84px); aspect-ratio: 453 / 471; height: auto; margin: 0 0 1.1rem; filter: drop-shadow(0 10px 24px rgba(124,156,255,.28)); }
+  #capa .logo-linha { display: flex; align-items: center; gap: 18px; margin: 0 0 1.1rem; }
+  #capa .logo-ref { display: block; width: clamp(40px, 3vw + 20px, 64px); height: auto; filter: invert(1); opacity: .9; }
+  #capa .logo-capa { display: block; width: clamp(64px, 6vw + 30px, 104px); aspect-ratio: 1; height: auto; margin: 0; cursor: grab; touch-action: none; filter: drop-shadow(0 10px 24px rgba(124,156,255,.28)); }
   #capa.play .logo-capa { animation: pop .6s cubic-bezier(.3,1.6,.5,1) both; transform-origin: 50% 80%; }
   @media (prefers-reduced-motion: reduce) { #capa.play .logo-capa { animation: none; } }
   #capa h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.7rem, 4.4vw + 1rem, 5.6rem); line-height: .92; letter-spacing: -.035em; margin: 0 0 .38em; }
@@ -856,6 +858,9 @@
   .dev-barra { position: absolute; left: 12px; bottom: calc(100% + 6px); z-index: 61; display: none; gap: 4px; padding: 5px; border-radius: 12px;
     background: rgba(13,20,33,.92); border: 1px solid rgba(255,194,75,.6); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
   .dev-barra.on { display: flex; }
+  #capa > .dev-barra { position: fixed; bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+  #capa .versao.ligado { z-index: 60; color: var(--preto); background: var(--ambar); opacity: 1; padding: 2px 6px; border-radius: 6px; }
+  #capa .dev-camada { position: fixed; }
   .dev-barra button { min-width: 38px; height: 38px; padding: 0 9px; border-radius: 9px; border: 0; cursor: pointer;
     background: rgba(255,255,255,.08); color: #F4F7FB; font: 800 .85rem/1 var(--display); touch-action: manipulation; }
   .dev-barra button:active { background: var(--ambar); color: var(--preto); }
@@ -1324,7 +1329,10 @@
 <!-- ================= CAPA ================= -->
 <section id="capa" class="tela ativa" aria-label="Capa">
   <div class="text">
-    <svg class="logo-capa" aria-hidden="true"><use href="#logo"/></svg>
+    <div class="logo-linha">
+      <svg class="logo-capa" id="logoCubo" viewBox="-20 -14 552 552" role="img" aria-label="Cubo de átomos: arraste para girar"><use href="#logo"/></svg>
+      <img class="logo-ref" src="imagens/icone-referencia.png" alt="Ícone de referência">
+    </div>
     <h1><span class="l2">Moléculas</span></h1>
     <p class="lede">Um audiobook interativo sobre ligações químicas: ouça, observe e aprenda a montar moléculas passo a passo.</p>
     <div class="pop-nome" id="popNome" role="dialog" aria-modal="true" aria-labelledby="popNomeTit">
@@ -1336,7 +1344,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v223 · 11/10/2026</span>
+    <span class="versao" id="versao">v224 · 11/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -9863,6 +9871,8 @@ const Dev = {
   // imagens, desenhos e moléculas: o tamanho muda pela escala (scale), não pela letra
   VISUAIS: "img, svg:not(svg svg), canvas, figure, [class*='-cena'], [class*='-mol'], [class*='-foto'], [class*='-atomo']",
   visual(el) { return !el.matches(this.ALVOS); },
+  // a tela que está sendo editada: a capa (se aberta) ou o palco
+  raiz() { const c = document.getElementById("capa"); return c.classList.contains("ativa") ? c : Palco.el; },
   iniciar() {
     const v = document.getElementById("devVersao"), orig = document.getElementById("versao");
     v.textContent = orig ? orig.textContent : "";
@@ -9871,6 +9881,11 @@ const Dev = {
     v.addEventListener("pointerdown", () => { timer = setTimeout(() => { timer = null; this.alternar(); }, 650); });
     ["pointerup", "pointerleave", "pointercancel"].forEach(ev => v.addEventListener(ev, () => { clearTimeout(timer); timer = null; }));
     v.addEventListener("contextmenu", e => e.preventDefault());
+    // na capa, a versão do canto faz o mesmo
+    const vc = document.getElementById("versao"); let tc = null;
+    vc.addEventListener("pointerdown", () => { tc = setTimeout(() => { tc = null; this.alternar(); }, 650); });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(ev => vc.addEventListener(ev, () => { clearTimeout(tc); tc = null; }));
+    vc.addEventListener("contextmenu", e => e.preventDefault());
     document.getElementById("devBarra").addEventListener("click", e => {
       const b = e.target.closest("[data-dev]"); if (!b) return;
       const acao = b.dataset.dev;
@@ -9880,7 +9895,7 @@ const Dev = {
       if (acao === "maior" || acao === "menor") this.redimensionar(this.sel, acao === "maior" ? 1.05 : 1 / 1.05);
       else if (acao === "grupo") {
         const pai = this.sel.parentElement;
-        if (!pai || pai === Palco.el || !Palco.el.contains(pai)) return this.aviso("Já é o bloco de fora");
+        if (!pai || pai === this.raiz() || !this.raiz().contains(pai)) return this.aviso("Já é o bloco de fora");
         this.escolher(pai); this.fixo = true;
       } else if (acao === "desfazer") this.desfazer(this.sel);
     });
@@ -9903,10 +9918,15 @@ const Dev = {
   alternar() {
     this.ligado = !this.ligado;
     document.getElementById("devVersao").classList.toggle("ligado", this.ligado);
+    const raiz = this.raiz(), naCapa = raiz.id === "capa", barra = document.getElementById("devBarra");
+    if (this.ligado) { document.getElementById("versao").classList.toggle("ligado", naCapa);
+      if (naCapa) { this.barraVolta = barra.parentElement; this.barraDepois = barra.nextSibling; raiz.appendChild(barra); } }
+    else { document.getElementById("versao").classList.remove("ligado");
+      if (this.barraVolta) { this.barraVolta.insertBefore(barra, this.barraDepois); this.barraVolta = null; } }
     if (navigator.vibrate) try { navigator.vibrate(30); } catch (_) {}
     if (this.ligado) {
       // uma camada por cima do palco: os toques vão para o editor (e não para os botões e átomos da cena)
-      const palco = document.getElementById("palco"), c = document.createElement("div");
+      const palco = naCapa ? raiz : document.getElementById("palco"), c = document.createElement("div");
       c.className = "dev-camada"; palco.appendChild(c); this.camada = c;
       c.addEventListener("pointerdown", e => this.baixa(e)); c.addEventListener("pointermove", e => this.move(e));
       ["pointerup", "pointercancel"].forEach(ev => c.addEventListener(ev, e => this.sobe(e)));
@@ -9939,7 +9959,8 @@ const Dev = {
   // textos e imagens/moléculas entram na disputa; vale o retângulo na tela, então um texto por cima de uma cena 3D ganha
   achar(x, y) {
     let melhor = null, area = Infinity;
-    Palco.el.querySelectorAll(this.ALVOS + ", " + this.VISUAIS).forEach(el => {
+    this.raiz().querySelectorAll(this.ALVOS + ", " + this.VISUAIS).forEach(el => {
+      if (el.closest(".dev-barra")) return;
       if (el === this.camada || el.closest(".dev-camada")) return;
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height || getComputedStyle(el).visibility === "hidden" || +getComputedStyle(el).opacity === 0) return;
@@ -9965,6 +9986,10 @@ const Dev = {
     if (d.vis) el.style.scale = String(d.s); else el.style.fontSize = `${d.f}px`;
   },
   baixa(e) {
+    // na capa, a camada cobre a versão: segurar em cima dela desliga o editor
+    if (this.raiz().id === "capa") { const r = document.getElementById("versao").getBoundingClientRect();
+      if (e.clientX >= r.left - 6 && e.clientX <= r.right + 6 && e.clientY >= r.top - 6 && e.clientY <= r.bottom + 6) {
+        this.tCapa = setTimeout(() => { this.tCapa = null; this.alternar(); }, 650); return; } }
     try { this.camada.setPointerCapture(e.pointerId); } catch (_) {}
     let el = this.toques.size ? [...this.toques.values()][0].el : null;
     if (!el) {
@@ -9991,13 +10016,13 @@ const Dev = {
     }
     this.aplicar(tq.el, d);
   },
-  sobe(e) { this.toques.delete(e.pointerId); if (this.toques.size < 2) this.pinca = null; },
+  sobe(e) { clearTimeout(this.tCapa); this.toques.delete(e.pointerId); if (this.toques.size < 2) this.pinca = null; },
   // o relatório do que mudou, para colar na conversa
   relatorio() {
-    const P = Palco.el.getBoundingClientRect(), n = NARRACOES[Player.indice];
+    const naCapa = this.raiz().id === "capa", P = this.raiz().getBoundingClientRect(), n = NARRACOES[Player.indice];
     const linhas = [`Ajustes de tela — ${document.getElementById("devVersao").textContent}`,
-      `Narração: ${n ? n.id + " (" + n.titulo + ")" : "—"}${Player.fonte ? ` · áudio em ${Player.fonte.currentTime.toFixed(1)}s` : ""}`,
-      `Tela (palco): ${Math.round(P.width)} × ${Math.round(P.height)} px`, ""];
+      naCapa ? "Tela: CAPA" : `Narração: ${n ? n.id + " (" + n.titulo + ")" : "—"}${Player.fonte ? ` · áudio em ${Player.fonte.currentTime.toFixed(1)}s` : ""}`,
+      `Tela (${naCapa ? "capa" : "palco"}): ${Math.round(P.width)} × ${Math.round(P.height)} px`, ""];
     let k = 0;
     this.ajustes.forEach((d, el) => {
       if (!el.isConnected || (!d.dx && !d.dy && d.f === d.f0 && d.s === d.s0)) return;
@@ -10024,6 +10049,56 @@ const Dev = {
   }
 };
 Dev.iniciar();
+
+// o cubo de átomos da capa: desenhado em 3D (projeção com perspectiva) e girado com o dedo/mouse
+const CuboCapa = {
+  ay: 40 * Math.PI / 180, ax: -24 * Math.PI / 180, vy: 0, vx: 0,
+  CORES: ["#7C9CFF","#A3DBF7","#FF7A66","#FFC24B","#A3DBF7","#FFFFFF","#A3DBF7","#FF7A66"],
+  ESCURAS: ["#4A5FB0","#4F8DB5","#B4473A","#B9801B","#4F8DB5","#8FA4BF","#4F8DB5","#B4473A"],
+  iniciar() {
+    const s = this.el = document.getElementById("logoCubo"); if (!s) return;
+    this.V = []; for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) this.V.push([x, y, z]);
+    this.E = []; for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) if (this.V[i].filter((v, n) => v !== this.V[j][n]).length === 1) this.E.push([i, j]);
+    this.desenhar();
+    let ult = null;
+    s.addEventListener("pointerdown", e => { ult = { x: e.clientX, y: e.clientY, t: performance.now() }; this.vy = this.vx = 0; s.style.cursor = "grabbing";
+      try { s.setPointerCapture(e.pointerId); } catch (_) {} });
+    s.addEventListener("pointermove", e => { if (!ult) return;
+      const dx = e.clientX - ult.x, dy = e.clientY - ult.y, dt = Math.max(performance.now() - ult.t, 1), k = .012;
+      this.ay += dx * k; this.ax = Math.max(-1.4, Math.min(1.4, this.ax - dy * k));
+      this.vy = dx * k / dt * 16; this.vx = -dy * k / dt * 16;
+      ult = { x: e.clientX, y: e.clientY, t: performance.now() }; this.desenhar(); });
+    const solta = () => { if (!ult) return; ult = null; s.style.cursor = ""; this.embalo(); };
+    s.addEventListener("pointerup", solta); s.addEventListener("pointercancel", solta);
+  },
+  // solto com velocidade, ele continua girando e vai parando
+  embalo() {
+    const passo = () => { if (Math.abs(this.vy) + Math.abs(this.vx) < .0008) return;
+      this.ay += this.vy; this.ax = Math.max(-1.4, Math.min(1.4, this.ax + this.vx)); this.vy *= .94; this.vx *= .94;
+      this.desenhar(); requestAnimationFrame(passo); };
+    requestAnimationFrame(passo);
+  },
+  desenhar() {
+    const S = 128, cx = 256, cy = 262, ay = this.ay, ax = this.ax;
+    const P = this.V.map(([x, y, z]) => { const X = x * Math.cos(ay) + z * Math.sin(ay); let Z = -x * Math.sin(ay) + z * Math.cos(ay);
+      const Y = y * Math.cos(ax) - Z * Math.sin(ax); Z = y * Math.sin(ax) + Z * Math.cos(ax); const k = 1 / (1 + Z * .08);
+      return { x: cx + X * S * k, y: cy - Y * S * k, z: Z, k }; });
+    const f = n => n.toFixed(1), linha = ([a, b]) => `<line x1="${f(P[a].x)}" y1="${f(P[a].y)}" x2="${f(P[b].x)}" y2="${f(P[b].y)}"/>`;
+    // o canto mais ao fundo fica apagado, com as suas 3 ligações; o resto claro, com sombra, do fundo para a frente
+    const fundo = P.reduce((m, p, i) => p.z > P[m].z ? i : m, 0);
+    const tras = this.E.filter(e => e.includes(fundo)), frente = this.E.filter(e => !e.includes(fundo));
+    const ordem = P.map((p, i) => i).sort((a, b) => P[b].z - P[a].z);
+    let s = `<g stroke="#4F8DB5" stroke-opacity=".55" stroke-width="20" stroke-linecap="round">${tras.map(linha).join("")}</g>`
+      + `<circle cx="${f(P[fundo].x)}" cy="${f(P[fundo].y)}" r="${f(30 * P[fundo].k)}" fill="#4F8DB5" fill-opacity=".8"/>`
+      + `<g stroke="#2E5775" stroke-width="26" stroke-linecap="round" transform="translate(0 8)">${frente.map(linha).join("")}</g>`
+      + `<g stroke="#D3EFFC" stroke-width="24" stroke-linecap="round">${frente.map(linha).join("")}</g>`;
+    for (const i of ordem) { if (i === fundo) continue; const p = P[i], r = 36 * p.k;
+      s += `<circle cx="${f(p.x)}" cy="${f(p.y + 8)}" r="${f(r)}" fill="${this.ESCURAS[i]}"/><circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(r)}" fill="${this.CORES[i]}"/>`
+        + `<circle cx="${f(p.x - r * .38)}" cy="${f(p.y - r * .38)}" r="${f(r * .26)}" fill="#fff" fill-opacity=".55"/>`; }
+    this.el.innerHTML = s;
+  }
+};
+CuboCapa.iniciar();
 
 // tablet ou Chromebook (deitado, com altura de sobra): a mesma condição do @media dos ajustes de tablet no CSS
 function noTablet() { return matchMedia("(orientation: landscape) and (min-height: 561px)").matches; }
