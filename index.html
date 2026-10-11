@@ -1314,7 +1314,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v210 · 11/10/2026</span>
+    <span class="versao" id="versao">v211 · 11/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -7252,6 +7252,17 @@ const Cena12A = {
     vidro.renderOrder = 2; frasco.add(vidro);
     const rolha = new T.Mesh(new T.CylinderGeometry(.34, .29, .34, 40), new T.MeshStandardMaterial({ color: 0x3a4250, roughness: .7 }));
     rolha.position.y = 2.82; frasco.add(rolha);
+    // a etiqueta "Amônia": papel claro, curvado na frente do balão (como as dos cilindros de gás)
+    const etq = document.createElement("canvas"); etq.width = 512; etq.height = 176;
+    const ge = etq.getContext("2d");
+    ge.fillStyle = "#EEF3F7"; ge.strokeStyle = "#9FB0C2"; ge.lineWidth = 6;
+    ge.beginPath(); ge.roundRect ? ge.roundRect(6, 6, 500, 164, 22) : ge.rect(6, 6, 500, 164); ge.fill(); ge.stroke();
+    ge.fillStyle = "#1B2330"; ge.font = "800 96px 'Bricolage Grotesque', 'Segoe UI', sans-serif"; ge.textAlign = "center"; ge.textBaseline = "middle";
+    ge.fillText("Amônia", 256, 94);
+    const texEtq = new T.CanvasTexture(etq); texEtq.encoding = T.sRGBEncoding; texEtq.anisotropy = 4;
+    const etiqueta = new T.Mesh(new T.CylinderGeometry(R + .025, R + .025, .44, 48, 1, true, -.62, 1.24),
+      new T.MeshStandardMaterial({ map: texEtq, transparent: true, roughness: .65, metalness: 0 }));
+    etiqueta.position.y = cy - .05; frasco.add(etiqueta);
     // o gás: manchas claras e bem transparentes que giram devagar lá dentro, subindo e descendo
     const tex = Quantico.textura([[0, "rgba(225,242,255,.9)"], [.5, "rgba(200,232,255,.35)"], [1, "rgba(200,232,255,0)"]]);
     ctx.gas = Array.from({ length: 34 }, (_, i) => {
@@ -7285,6 +7296,21 @@ const Cena12A = {
       ctx.escMol = Math.min(.95, ctx.meiaLargura / 1.7);
     };
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
+    // girar a molécula com o dedo: depois que ela parou no meio e até a resposta (quando ela sobe para o lado da fórmula).
+    // Para os lados gira, para cima/baixo inclina; ela fica como o aluno deixou
+    const giro = { x: 0, y: 0 }, qGiro = new T.Quaternion(), eGiro = new T.Euler();
+    const cv = renderer.domElement; cv.style.touchAction = "none";
+    const podeGirar = () => ctx.t0 !== undefined && ctx.tAcao - ctx.t0 >= this.SAIDA && ctx.t1 === undefined;
+    let arraste = null;
+    cv.addEventListener("pointerdown", e => { if (!podeGirar()) return; arraste = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} cv.style.cursor = "grabbing"; });
+    cv.addEventListener("pointermove", e => {
+      if (!arraste) return;
+      giro.y += (e.clientX - arraste.x) * .012;
+      giro.x = Math.max(-1.3, Math.min(1.3, giro.x + (e.clientY - arraste.y) * .012));
+      arraste = { x: e.clientX, y: e.clientY };
+    });
+    const soltar = () => { arraste = null; cv.style.cursor = ""; };
+    cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
     let antes = performance.now();
     const pos = new T.Vector3(), paraCam = new T.Vector3();
     const quadro = agora => {
@@ -7307,8 +7333,10 @@ const Cena12A = {
         mol.position.lerpVectors(new T.Vector3(frasco.position.x, cy, 0), ctx.centro, k);
         mol.position.y += Math.sin(k * Math.PI) * 1.1;
         mol.quaternion.setFromEuler(new T.Euler((1 - k) * Math.PI * .8, (1 - k) * Math.PI * 4 + .35, (1 - k) * Math.PI * .5));
+        mol.quaternion.premultiply(qGiro.setFromEuler(eGiro.set(giro.x, giro.y, 0)));   // o giro do dedo, por cima
         mol.scale.setScalar(ctx.escMol * (.12 + .88 * k));
       }
+      if (!arraste) cv.style.cursor = podeGirar() ? "grab" : "";
       // 12.2: encolhe e vai para o lado esquerdo da fórmula, lá no topo
       if (ctx.t1 !== undefined) {
         const q0 = Math.min((t - ctx.t1) / this.ENCOLHE, 1), q = q0 * q0 * (3 - 2 * q0);
