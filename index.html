@@ -1354,7 +1354,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v219 · 11/10/2026</span>
+    <span class="versao" id="versao">v220 · 11/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3314,14 +3314,14 @@ const NARRACOES = [
     ],
     aoFim: () => ui.semPlay(true) },   // sem play: quem leva adiante é o toque no cilindro
   // a molécula de CH₄ no meio (7s): aos 6s, "Qual a fórmula do metano?"; as opções no fim (o certo: CH₄)
-  { id: "dialogo13_1", titulo: "Qual a fórmula do metano?", src: "audio/audio_moleculas_13.1mp3.mp3", semNav: true, extra: true,
+  { id: "dialogo13_1", titulo: "Qual a fórmula do metano?", src: "audio/audio_moleculas_13.1.mp3", semNav: true, extra: true,
     eventos: [
       { tempo: 6,    acao: () => Cena13A.pergunta(false) }
     ],
     aoFim: () => { ui.semPlay(true); Cena13A.opcoes(); } },
   // a resposta (29s): a fórmula sobe de 1s a 2s (e a molécula encolhe para o lado dela); 4A em cima do C (22,5s) e 1A em
   // cima do H (25s); aos 26s, "quantos elétrons de valência no total…", respondida no carrossel (o certo: 8)
-  { id: "dialogo13_2", titulo: "Resposta: CH₄", src: "audio/audio_moleculas_13.2mp3.mp3", semNav: true, extra: true,
+  { id: "dialogo13_2", titulo: "Resposta: CH₄", src: "audio/audio_moleculas_13.2.mp3", semNav: true, extra: true,
     eventos: [
       { tempo: 1,    acao: () => Cena13A.formulaSobe() },
       { tempo: 21.4, acao: () => Cena121.pulsar(".c12-l[data-l='C']", 2) },   // o C da fórmula pulsa
@@ -3333,7 +3333,7 @@ const NARRACOES = [
     aoFim: () => ui.semPlay(true) },   // quem leva adiante é a resposta certa no carrossel
   // depois do acerto (8), 23s: os elétrons descem para a fileira (4 do C, 4 dos H); o total brilha; aos 14-15s, o C e os
   // quatro H na borda direita e os contornos no centro — o aluno monta o esqueleto arrastando os átomos
-  { id: "dialogo13_3", titulo: "Metano: os elétrons e o esqueleto", src: "audio/audio_moleculas_13.3mp3.mp3", semNav: true, extra: true,
+  { id: "dialogo13_3", titulo: "Metano: os elétrons e o esqueleto", src: "audio/audio_moleculas_13.3.mp3", semNav: true, extra: true,
     eventos: [
       { tempo: 0,    acao: () => Cena71.tirarPergunta() },                 // a pergunta e o carrossel saem em fade
       ...[0, 1, 2, 3].map(k => ({ tempo: 1 + k * .25, acao: () => Cena12.eletron("C", k) })),           // 4 elétrons saem do C (1s → 2s)
@@ -3342,7 +3342,18 @@ const NARRACOES = [
       { tempo: 14,   acao: () => Cena133.comecar() },                      // os contornos no centro e o C na borda direita (instável)
       { tempo: 15,   acao: () => Cena133.hidrogenios() }                   // os quatro H embaixo dele
     ],
-    aoFim: () => ui.semPlay(true) },   // sem play: o aluno monta o esqueleto
+    aoFim: () => ui.semPlay(true) },   // sem play: o aluno monta o esqueleto (o acerto, depois da festa, traz o 13.4)
+  // as ligações do metano (12s): os átomos montados viram o esqueleto (instáveis); o C pulsa 3 vezes (3s) e os H (4,8s), bem
+  // grandes; a partir dos 8s, o aluno liga o centro às pontas tocando nos átomos (as regras da água e da amônia).
+  // As quatro ligações: a festa e a narração seguinte (o 13.5)
+  { id: "dialogo13_4", titulo: "Metano: as ligações", src: "audio/audio_moleculas_13.4.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 0,    acao: () => Cena133.paraLigacoes() },
+      { tempo: 3,    acao: () => Cena121.pulsarAtomo(["meio"], 3, 1.7) },                       // o C pulsa 3 vezes, exagerado
+      { tempo: 4.8,  acao: () => Cena121.pulsarAtomo(["cima", "dir", "baixo", "esq"], 3, 1.7) },  // os H também
+      { tempo: 8,    acao: () => Cena112L.liberar() }                      // as ligações pelo toque
+    ],
+    aoFim: () => ui.semPlay(true) },   // sem play: quem leva adiante são as quatro ligações
 
 ];
 
@@ -7731,19 +7742,46 @@ const Cena133 = {
     Vibra.tocar("toqueEletron");
     if (this.LADOS.every(x => this.slots[x].ocupante)) { this.conferindo = true; Palco.animar(s.el, [{}, {}], { duracao: .6, fill: "none" }).finished.then(() => this.conferir(), () => {}); }
   },
+  // 13.4, 0s: os átomos montados viram o esqueleto das ligações (o mesmo desenho da água e da amônia), exatamente no mesmo
+  // lugar e do mesmo tamanho (o desenho entra em fade e os átomos e contornos saem); continuam instáveis
+  paraLigacoes() {
+    if (this.$(".c121-esqueleto.metano")) return;
+    const M = this.medidas(), k = M.d / 66;   // (66: a distância do C a cada H no desenho)
+    Palco.el.querySelectorAll(".c121-esqueleto, .c121-central").forEach(e => e.remove());
+    const s = Cena121.svg("metano");
+    const central = Palco.el.querySelector(".c121-central"); if (central) central.remove();   // (o aviso de erro fica embaixo do desenho)
+    Palco.el.appendChild(s);
+    Object.assign(s.style, { position: "absolute", left: `${M.cx - 100 * k}px`, top: `${M.cy - 80 * k}px`, width: `${200 * k}px`, margin: "0", zIndex: "4" });
+    const lugares = { meio: "meio", cima: "cima", dir: "dir", baixo: "baixo", esq: "esq" };
+    Object.keys(lugares).forEach(l => {
+      Cena121.atomo(l === "meio" ? "C" : "H", l);
+      const g = Cena112L.g(l); g.getAnimations().forEach(a => a.finish());
+      Cena112L.instavel(l, true);
+    });
+    Palco.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: .5, easing: "ease-out" });
+    Palco.el.querySelectorAll(".c133-at, .c133-slot").forEach(el =>
+      Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5, easing: "ease-in" }).finished.then(() => el.remove(), () => {}));
+  },
   // os cinco no lugar: certo se o C está no meio (e os H em volta)
   conferir() {
     this.conferindo = false;
     const certo = this.slots.meio.ocupante && this.slots.meio.ocupante.tipo === "C";
     if (certo) {
+      // (os átomos continuam instáveis — ainda não estão ligados); a festa e, quando ela acaba, o 13.4
       this.feito = true;
-      this.atomos.forEach(a => { a.el.classList.remove("instavel"); a.el.classList.add("estavel"); a.el.style.cursor = "default"; });
+      this.atomos.forEach(a => { a.el.style.cursor = "default"; });
       Palco.adicionar(`<div class="c4-verde"></div>`);
       const v = Palco.el.lastElementChild;
       v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
       Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
-      ["audio/vfx/applause.mp3", "audio/funfare.mp3"].forEach(src => { try { const a = new Audio(src); a.play().catch(() => {}); } catch (_) {} });
+      const sons = ["audio/vfx/applause.mp3", "audio/funfare.mp3"].map(src => { const a = new Audio(src); a.play().catch(() => {}); return a; });
       Vibra.tocar("cloroCerta");
+      const fim = a => new Promise(r => { a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 8000); });
+      const i = NARRACOES.findIndex(n => n.id === "dialogo13_3");
+      Promise.all(sons.map(fim)).then(() => {
+        if (Player.indice !== i || !this.slots.meio.el.isConnected) return;   // saiu da cena no meio da festa
+        Player.calar(); Player.terminou = false; Player.irPara(i + 1, true);
+      });
       return;
     }
     // errado: a tela treme em verde, o "error", e os átomos voltam para a fileira
@@ -8206,12 +8244,13 @@ const Cena12 = {
 const Cena121 = {
   $(sel) { return Palco.el.querySelector(sel); },
   POS: { meio: 100, esq: 24, dir: 176 },   // (a água, em linha: só o x — o y é 25)
-  RAIO: { O: 21 * 1.2, N: 21 * 1.2, H: 21 * .8 },   // (o átomo central, 20% maior; o H continua com o tamanho de antes)
+  RAIO: { O: 21 * 1.2, N: 21 * 1.2, C: 21 * 1.2, H: 21 * .8 },   // (o átomo central, 20% maior; o H continua com o tamanho de antes)
   // o arranjo de cada esqueleto: o quadro do desenho, onde fica cada átomo (x, y) e quem é o central.
   // A água é em linha (H–O–H); a amônia tem o N no meio e os três H à esquerda, à direita e embaixo
   ARRANJOS: {
     agua:   { box: "0 0 200 50", central: "O", aria: "Esqueleto da molécula de água", pos: { meio: [100, 25], esq: [24, 25], dir: [176, 25] } },
-    amonia: { box: "0 0 200 112", central: "N", aria: "Esqueleto da molécula de amônia", pos: { meio: [100, 30], esq: [26, 30], dir: [174, 30], baixo: [100, 98] } }
+    amonia: { box: "0 0 200 112", central: "N", aria: "Esqueleto da molécula de amônia", pos: { meio: [100, 30], esq: [26, 30], dir: [174, 30], baixo: [100, 98] } },
+    metano: { box: "0 0 200 160", central: "C", aria: "Esqueleto da molécula de metano", pos: { meio: [100, 80], cima: [100, 14], dir: [166, 80], baixo: [100, 146], esq: [34, 80] } }
   },
   arranjo() { const s = this.$(".c121-esqueleto"); return this.ARRANJOS[(s && s.dataset.mol) || "agua"]; },
   xy(lado) { return this.arranjo().pos[lado]; },
@@ -8260,7 +8299,7 @@ const Cena121 = {
   atomo(sim, lado = "meio") {
     const s = this.svg(); if (s.querySelector(`.at [data-l="${lado}"]`)) return;
     const [x, y] = this.xy(lado);
-    const [fundo, borda, letra] = sim === "O" ? ["#FF5A4E", "#8E1E16", "#fff"] : sim === "N" ? ["#4F74F7", "#1B2F86", "#fff"] : ["#F4F7FB", "#7C8BA0", "#0A1322"];
+    const [fundo, borda, letra] = sim === "O" ? ["#FF5A4E", "#8E1E16", "#fff"] : sim === "N" ? ["#4F74F7", "#1B2F86", "#fff"] : sim === "C" ? ["#3B414C", "#12161C", "#fff"] : ["#F4F7FB", "#7C8BA0", "#0A1322"];
     const r = this.RAIO[sim];   // o H é 20% menor
     s.querySelector(".at").insertAdjacentHTML("beforeend", `<g data-l="${lado}" style="transform-origin:${x}px ${y}px">
         <circle cx="${x}" cy="${y}" r="${r}" fill="${fundo}" stroke="${borda}" stroke-width="2"/>
@@ -8358,10 +8397,11 @@ const Cena121 = {
     Palco.animar(g, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => g.remove(), () => {});
   },
   // átomos do esqueleto ("esq", "meio", "dir") pulsam: crescem com brilho e voltam
-  pulsarAtomo(lados, vezes) {
+  // (escala: o quanto cresce no pulso — 1,3 normalmente; maior para um pulso exagerado)
+  pulsarAtomo(lados, vezes, escala = 1.3) {
     lados.forEach(lado => {
       const g = this.$(`.c121-esqueleto .at [data-l="${lado}"]`); if (!g) return;
-      const normal = { scale: "1", filter: "drop-shadow(0 0 0 rgba(255,255,255,0))" }, grande = { scale: "1.3", filter: "drop-shadow(0 0 8px rgba(255,255,255,.95))" };
+      const normal = { scale: "1", filter: "drop-shadow(0 0 0 rgba(255,255,255,0))" }, grande = { scale: String(escala), filter: "drop-shadow(0 0 8px rgba(255,255,255,.95))" };
       const q = [];
       for (let i = 0; i < vezes; i++) q.push({ ...normal, offset: i / vezes }, { ...grande, offset: (i + .5) / vezes });
       q.push({ ...normal, offset: 1 });
@@ -8601,7 +8641,7 @@ const Cena112L = {
     // depois da fanfarra: o 11.2A (se o 11.2 ainda estiver falando, entra quando ele acabar)
     const acabou = new Promise(r => { if (!fanfarra) return r(); fanfarra.addEventListener("ended", r, { once: true }); fanfarra.addEventListener("error", r, { once: true }); setTimeout(r, 6000); });
     Promise.all([acabou, Palco.animar(s, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.4, fill: "none" }).finished]).then(() => {
-      if (s.isConnected && NARRACOES[Player.indice] && ["dialogo11_2", "dialogo12_5"].includes(NARRACOES[Player.indice].id)) Player.seguirSozinho();   // (depois da água, o 11.2A; da amônia, o 12.6)
+      if (s.isConnected && NARRACOES[Player.indice] && ["dialogo11_2", "dialogo12_5", "dialogo13_4"].includes(NARRACOES[Player.indice].id)) Player.seguirSozinho();   // (depois da água, o 11.2A; da amônia, o 12.6; do metano, o 13.5)
     }, () => {});
   }
 };
@@ -10113,7 +10153,7 @@ const Demo = {
   toqueAtomos(toques) {
     const id = NARRACOES[Player.indice] && NARRACOES[Player.indice].id;
     const emJanela = A => this.naJanela(A.x, A.y);
-    if (id === "dialogo11_2" || id === "dialogo12_5") {
+    if (id === "dialogo11_2" || id === "dialogo12_5" || id === "dialogo13_4") {
       const lado = !Cena112L.sel ? "meio" : Cena121.pontasLados().find(l => !Cena112L.lig[l]);
       if (!lado) return null;
       const A = Cena112L.naTela(lado); if (!A) return null;
