@@ -572,6 +572,7 @@
   /* 11.3C: a água em 3D, no meio da tela (no lugar da molécula do caderno) */
   .c113-3d { position: absolute; left: 0; right: 0; top: 22%; bottom: 15%; z-index: 4; }
   .c113-3d canvas { display: block; width: 100%; height: 100%; }
+  .c113-3d.amonia { top: 30%; bottom: 17%; }   /* a amônia em 3D: abaixo da fórmula (o par do N fica em cima) e acima do "Entendi" */
   /* 11.3B: o foco — o que sai de foco escurece 90%; os pares do O também brilham */
   .c121-esqueleto .at > g, .c121-esqueleto .c124-e, .c121-esqueleto .c113-estavel { transition: opacity .5s ease, filter .45s ease; }
   .c121-esqueleto .c113-escuro { opacity: .1; }
@@ -1325,7 +1326,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v215 · 11/10/2026</span>
+    <span class="versao" id="versao">v216 · 11/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3244,6 +3245,35 @@ const NARRACOES = [
                                    Cena113P.fila(false); Cena12N.$(".c12nq").classList.add("baixo"); } }   // (a fileira some e a pergunta desce até a base: o esqueleto da amônia é alto)
     ],
     aoFim: () => { ui.semPlay(true); Cena12N.opcoes(); } },   // as opções entram; quem leva adiante é a resposta certa
+  // depois do acerto (2 e⁻), 13s: o par que sobrou volta embaixo (3,8s); no fim, o aluno toca em cima do N e o par vai para lá
+  // (como na água): o N se acalma com a bola verde e entra o 12.8
+  { id: "dialogo12_7", titulo: "O par que falta", src: "audio/audio_moleculas_12.7.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 0,    acao: () => Cena71.tirarPergunta() },                 // a pergunta e as opções saem em fade
+      { tempo: 3.8,  acao: () => Cena113P.fila(true) }                     // o par de elétrons que sobrou aparece embaixo
+    ],
+    aoFim: () => { ui.semPlay(true); Cena113P.liberar(); } },
+  // a amônia pronta (23s): o foco nas ligações (com o par dentro), no par de cima e em cada traço; aos 19s, a festa (com
+  // uma pausa de 1s). No fim, a molécula de bolas sai, entra a do caderno e o botão "Entendi" (sem play) leva ao 12.9
+  { id: "dialogo12_8", titulo: "A amônia", src: "audio/audio_moleculas_12.8.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 7,    acao: () => Cena113F.escurecer(["meio"]) },           // o N apaga
+      { tempo: 8.2,  acao: () => ["esq", "dir", "baixo"].forEach(l => Cena121.parDentro(l, 2.8)) },   // os traços transparentes, com o par dentro (até 11s)
+      { tempo: 11,   acao: () => Cena113F.escurecer(["meio"], false) },    // tudo volta ao normal
+      { tempo: 12,   acao: () => Cena113F.escurecer(["esq", "dir", "baixo"]) },   // os H apagam
+      { tempo: 14.2, acao: () => Cena12N.pulsarPar() },                    // o par de cima pulsa
+      { tempo: 15,   acao: () => Cena113P.piscarLigacao("esq") },          // o traço da esquerda pulsa
+      { tempo: 15.7, acao: () => Cena113P.piscarLigacao("baixo") },        // o de baixo
+      { tempo: 16.5, acao: () => Cena113P.piscarLigacao("dir") },          // o da direita
+      { tempo: 19,   acao: () => Cena12N.festa() }                         // pausa de 1s, com confetes, fanfarra e aplausos
+    ],
+    aoFim: () => { ui.semPlay(true); Cena12N.caderno(); } },
+  // 5s: a molécula do caderno sai e entra a amônia em 3D (gira sozinha e com o dedo); no fim, o botão "Entendi"
+  { id: "dialogo12_9", titulo: "A amônia em 3D", src: "audio/audio_moleculas_12.9.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 4.9,  acao: () => Cena113C.mostrar("amonia") }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1("e", "Entendi"); } },
 
 ];
 
@@ -7192,9 +7222,10 @@ const Cena11Copo = {
   },
   // fim do 11.1B: no lugar do play, um botão "Passo 1", centralizado embaixo; o toque nele leva ao 11.1C
   // (o mesmo botão, com outro número, no fim do 11.1C — "Passo 2" — e do 11.2 — "Passo 3")
-  botaoPasso1(n = 1) {
+  // (texto: outro rótulo no lugar de "Passo N" — ex.: "Entendi")
+  botaoPasso1(n = 1, texto = "") {
     if (this.$(".c11-passo-bt")) return;
-    Palco.adicionar(`<div class="c10-botoes c11-passo-bt n${n}"><button class="c10-bt">Passo ${n}</button></div>`);
+    Palco.adicionar(`<div class="c10-botoes c11-passo-bt n${n}"><button class="c10-bt">${texto || "Passo " + n}</button></div>`);
     const caixa = this.$(".c11-passo-bt"), b = caixa.querySelector(".c10-bt");
     Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }], { duracao: .45, easing: "cubic-bezier(.3,1.4,.5,1)" });
     b.addEventListener("click", () => {
@@ -7498,6 +7529,30 @@ const Cena12N = {
     const dur = Math.min(2, texto.length * .045);
     Palco.digitar(p, texto, dur);
     if (logo) Palco.animar(caixa, [{}, {}], { duracao: dur + .1, fill: "none" }).finished.then(() => this.opcoes(), () => {});
+  },
+  // 12.8, 14,2s: o par em cima do N pulsa (cresce com brilho e volta, 2 vezes)
+  pulsarPar() {
+    const [, cy] = Cena121.xy("meio");
+    Palco.el.querySelectorAll(".c121-esqueleto .c124-e").forEach(c => {
+      if (+c.getAttribute("cy") >= cy) return;
+      c.style.transformOrigin = `${c.getAttribute("cx")}px ${c.getAttribute("cy")}px`;
+      Palco.animar(c, [{ transform: "scale(1)" }, { transform: "scale(1.7)", offset: .25 }, { transform: "scale(1)", offset: .5 }, { transform: "scale(1.7)", offset: .75 }, { transform: "scale(1)" }],
+        { duracao: 1, easing: "ease-in-out", fill: "none" });
+    });
+  },
+  // 12.8, 19s: o áudio pausa 1s, com confetes, fanfarra e aplausos
+  festa() {
+    Cena121.respiro(1, true);
+    Cena113F.festa(true); Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+  },
+  // fim do 12.8: a molécula de bolas sai e entra a do caderno; depois, no meio, o botão "Entendi" (sem play)
+  caderno() {
+    Cena113F.tirarMolecula();
+    const s = this.$(".c121-esqueleto"); if (!s) return;
+    Palco.animar(s, [{}, {}], { duracao: 1.05, fill: "none" }).finished.then(() => {
+      Cena113F.caderno();
+      return Palco.animar(s, [{}, {}], { duracao: 1.1, fill: "none" }).finished;
+    }).then(() => Cena11Copo.botaoPasso1("e", "Entendi"), () => {});
   },
   opcoes() {
     const caixa = this.$(".c12nq .c4-opcoes"); if (!caixa || caixa.style.visibility !== "hidden") return;
@@ -8005,8 +8060,8 @@ const Cena121 = {
   // o par de elétrons aparece dentro do traço (que fica transparente) por dur segundos
   parDentro(lado, dur) {
     const s = this.$(".c121-esqueleto"); if (!s || !this.apagarTraco(lado, dur, .3)) return;
-    const { mx } = this.pontas(lado), ent = Math.min(.3 / dur, .2);
-    s.insertAdjacentHTML("beforeend", `<g class="vai">${[-4, 4].map(dy => `<circle cx="${mx}" cy="${25 + dy}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`).join("")}</g>`);
+    const { mx, my, nx, ny } = this.pontas(lado), ent = Math.min(.3 / dur, .2);   // (lado a lado, atravessando o traço, em qualquer direção)
+    s.insertAdjacentHTML("beforeend", `<g class="vai">${[-4, 4].map(d => `<circle cx="${mx + nx * d}" cy="${my + ny * d}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`).join("")}</g>`);
     const g = s.lastElementChild;
     Palco.animar(g, [{ opacity: 0 }, { opacity: 1, offset: ent }, { opacity: 1, offset: 1 - ent }, { opacity: 0 }], { duracao: dur }).finished.then(() => g.remove(), () => {});
   },
@@ -8278,24 +8333,30 @@ const Cena113P = {
     Palco.animar(q, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => q.remove(), () => {});
   },
   // fim do 11.3B: os toques valem
+  // os lados do átomo central que recebem par: na água, em cima e embaixo do O; na amônia, só em cima do N (embaixo há um H)
+  ladosPar() { return Cena121.arranjo().central === "N" ? ["cima"] : ["cima", "baixo"]; },
+  // onde ficam os dois elétrons do par (j = 0 ou 1), em cima ou embaixo do átomo central
+  lugar(lado, j) { const [cx, cy] = Cena121.xy("meio"); return [cx + (j ? 4.5 : -4.5), cy + (lado === "cima" ? -34 : 34)]; },
   liberar() {
     this.tirarQuiz(); this.fila(true);
     if (this.$(".c84-toques")) return;
-    this.lados = { cima: 0, baixo: 0 };
-    Palco.el.querySelectorAll(".c121-esqueleto .c124-e").forEach(c => { this.lados[c.getAttribute("cy") < 25 ? "cima" : "baixo"] = 1; });
-    if (this.lados.cima && this.lados.baixo) return;
-    Palco.adicionar(`<div class="c84-toques" aria-label="Toque em cima ou embaixo do O para colocar os pares de elétrons"></div>`);
+    const [, cy] = Cena121.xy("meio");
+    this.lados = Object.fromEntries(this.ladosPar().map(l => [l, 0]));
+    Palco.el.querySelectorAll(".c121-esqueleto .c124-e").forEach(c => { const l = +c.getAttribute("cy") < cy ? "cima" : "baixo"; if (l in this.lados) this.lados[l] = 1; });
+    if (Object.values(this.lados).every(Boolean)) return;
+    Palco.adicionar(`<div class="c84-toques" aria-label="Toque perto do átomo central para colocar os pares de elétrons"></div>`);
     this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
-    Cena121.pulsarAtomo(["meio"], 1);   // convite: o O dá uma pulsada
+    Cena121.pulsarAtomo(["meio"], 1);   // convite: o central dá uma pulsada
   },
   toque(e) {
     if (Palco.pausado) return;
     const O = Cena112L.naTela("meio"); if (!O) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top, dx = x - O.x, dy = y - O.y;
-    // só vale perto do O, em cima ou embaixo dele (dos lados ficam as ligações)
+    // só vale perto do central, em cima ou embaixo dele (dos lados ficam as ligações)
     if (Math.hypot(dx, dy) > O.R * 5 || Math.abs(dy) < Math.abs(dx) * .8 || Math.abs(dy) < O.R * .4) return;
     const lado = dy < 0 ? "cima" : "baixo";
     Cena84.circulo(x, y, "");
+    if (!(lado in this.lados)) return Cena112L.erro(["meio"], "O par fica em cima do " + Cena121.arranjo().central);
     if (this.lados[lado]) return Cena112L.erro(["meio"], "Só cabe um par em cada lado");
     const ks = this.livres().slice(-2); if (ks.length < 2) return;
     this.lados[lado] = 1;
@@ -8303,12 +8364,12 @@ const Cena113P = {
     const fila = Cena12.fila(), s = Cena121.svg();
     ks.forEach(k => { fila.children[k].style.visibility = "hidden"; });   // já saem da conta (um toque rápido no outro lado não pega os mesmos)
     ks.reverse().forEach((k, j) => {
-      const alvo = Cena124.LUGAR[lado][j];
+      const alvo = this.lugar(lado, j);
       const pousar = () => s.querySelector(".at").insertAdjacentHTML("beforebegin",
         `<circle class="c124-e" cx="${alvo[0]}" cy="${alvo[1]}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
       Palco.animar(fila, [{}, {}], { duracao: .01, atraso: j * .08, fill: "none" }).finished.then(() => Cena124.voar(fila.children[k], alvo, .75, pousar), () => {});
     });
-    if (this.lados.cima && this.lados.baixo) this.pronto();
+    if (Object.values(this.lados).every(Boolean)) this.pronto();
   },
   // os dois pares no lugar: a conquista — brilho verde com aplausos, fanfarra e confetes
   pronto() {
@@ -8319,8 +8380,8 @@ const Cena113P = {
       const av = this.$(".c84-aviso"); if (av) { av.getAnimations().forEach(a => a.cancel()); av.remove(); }   // um aviso de erro ainda na tela sai
       this.estabilizar("meio");   // com o octeto completo, o O para de tremer (a bola verde)
       Vibra.tocar("toqueEletron");
-      // e entra o 11.3B (a festa é dele, aos 3s)
-      if (NARRACOES[Player.indice] && NARRACOES[Player.indice].id === "dialogo11_3A") Player.seguirSozinho(true);
+      // e entra o 11.3B (a festa é dele, aos 3s) — ou, na amônia, o 12.8
+      if (NARRACOES[Player.indice] && ["dialogo11_3A", "dialogo12_7"].includes(NARRACOES[Player.indice].id)) Player.seguirSozinho(true);
     }, () => {});
   }
 };
@@ -8341,7 +8402,7 @@ const Cena113F = {
       if (n.startsWith("lig-")) return [s.querySelector(`.lig [data-l="${n.slice(4)}"]`)];
       const pares = [...s.querySelectorAll(".c124-e")];
       if (n === "pares") return pares;
-      return pares.filter(c => (+c.getAttribute("cy") < 25) === (n === "par-cima"));
+      return pares.filter(c => (+c.getAttribute("cy") < Cena121.xy("meio")[1]) === (n === "par-cima"));
     }).filter(Boolean);
   },
   // o que não está em foco escurece 90% (ligar = false: volta)
@@ -8383,11 +8444,22 @@ const Cena113F = {
     const xe = 100 - borda - folga, xd = 100 + borda + folga;     // onde os traços encostam no O
     const hEsq = xe - traco - folga - hMeio, hDir = xd + traco + folga + hMeio;
     const dx = 4.5 * K, dy = 17 * K;                                // os pares, em cima e embaixo do O
+    if (Cena121.arranjo().central === "N") {
+      // a amônia: H–N–H em linha, o terceiro H embaixo do N (traço vertical) e o par do N em cima
+      const [cx, cy] = Cena121.xy("meio"), sy = (x, y, t) => simbolo(x, t).replace('y="25"', `y="${y}"`);
+      const vy = cy + 12 + folga, hBaixo = vy + traco + folga + 12;
+      s.innerHTML = `<g class="caderno" stroke="${cor}" stroke-width="${2.2 * 1.2}" stroke-linecap="round">
+          <line x1="${xe - traco}" y1="${cy}" x2="${xe}" y2="${cy}"/><line x1="${xd}" y1="${cy}" x2="${xd + traco}" y2="${cy}"/><line x1="${cx}" y1="${vy}" x2="${cx}" y2="${vy + traco}"/></g>
+        ${sy(hEsq, cy, "H")}${sy(cx, cy, "N")}${sy(hDir, cy, "H")}${sy(cx, hBaixo, "H")}
+        ${ponto(cx - dx, cy - dy)}${ponto(cx + dx, cy - dy)}`;
+      s.setAttribute("aria-label", "Estrutura de Lewis da amônia: o N ligado a três H, com um par de elétrons no nitrogênio");
+    } else {
     s.innerHTML = `<g class="caderno" stroke="${cor}" stroke-width="${2.2 * 1.2}" stroke-linecap="round">
         <line x1="${xe - traco}" y1="25" x2="${xe}" y2="25"/><line x1="${xd}" y1="25" x2="${xd + traco}" y2="25"/></g>
       ${simbolo(hEsq, "H")}${simbolo(100, "O")}${simbolo(hDir, "H")}
       ${ponto(100 - dx, 25 - dy)}${ponto(100 + dx, 25 - dy)}${ponto(100 - dx, 25 + dy)}${ponto(100 + dx, 25 + dy)}`;
     s.setAttribute("aria-label", "Estrutura de Lewis da água: H–O–H, com dois pares de elétrons no oxigênio");
+    }
     delete s.dataset.apagado;
     Palco.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: 1, easing: "ease-out", fill: "none" });
     s.style.opacity = "";
@@ -8400,17 +8472,20 @@ const Cena113F = {
    dos H). Ela gira sozinha; com o dedo, gira para os lados e inclina; solta, volta a girar depois de um instante. */
 const Cena113C = {
   $(sel) { return Palco.el.querySelector(sel); },
-  mostrar() {
+  // mol: "agua" (padrão) ou "amonia" (pirâmide, 107°, com o par do N em cima)
+  mostrar(mol = "agua") {
     if (this.$(".c113-3d")) return;
     Cena113F.apagar(this.$(".c121-esqueleto"), .8);
-    Palco.adicionar(`<div class="c113-3d" aria-label="Molécula de água em 3D, angular, com os dois pares de elétrons do oxigênio. Arraste para girar"></div>`);
+    const aria = mol === "amonia" ? "Molécula de amônia em 3D, em pirâmide, com o par de elétrons do nitrogênio" : "Molécula de água em 3D, angular, com os dois pares de elétrons do oxigênio";
+    if (mol === "amonia") Cena113F.tirarPasso();   // (o texto do passo sai: a amônia em 3D ocupa o lugar dele)
+    Palco.adicionar(`<div class="c113-3d${mol !== "agua" ? " " + mol : ""}" aria-label="${aria}. Arraste para girar"></div>`);
     const caixa = this.$(".c113-3d");
     caixa.style.opacity = "0";
     Palco.animar(caixa, [{ opacity: 0, transform: "scale(.85)" }, { opacity: 1, transform: "scale(1)" }], { duracao: 1, atraso: .4, easing: "ease-out", fill: "none" })
       .finished.then(() => { caixa.style.opacity = ""; }, () => {});
-    this.montar(caixa);
+    this.montar(caixa, mol);
   },
-  montar(caixa) {
+  montar(caixa, mol = "agua") {
     if (!window.THREE || caixa.querySelector("canvas")) return;
     const T = THREE;
     let renderer;
@@ -8424,26 +8499,36 @@ const Cena113C = {
     const luz2 = new T.DirectionalLight(0xA3DBF7, .5); luz2.position.set(-6, -3, -4); cena.add(luz2);
     const mat = cor => new T.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
     const esf = new T.SphereGeometry(1, 48, 32), bas = new T.CylinderGeometry(.13, .13, 1, 24);
-    const mol = new T.Group(); cena.add(mol);
+    const amonia = mol === "amonia";
+    mol = new T.Group(); cena.add(mol);
     const Y = new T.Vector3(0, 1, 0);
     const bola = (cor, r, p) => { const m = new T.Mesh(esf, mat(cor)); m.scale.setScalar(r); m.position.copy(p); mol.add(m); return m; };
-    // o O no centro e os dois H embaixo, 104,5° entre as ligações (no plano da tela)
+    const ligar = (A, H) => {
+      const d = H.clone().sub(A), c = new T.Mesh(bas, mat(0xC8C8C8));
+      c.scale.set(1, d.length(), 1); c.position.copy(A).add(H).multiplyScalar(.5); c.quaternion.setFromUnitVectors(Y, d.normalize()); mol.add(c);
+    };
     const O = new T.Vector3(0, .35, 0), L = 1.7, meio = 104.5 / 2 * Math.PI / 180;
-    bola(0xFF0D0D, .66, O);
-    [-1, 1].forEach(s => {
-      const H = O.clone().add(new T.Vector3(s * L * Math.sin(meio), -L * Math.cos(meio), 0));
-      bola(0xFFFFFF, .42, H);
-      const d = H.clone().sub(O), c = new T.Mesh(bas, mat(0xC8C8C8));
-      c.scale.set(1, d.length(), 1); c.position.copy(O).add(H).multiplyScalar(.5); c.quaternion.setFromUnitVectors(Y, d.normalize()); mol.add(c);
-    });
+    if (amonia) {
+      // o N no centro e os três H embaixo, em pirâmide (107° entre as ligações: cada uma a 68° da vertical)
+      bola(0x3050F8, .64, O);
+      const th = 68 * Math.PI / 180;
+      [0, 1, 2].forEach(k => {
+        const az = (k * 120 + 90) * Math.PI / 180, H = O.clone().add(new T.Vector3(L * Math.sin(th) * Math.cos(az), -L * Math.cos(th), L * Math.sin(th) * Math.sin(az)));
+        bola(0xFFFFFF, .42, H); ligar(O, H);
+      });
+    } else {
+      // o O no centro e os dois H embaixo, 104,5° entre as ligações (no plano da tela)
+      bola(0xFF0D0D, .66, O);
+      [-1, 1].forEach(s => { const H = O.clone().add(new T.Vector3(s * L * Math.sin(meio), -L * Math.cos(meio), 0)); bola(0xFFFFFF, .42, H); ligar(O, H); });
+    }
     // os dois pares não ligantes: para cima, abertos para a frente e para trás (o plano perpendicular ao dos H)
     const eMat = new T.MeshBasicMaterial({ color: 0xD3EFFC });
     const brilhoTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
       gr.addColorStop(0, "rgba(211,239,252,1)"); gr.addColorStop(.35, "rgba(163,219,247,.5)"); gr.addColorStop(1, "rgba(163,219,247,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new T.CanvasTexture(c); })();
     const halo = new T.SpriteMaterial({ map: brilhoTex, transparent: true, depthWrite: false, blending: T.AdditiveBlending });
     const abre = 54.75 * Math.PI / 180;   // metade do ângulo entre os pares (o tetraedro: 109,5°)
-    [-1, 1].forEach(s => {
-      const dir = new T.Vector3(0, Math.cos(abre), s * Math.sin(abre)).normalize();
+    (amonia ? [0] : [-1, 1]).forEach(s => {   // (a amônia tem um par só, bem em cima do N)
+      const dir = new T.Vector3(0, Math.cos(abre * Math.abs(s)), s * Math.sin(abre)).normalize();
       [-1, 1].forEach(lado => {   // só os dois elétrons do par (sem nuvem em volta), com o brilho deles
         const e = new T.Mesh(new T.SphereGeometry(.11, 20, 14), eMat);
         e.position.copy(O).addScaledVector(dir, 1.3).add(new T.Vector3(lado * .2, 0, 0)); mol.add(e);
@@ -9676,9 +9761,9 @@ const Demo = {
       const A = Cena112L.naTela(lado); if (!A) return null;
       return () => this.tocar(toques, emJanela(A));
     }
-    if (id === "dialogo11_3A" || id === "dialogo12_4") {
-      const O = Cena112L.naTela("meio") || Cena124.oxigenio(); if (!O) return null;
-      const cima = id === "dialogo11_3A" ? !Cena113P.lados.cima : Cena124.lados.cima < 2;
+    if (id === "dialogo11_3A" || id === "dialogo12_7") {
+      const O = Cena112L.naTela("meio"); if (!O || !Cena113P.lados) return null;
+      const cima = !Cena113P.lados.cima;
       return () => this.tocar(toques, this.naJanela(O.x, O.y + (cima ? -1 : 1) * O.R * 2));
     }
     // Regra de Hund: primeiro um em cada lado (só nos lados permitidos), depois os pares nos lados de par
