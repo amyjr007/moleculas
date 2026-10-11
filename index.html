@@ -1342,7 +1342,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v227 · 11/10/2026</span>
+    <span class="versao" id="versao">v228 · 11/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10049,8 +10049,10 @@ const Dev = {
 Dev.iniciar();
 
 // o cubo de átomos da capa: desenhado em 3D (projeção com perspectiva), animado em ciclo e girado com o dedo/mouse
-// ciclo (12 s): descanso → giro completo → descanso → átomos crescem em sequência → descanso → balanço → descanso;
-// os elétrons (2 por ligação, um par) correm pelas ligações o tempo todo
+// ciclo do cubo (15 s): descanso → giro no eixo vertical → descanso → giro no eixo horizontal (vira de cabeça para baixo)
+//   → descanso → átomos crescem em sequência → descanso → balanço → descanso
+// um elétron só, no seu próprio ciclo: percorre todas as ligações e átomos (um caminho único pelas 7 arestas),
+//   depois passeia em 3D por dentro e por fora do cubo e volta ao começo
 const CuboCapa = {
   // a pose de descanso escolhida pela professora: amarelo no alto, corais nos lados, visto bem de cima
   AY0: 45 * Math.PI / 180, AX0: -55 * Math.PI / 180,
@@ -10059,18 +10061,25 @@ const CuboCapa = {
   CORES: ["#7C9CFF","#A3DBF7","#FF7A66","#FFC24B","#A3DBF7","#FFFFFF","#A3DBF7","#FF7A66"],
   ESCURAS: ["#4A5FB0","#4F8DB5","#B4473A","#B9801B","#4F8DB5","#8FA4BF","#4F8DB5","#B4473A"],
   ORDEM_PULSO: [3, 2, 7, 1, 6, 0, 5, 4],   // de cima para baixo
-  CICLO: 12,
-  modo: "auto", tl: 0, vy: 0, vx: 0,
+  CICLO: 15,
+  // o elétron: o caminho pelos átomos (passa por todas as arestas uma vez) e o voo de volta (pontos no espaço do cubo)
+  CAMINHO: [6, 2, 3, 7, 5, 1, 0, 4],
+  VOO: [[.45, -.45, -.45], [0, 0, 0], [-.55, .35, .65], [-1.55, .2, 1.45], [-2, 1.15, .1], [-.9, 2.05, -1.15], [.55, 1.65, -1.6]],
+  T_ARESTA: .5, T_ATOMO: .18, T_VOO: 3.6,
+  modo: "auto", tl: 0, te: 0, vy: 0, vx: 0,
   iniciar() {
     const s = this.el = document.getElementById("logoCubo"); if (!s) return;
     this.V = []; for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) this.V.push([x, y, z]);
     this.E = this.ARESTAS; this.ay = this.AY0; this.ax = this.AX0;
+    this.T_ELETRON = this.CAMINHO.length * this.T_ATOMO + (this.CAMINHO.length - 1) * this.T_ARESTA + this.T_VOO;
     this.desenhar(null, false);
     // o ícone do topo da página 1 é o mesmo cubo, parado na pose de descanso
     const sym = document.getElementById("logo");
     if (sym) { sym.setAttribute("viewBox", "-20 -14 552 552"); sym.innerHTML = s.innerHTML; }
     let ult = null;
     s.addEventListener("pointerdown", e => { ult = { x: e.clientX, y: e.clientY, t: performance.now() }; this.vy = this.vx = 0; this.modo = "mao";
+      // vindo do giro no eixo horizontal, o ângulo volta para a faixa normal
+      this.ax = this.limita(((this.ax + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
       s.style.cursor = "grabbing"; try { s.setPointerCapture(e.pointerId); } catch (_) {} });
     s.addEventListener("pointermove", e => { if (!ult) return;
       const dx = e.clientX - ult.x, dy = e.clientY - ult.y, dt = Math.max(performance.now() - ult.t, 1), k = .012;
@@ -10092,12 +10101,13 @@ const CuboCapa = {
   limita(a) { return Math.max(-1.4, Math.min(1.4, a)); },
   suave(u) { u = Math.max(0, Math.min(1, u)); return u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; },
   passo(dt) {
-    this.tl += dt; this.te = (this.te || 0) + dt;   // te: o relógio dos elétrons (nunca para)
+    this.tl += dt; this.te += dt;   // te: o relógio do elétron (nunca para)
     if (this.modo === "auto") {
       const t = this.tl % this.CICLO;
       let ay = this.AY0, ax = this.AX0;
-      if (t >= 2 && t < 4.4) ay += 2 * Math.PI * this.suave((t - 2) / 2.4);             // giro completo
-      else if (t >= 8.6 && t < 10.8) { const u = (t - 8.6) / 2.2;                          // balanço
+      if (t >= 2 && t < 4.4) ay += 2 * Math.PI * this.suave((t - 2) / 2.4);                // giro no eixo vertical
+      else if (t >= 5.4 && t < 7.8) ax += 2 * Math.PI * this.suave((t - 5.4) / 2.4);       // giro no eixo horizontal
+      else if (t >= 11.4 && t < 13.6) { const u = (t - 11.4) / 2.2;                         // balanço
         ax += .5 * Math.sin(Math.PI * u); ay += .75 * Math.sin(2 * Math.PI * u) * (1 - u * .4); }
       this.ay = ay; this.ax = ax;
     } else if (this.modo === "embalo") {
@@ -10115,43 +10125,69 @@ const CuboCapa = {
       if (v.u >= 1) { this.modo = "auto"; this.tl = 0; }
     }
   },
-  // os átomos crescem um depois do outro (fator de escala de cada um)
+  // os átomos crescem um depois do outro; o átomo em que o elétron está incha um pouco
   pulsos() {
-    const esc = new Array(8).fill(1); if (this.modo !== "auto") return esc;
-    const t = this.tl % this.CICLO - 5.6;
-    this.ORDEM_PULSO.forEach((i, n) => { const u = (t - n * .2) / .55; if (u > 0 && u < 1) esc[i] = 1 + .42 * Math.sin(Math.PI * u); });
+    const esc = new Array(8).fill(1);
+    if (this.modo === "auto") { const t = this.tl % this.CICLO - 8.6;
+      this.ORDEM_PULSO.forEach((i, n) => { const u = (t - n * .2) / .55; if (u > 0 && u < 1) esc[i] = 1 + .42 * Math.sin(Math.PI * u); }); }
+    const no = this.eletron(this.te).atomo; if (no) esc[no.i] = Math.max(esc[no.i], 1 + .16 * Math.sin(Math.PI * no.u));
     return esc;
   },
-  desenhar(esc, eletrons) {
+  // onde está o elétron (no espaço do cubo) no tempo t; "atomo" quando está parado dentro de um átomo
+  eletron(t) {
+    t = ((t % this.T_ELETRON) + this.T_ELETRON) % this.T_ELETRON;
+    const C = this.CAMINHO, V = this.V, ta = this.T_ATOMO, tr = this.T_ARESTA;
+    for (let n = 0; n < C.length; n++) {
+      if (t < ta) return { p: V[C[n]], atomo: { i: C[n], u: t / ta } };
+      t -= ta;
+      if (n < C.length - 1) {
+        if (t < tr) { const u = .5 - .5 * Math.cos(Math.PI * t / tr), a = V[C[n]], b = V[C[n + 1]];
+          return { p: a.map((v, k) => v + (b[k] - v) * u) }; }
+        t -= tr;
+      }
+    }
+    // o voo: uma curva suave (Catmull-Rom) do último átomo, por dentro e por fora do cubo, até o primeiro
+    const Q = [V[C[C.length - 1]], ...this.VOO, V[C[0]]], n = Q.length - 1;
+    const s = .5 - .5 * Math.cos(Math.PI * Math.min(t / this.T_VOO, 1)), x = s * n, i = Math.min(Math.floor(x), n - 1), u = x - i;
+    const p0 = Q[Math.max(i - 1, 0)], p1 = Q[i], p2 = Q[i + 1], p3 = Q[Math.min(i + 2, n)];
+    return { p: p1.map((_, k) => .5 * (2 * p1[k] + (-p0[k] + p2[k]) * u + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * u * u + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * u * u * u)) };
+  },
+  desenhar(esc, comEletron) {
     esc = esc || new Array(8).fill(1);
     const S = 112, cx = 256, cy = 262, ay = this.ay, ax = this.ax;
-    const P = this.V.map(([x, y, z]) => { const X = x * Math.cos(ay) + z * Math.sin(ay); let Z = -x * Math.sin(ay) + z * Math.cos(ay);
+    const proj = ([x, y, z]) => { const X = x * Math.cos(ay) + z * Math.sin(ay); let Z = -x * Math.sin(ay) + z * Math.cos(ay);
       const Y = y * Math.cos(ax) - Z * Math.sin(ax); Z = y * Math.sin(ax) + Z * Math.cos(ax); const k = 1 / (1 + Z * .08);
-      return { x: cx + X * S * k, y: cy - Y * S * k, z: Z, k }; });
+      return { x: cx + X * S * k, y: cy - Y * S * k, z: Z, k }; };
+    const P = this.V.map(proj);
     const f = n => n.toFixed(1), linha = ([a, b]) => `<line x1="${f(P[a].x)}" y1="${f(P[a].y)}" x2="${f(P[b].x)}" y2="${f(P[b].y)}"/>`;
     // o canto mais ao fundo fica apagado, com as suas ligações; o resto claro, com sombra, do fundo para a frente
     const fundo = P.reduce((m, p, i) => p.z > P[m].z ? i : m, 0);
     const tras = this.E.filter(e => e.includes(fundo)), frente = this.E.filter(e => !e.includes(fundo));
-    const ordem = P.map((p, i) => i).sort((a, b) => P[b].z - P[a].z);
-    // os elétrons: um par por ligação, indo de uma ponta à outra e nascendo/sumindo dentro dos átomos
-    const eletronsDe = (lista, apagado) => !eletrons ? "" : lista.map(e => {
-      const k = this.E.indexOf(e), [a, b] = e;
-      return [0, .5].map(d => { const p = ((this.te || 0) / 1.5 + k * .29 + d) % 1, op = Math.sin(Math.PI * p) * (apagado ? .45 : 1);
-        const x = P[a].x + (P[b].x - P[a].x) * p, y = P[a].y + (P[b].y - P[a].y) * p;
-        return `<circle cx="${f(x)}" cy="${f(y)}" r="24" fill="#FFC24B" fill-opacity="${(op * .32).toFixed(2)}"/>`
-          + `<circle cx="${f(x)}" cy="${f(y)}" r="11" fill="#FFF3C4" fill-opacity="${op.toFixed(2)}"/>`; }).join("");
-    }).join("");
     let s = `<g stroke="#4F8DB5" stroke-opacity=".55" stroke-width="20" stroke-linecap="round">${tras.map(linha).join("")}</g>`
-      + eletronsDe(tras, true)
       + `<circle cx="${f(P[fundo].x)}" cy="${f(P[fundo].y)}" r="${f(30 * P[fundo].k * esc[fundo])}" fill="#4F8DB5" fill-opacity=".8"/>`
       + `<g stroke="#2E5775" stroke-width="26" stroke-linecap="round" transform="translate(0 8)">${frente.map(linha).join("")}</g>`
-      + `<g stroke="#D3EFFC" stroke-width="24" stroke-linecap="round">${frente.map(linha).join("")}</g>`
-      + eletronsDe(frente, false);
-    for (const i of ordem) { if (i === fundo) continue; const p = P[i], r = 36 * p.k * esc[i];
+      + `<g stroke="#D3EFFC" stroke-width="24" stroke-linecap="round">${frente.map(linha).join("")}</g>`;
+    // átomos e elétron, do mais longe para o mais perto (o elétron "entra" no átomo: no empate, o átomo fica por cima)
+    const itens = P.map((p, i) => ({ z: p.z, i })).filter(o => o.i !== fundo);
+    let E = null;
+    if (comEletron) { E = proj(this.eletron(this.te).p); itens.push({ z: E.z + .001, e: true }); }
+    itens.sort((a, b) => b.z - a.z);
+    for (const o of itens) {
+      if (o.e) {
+        // o rastro: onde ele esteve há pouco, cada vez mais fraco
+        for (let j = 6; j >= 1; j--) { const q = proj(this.eletron(this.te - j * .03).p);
+          s += `<circle cx="${f(q.x)}" cy="${f(q.y)}" r="${f(14 * q.k * (1 - j / 8))}" fill="#FFC24B" fill-opacity="${(.5 * (1 - j / 7)).toFixed(2)}"/>`; }
+        const br = E.z > .9 ? .6 : 1;
+        s += `<circle cx="${f(E.x)}" cy="${f(E.y)}" r="${f(34 * E.k)}" fill="#FFC24B" fill-opacity="${(.32 * br).toFixed(2)}"/>`
+          + `<circle cx="${f(E.x)}" cy="${f(E.y)}" r="${f(16 * E.k)}" fill="#FFF3C4" fill-opacity="${br}"/>`;
+        continue;
+      }
+      const i = o.i, p = P[i], r = 36 * p.k * esc[i];
       // no pulso, um halo da cor do átomo
-      if (esc[i] > 1.01) s += `<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(r * 1.45)}" fill="${this.CORES[i]}" fill-opacity="${((esc[i] - 1) / .42 * .3).toFixed(2)}"/>`;
+      if (esc[i] > 1.01) s += `<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(r * 1.45)}" fill="${this.CORES[i]}" fill-opacity="${Math.min((esc[i] - 1) / .42 * .3, .3).toFixed(2)}"/>`;
       s += `<circle cx="${f(p.x)}" cy="${f(p.y + 8)}" r="${f(r)}" fill="${this.ESCURAS[i]}"/><circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(r)}" fill="${this.CORES[i]}"/>`
-        + `<circle cx="${f(p.x - r * .38)}" cy="${f(p.y - r * .38)}" r="${f(r * .26)}" fill="#fff" fill-opacity=".55"/>`; }
+        + `<circle cx="${f(p.x - r * .38)}" cy="${f(p.y - r * .38)}" r="${f(r * .26)}" fill="#fff" fill-opacity=".55"/>`;
+    }
     this.el.innerHTML = s;
   }
 };
