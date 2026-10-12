@@ -1354,7 +1354,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v229 · 12/10/2026</span>
+    <span class="versao" id="versao">v230 · 12/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -7372,7 +7372,11 @@ const Cena11Copo = {
     const base = r0.top - ty, topo = Math.min(base, fr.top - 12), novo = topo - base;
     const cv = { left: r0.left, top: topo, width: r0.width, height: r0.height };
     if (box && Math.abs(ty - novo) > .5) { box.style.transition = `translate ${dur}s cubic-bezier(.45,0,.55,1)`; box.style.translate = `${tx}px ${novo}px`; }
-    const meio = fr.height * .45, x = fr.left - cv.left - 14 - meio, y = fr.top + fr.height / 2 - cv.top;
+    let meio = fr.height * .45, x = fr.left - cv.left - 14 - meio, y = fr.top + fr.height / 2 - cv.top;
+    // (celular: a água pequena um pouco mais à esquerda e mais baixa — ajuste da professora no 11.1B, numa tela de 356 × 655)
+    if (ctx === this.ctx && matchMedia("(orientation: portrait) and (max-width: 600px)").matches) {
+      x -= Palco.el.clientWidth * .069; y += Palco.el.clientHeight * .044;
+    }
     const ray = new T.Raycaster(); ray.setFromCamera(new T.Vector2(x / cv.width * 2 - 1, -(y / cv.height * 2 - 1)), ctx.camera);
     const p = new T.Vector3(); if (!ray.ray.intersectPlane(new T.Plane(new T.Vector3(0, 0, 1), 0), p)) return;
     ctx.pPeq = p;
