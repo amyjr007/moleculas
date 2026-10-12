@@ -499,7 +499,16 @@
   .c11-copo.chama::before { content: ""; position: absolute; left: 22%; right: 22%; top: 18%; bottom: 10%; border-radius: 50%; pointer-events: none; z-index: 1;
     background: radial-gradient(closest-side, rgba(163,219,247,.3), rgba(163,219,247,0)); animation: c71Chama 1.8s ease-in-out infinite; }
   .c11-riso { font-size: .85em; margin-left: .15em; }
-  .c11-passo-bt { top: auto; bottom: 9%; translate: none; }   /* o botão "Passo 1" do fim do 11.1B: centralizado embaixo */
+  .c11-passo-bt { top: auto; bottom: 9%; translate: none; }
+  /* 11.1A: o cubo de moléculas (cada face, a foto de uma molécula) e a mãozinha que mostra o gesto de girar */
+  .c11f-cubo { z-index: 2; touch-action: none; cursor: grab; -webkit-tap-highlight-color: transparent; }
+  .c11f-cubo.pega { cursor: grabbing; }
+  .c11f-cubo .c3-face { overflow: visible; background: none; border-color: transparent; }
+  .c11f-cubo .c3-face img { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .c11f-mao { position: absolute; z-index: 6; pointer-events: none; width: clamp(34px, 4.5vmin + 16px, 54px); translate: -50% 0;
+    animation: c11fGesto 1.9s ease-in-out infinite; }
+  .c11f-mao svg { display: block; width: 100%; height: auto; }
+  @keyframes c11fGesto { 0% { transform: translateX(55px); opacity: 0; } 15% { opacity: 1; } 65% { transform: translateX(-55px); opacity: 1; } 85%, 100% { transform: translateX(-55px); opacity: 0; } }   /* o botão "Passo 1" do fim do 11.1B: centralizado embaixo */
   .c11-voa { position: absolute; z-index: 6; margin: 0; display: flex; align-items: center; justify-content: center; white-space: nowrap; pointer-events: none; box-sizing: border-box; }
   .c11-voa-txt { display: block; line-height: 1; letter-spacing: .02em; transform-origin: 50% 50%; }   /* o "H₂O" que voa da opção até a fórmula */
   .c11-voa-txt sub { font-size: .58em; vertical-align: -.25em; }
@@ -680,6 +689,9 @@
   @media (orientation: portrait) and (max-width: 600px) {
     /* o copo (11.1) e a molécula que sai dele (11.1A em diante): menores e mais baixos, no mesmo lugar o tempo todo */
     .c11-copo, .c11-copo.solto { translate: calc(var(--pw, 356px) * .001) calc(var(--ph, 655px) * .154); scale: .825; }
+    /* 11.1A: a molécula que sai do copo para mais alta (o quadro 3D sobe junto com a saída) */
+    .c11-copo canvas { transition: translate 2.2s cubic-bezier(.4,0,.2,1); }
+    .c11-copo.solto canvas { translate: calc(var(--pw, 356px) * .003) calc(var(--ph, 655px) * -.194); }
     /* 11.1A: a pergunta e as opções sobem */
     .c72-quiz.c11a .c72-pergunta { translate: calc(var(--pw, 356px) * .013) calc(var(--ph, 655px) * -.079); }
     .c72-quiz.c11a .c4-opcoes { translate: calc(var(--pw, 356px) * -.007) calc(var(--ph, 655px) * -.044); }
@@ -1342,7 +1354,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v228 · 11/10/2026</span>
+    <span class="versao" id="versao">v229 · 12/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3064,10 +3076,22 @@ const NARRACOES = [
     ],
     // no fim, o copo pode ser tocado: a molécula sai de dentro dele e vem o 11.1A
     aoFim: () => { ui.semPlay(true); Cena11Copo.liberar(); } },
-  // tocou no copo: a molécula sai girando de dentro dele e para no centro; o copo sai pela esquerda. Em 9,6s, a pergunta
+  // tocou no copo: a molécula sai girando de dentro dele e para no centro; o copo sai pela esquerda.
+  // (no relógio da cena do copo: 1 → 4s a molécula gira 360° em todas as direções e para de frente; 15,4s os H se afastam,
+  //  18s pulsam duas vezes, 20s voltam a se ligar — ver Cena11Copo.roteiro)
   { id: "dialogo11_1A", titulo: "Qual a fórmula da água?", src: "audio/audio_moleculas_11.1A.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 9.6,  acao: () => Cena11Copo.pergunta() }                   // "Qual a fórmula da água?" — três opções iguais, todas certas
+      { tempo: 8,    acao: () => Cena11F.preparar() },                     // (as fotos das moléculas das faces do cubo, prontas antes)
+      { tempo: 22,   acao: () => Cena11F.virar() },                        // a água vira a face de um cubo; cada face, uma molécula — gira até o CH₄
+      { tempo: 26,   acao: () => Cena11F.liberar() }                       // parou no CH₄: a mãozinha mostra o gesto e o aluno gira o cubo
+    ],
+    aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1("s", "Saquei"); } },   // no lugar do play, o "Saquei" (leva ao 11.1A2)
+  // o cubo volta a girar sozinho (1,5s em cada molécula), para na água aos 17s; aos 37s, a pergunta
+  { id: "dialogo11_1A2", titulo: "Qual é mesmo a fórmula da água?", src: "audio/audio_moleculas_11.1A2.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 2,    acao: () => Cena11F.auto() },
+      { tempo: 17,   acao: () => Cena11F.paraAgua() },                     // gira até a água e para (a água volta a ser a molécula 3D)
+      { tempo: 37,   acao: () => Cena11Copo.pergunta() }                   // "Qual é mesmo a fórmula da água?" — três opções iguais, todas certas
     ],
     aoFim: () => ui.semPlay(true) },                                       // quem leva adiante é a resposta: o 11.1B
   // a resposta: começa junto com a fanfarra do acerto (os eventos ainda vão ser definidos)
@@ -7139,6 +7163,7 @@ const Cena111 = {
 const Cena11Copo = {
   $(sel) { return Palco.el.querySelector(sel); },
   SAIDA: 2.2,   // quanto dura a saída da molécula (e a do copo)
+  suave(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); },
   // 5s: o copo, no centro, surgindo
   mostrar() {
     if (this.$(".c11-copo")) return;
@@ -7190,19 +7215,12 @@ const Cena11Copo = {
         });
         ctx.mol.visible = false;
         ctx.cena.add(ctx.mol);
-        // o símbolo dentro de cada bola (sempre de frente para a câmera, na superfície da esfera)
-        const rotulo = (letra, cor) => {
-          const c = document.createElement("canvas"); c.width = c.height = 128;
-          const g = c.getContext("2d"); g.fillStyle = cor; g.font = "800 92px 'Bricolage Grotesque', 'Segoe UI', sans-serif";
-          g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(letra, 64, 70);
-          const s = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(c), transparent: true, depthTest: false, depthWrite: false }));
-          s.renderOrder = 10; s.visible = false; ctx.cena.add(s); return s;
-        };
-        const u = ctx.mol.userData;
-        ctx.rotulos = [[u.O, u.rO, rotulo("O", "#FFFFFF")], ...u.Hs.map(h => [h, u.rH, rotulo("H", "#0A1322")])];
+        // (sem os símbolos dentro das bolas)
+        ctx.rotulos = [];
       },
       ativo(ctx) { return (ctx.t0 !== undefined && ctx.tAcao - ctx.t0 < cena.SAIDA + .2) || (ctx.t1 !== undefined && ctx.tAcao - ctx.t1 < cena.ENCOLHE + .2)
-        || (ctx.volta0 !== undefined && ctx.tAcao - ctx.volta0 < cena.SAIDA + .2); },
+        || (ctx.volta0 !== undefined && ctx.tAcao - ctx.volta0 < cena.SAIDA + .2)
+        || ["dialogo11_1A", "dialogo11_1A2"].includes((NARRACOES[Player.indice] || {}).id); },
       ajustar(ctx) {
         const T = ctx.THREE, tg = Math.tan(T.MathUtils.degToRad(14));
         // o copo inteiro no meio, com folga em volta
@@ -7233,6 +7251,21 @@ const Cena11Copo = {
           m.quaternion.setFromEuler(new T.Euler((1 - k) * Math.PI * .8, (1 - k) * Math.PI * 4, (1 - k) * Math.PI * .5));
           m.scale.setScalar(ctx.escMol * (.12 + .88 * k));
         }
+        // 11.1A (no tempo do áudio): 1 → 4s um giro de 360° em todas as direções, parando de frente;
+        // 15,4s os H se afastam do O, 18s pulsam duas vezes, 20s voltam a se ligar
+        const n = NARRACOES[Player.indice], tA = n && n.id === "dialogo11_1A" && Player.fonte ? Player.fonte.currentTime : null;
+        let sep = 0, pul = 1;
+        if (tA !== null && p > 0) {
+          const e = cena.suave((tA - 1) / 3), a = 2 * Math.PI * e;
+          if (e > 0 && e < 1) m.quaternion.multiply(new T.Quaternion().setFromEuler(new T.Euler(a, a, a)));
+          sep = cena.suave((tA - 15.4) / .6) - cena.suave((tA - 20) / .6);
+          const w = (tA - 18) / .6; if (w > 0 && w < 2) pul = 1 + .35 * Math.abs(Math.sin(Math.PI * w));
+        }
+        u.Hs.forEach((h, i) => {
+          h.position.copy(u.baseH[i]);
+          if (sep) h.position.addScaledVector(u.baseH[i].clone().sub(u.O.position).normalize(), sep * .9);
+          h.scale.setScalar(u.rH * pul);
+        });
         // 11.1B: a molécula encolhe e vai para o lado esquerdo da fórmula, lá no topo
         if (ctx.t1 !== undefined) {
           const q0 = Math.min((ctx.tAcao - ctx.t1) / cena.ENCOLHE, 1), q = q0 * q0 * (3 - 2 * q0);
@@ -7346,20 +7379,206 @@ const Cena11Copo = {
     ctx.escPeq = meio * (2 * ctx.meiaLargura / cv.width);   // (a molécula tem cerca de 1 unidade de cada lado do centro)
     ctx.t1 = ctx.tAcao;
   },
-  // 9,6s do 11.1A: "Qual a fórmula da água?", digitada; as três opções (iguais, todas certas) entram quando ela termina
+  // 37s do 11.1A2: "Qual é mesmo a fórmula da água?", digitada; as três opções (iguais, todas certas) entram quando ela termina
   pergunta() {
     if (this.$(".c72-quiz")) return;
     const op = 'H<sub>2</sub>O <span class="c11-riso" aria-label="risos">😂</span>';
     // acertou (sempre): a festa e, junto com ela, o 11.1B
-    Cena71.pergunta("nitrogenio", { texto: "", opcoes: [[op, 1], [op, 1], [op, 1]], de: "dialogo11_1A", para: "dialogo11_1B", junto: true });
+    Cena71.pergunta("nitrogenio", { texto: "", opcoes: [[op, 1], [op, 1], [op, 1]], de: "dialogo11_1A2", para: "dialogo11_1B", junto: true });
     const p = this.$(".c72-pergunta"), caixa = this.$(".c72-quiz .c4-opcoes");
     caixa.style.visibility = "hidden"; this.$(".c72-quiz").classList.add("c11a");   // (no tablet: pergunta e opções mais baixas)
-    Palco.digitar(p, "Qual a fórmula da água?", 1.4);
+    Palco.digitar(p, "Qual é mesmo a fórmula da água?", 1.7);
     Palco.animar(caixa, [{}, {}], { duracao: 1.5, fill: "none" }).finished.then(() => {
       caixa.style.visibility = "";
       [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
         { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
     }, () => {});
+  }
+};
+
+/* ---------- Narrações 11.1A e 11.1A2: o cubo de moléculas ----------
+   22s do 11.1A: a área da água vira como a face de um cubo, e cada face traz uma molécula (H₂O, NH₃, CH₄, SO₃, CO₂, NO₂,
+   OCl₂ e de novo a água). Gira rápido e vai parando até cair no CH₄ (26s). Aí uma mãozinha mostra o gesto e o aluno gira
+   o cubo com o dedo. 11.1A2: aos 2s volta a girar sozinho (1,5s em cada molécula) e aos 17s gira até a água e para —
+   e a água volta a ser a molécula 3D de sempre (a do copo), para o 11.1B.
+   As faces são fotos das moléculas tiradas pela própria cena 3D do copo (mesma câmera, mesma luz, mesmo lugar):
+   a troca da molécula 3D pela foto, e de volta, não aparece. */
+const Cena11F = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  SEQ: ["agua", "amonia", "metano", "so3", "co2", "no2", "ocl2"],
+  NOMES: { agua: "Água, H₂O", amonia: "Amônia, NH₃", metano: "Metano, CH₄", so3: "Trióxido de enxofre, SO₃", co2: "Gás carbônico, CO₂",
+           no2: "Dióxido de nitrogênio, NO₂", ocl2: "Dicloreto de oxigênio, OCl₂" },
+  GIRO1: 9,   // 22 → 26s: nove faces, da água até o segundo CH₄ (9 % 7 = 2)
+  imgs: null, s: 0, modo: null,
+  suave(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); },
+  // o tempo do áudio, se a narração tocando for a "id"
+  tempo(id) { const n = NARRACOES[Player.indice]; return n && n.id === id && Player.fonte ? Player.fonte.currentTime : null; },
+  // as moléculas (no estilo da água do copo: bolas encostadas, sem bastões)
+  molecula(nome, T, mat, esf) {
+    if (nome === "amonia") { const m = Cena12A.molecula(T, mat, esf); m.rotation.set(.35, 0, 0); return m; }
+    if (nome === "metano") { const m = Cena13A.molecula(T, mat, esf); m.rotation.set(.25, .5, 0); return m; }
+    const g = new T.Group(), COR = { O: Quantico.CORES.O, N: Quantico.CORES.N, Cl: Quantico.CORES.Cl, S: 0xFFFF30, C: 0x1E232B };
+    const R = { O: .62, N: .6, Cl: .7, S: .68, C: .58 };
+    const at = (sim, x, y, z = 0) => { const a = new T.Mesh(esf, mat(COR[sim])); a.scale.setScalar(R[sim]); a.position.set(x, y, z); g.add(a); };
+    const d = (a, b) => (R[a] + R[b]) * .86, grau = Math.PI / 180;
+    if (nome === "so3") { at("S", 0, 0); [90, 210, 330].forEach(a => at("O", d("S", "O") * Math.cos(a * grau), d("S", "O") * Math.sin(a * grau))); g.rotation.set(-.5, .3, 0); }
+    if (nome === "co2") { at("C", 0, 0); at("O", -d("C", "O"), 0); at("O", d("C", "O"), 0); g.rotation.set(0, .35, 0); }
+    if (nome === "no2") { at("N", 0, 0); [-1, 1].forEach(s => at("O", s * d("N", "O") * Math.sin(67 * grau), -d("N", "O") * Math.cos(67 * grau))); g.rotation.set(0, .4, 0); }
+    if (nome === "ocl2") { at("O", 0, 0); [-1, 1].forEach(s => at("Cl", s * d("O", "Cl") * Math.sin(55.5 * grau), -d("O", "Cl") * Math.cos(55.5 * grau))); g.rotation.set(0, .4, 0); }
+    // o centro: a média dos átomos
+    const c = g.children.reduce((v, a) => v.add(a.position), new T.Vector3()).multiplyScalar(1 / g.children.length);
+    g.children.forEach(a => a.position.sub(c));
+    return g;
+  },
+  // o centro (o meio da caixa em volta das bolas) e o raio (do centro até a borda da bola mais longe), no mundo, só com as bolas visíveis
+  medir(g, T) {
+    g.updateMatrixWorld(true);
+    const bolas = []; g.traverse(o => { if (o.isMesh && o.visible && o.geometry.type === "SphereGeometry") {
+      const p = new T.Vector3(), e = new T.Vector3(); o.getWorldPosition(p); o.getWorldScale(e); bolas.push([p, e.x]); } });
+    const min = new T.Vector3(Infinity, Infinity, Infinity), max = new T.Vector3(-Infinity, -Infinity, -Infinity);
+    bolas.forEach(([p, r]) => { min.min(p.clone().subScalar(r)); max.max(p.clone().addScalar(r)); });
+    const c = min.add(max).multiplyScalar(.5); let r = 0; bolas.forEach(([p, rr]) => { r = Math.max(r, p.distanceTo(c) + rr); });
+    return { c, r };
+  },
+  // as fotos das sete moléculas, do tamanho do quadro 3D do copo (8s do 11.1A, com a água parada no meio)
+  preparar() {
+    const ctx = Cena11Copo.ctx; if (!ctx || !ctx.mol) return;
+    const T = ctx.THREE, cv = ctx.renderer.domElement, tam = cv.width + "x" + cv.height;
+    if (this.imgs && this.tam === tam) return;
+    const mat = cor => new T.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
+    const esf = new T.SphereGeometry(1, 48, 32), m = ctx.mol, u = m.userData;
+    // a água na pose de descanso (de frente, no meio, H encostados)
+    const guarda = { p: m.position.clone(), q: m.quaternion.clone(), s: m.scale.clone(), v: m.visible, copo: ctx.copo.visible };
+    m.position.copy(ctx.centro); m.quaternion.identity(); m.scale.setScalar(ctx.escMol); m.visible = true; ctx.copo.visible = false;
+    u.Hs.forEach((h, i) => { h.position.copy(u.baseH[i]); h.scale.setScalar(u.rH); });
+    m.updateMatrixWorld(true);
+    const A = this.medir(m, T), imgs = {};
+    // (onde fica a borda de baixo da água na tela, de 0 a 1 da altura do quadro: a mãozinha fica logo abaixo)
+    this.baixo = ctx.naTela(A.c.clone().setY(A.c.y - A.r)).y / (ctx.caixa.clientHeight || 1);
+    ctx.renderer.render(ctx.cena, ctx.camera); imgs.agua = cv.toDataURL("image/png");
+    m.visible = false;
+    this.SEQ.slice(1).forEach(nome => {
+      const g = this.molecula(nome, T, mat, esf);
+      // do tamanho da água e com o mesmo centro
+      g.position.copy(ctx.centro); g.scale.setScalar(ctx.escMol); ctx.cena.add(g);
+      g.scale.multiplyScalar(A.r / this.medir(g, T).r);
+      g.position.add(A.c.clone().sub(this.medir(g, T).c)); ctx.renderer.render(ctx.cena, ctx.camera); imgs[nome] = cv.toDataURL("image/png");
+      ctx.cena.remove(g); g.traverse(o => o.material && o.material.dispose());
+    });
+    esf.dispose();
+    m.position.copy(guarda.p); m.quaternion.copy(guarda.q); m.scale.copy(guarda.s); m.visible = guarda.v; ctx.copo.visible = guarda.copo;
+    ctx.renderer.render(ctx.cena, ctx.camera);   // (o quadro volta a mostrar a água antes de a tela ser pintada)
+    this.imgs = imgs; this.tam = tam;
+  },
+  // 22s do 11.1A: o quadro da água vira um cubo (a face da frente é a foto da água, no lugar exato da molécula 3D)
+  virar() {
+    if (this.$(".c11f-cubo")) return;
+    const ctx = Cena11Copo.ctx; if (!ctx) return;
+    this.preparar(); if (!this.imgs) return;
+    const cv = ctx.renderer.domElement, r = cv.getBoundingClientRect(), P = Palco.el.getBoundingClientRect(), W = r.width;
+    Palco.adicionar(`<div class="c3-cubo c11f-cubo" role="img" aria-label="Um cubo com uma molécula em cada face: arraste para girar">
+      <div class="c3-giro">${[0, 1, 2, 3].map(k => `<div class="c3-face" data-k="${k}"><img alt="" draggable="false"></div>`).join("")}</div></div>`);
+    const cubo = this.$(".c11f-cubo");
+    Object.assign(cubo.style, { left: `${r.left - P.left}px`, top: `${r.top - P.top}px`, width: `${W}px`, height: `${r.height}px` });
+    cubo.querySelectorAll(".c3-face").forEach((f, k) => { f.style.transform = `rotateY(${90 * k}deg) translateZ(${W / 2}px)`; });
+    this.W = W; this.s = 0; this.modo = "giro1"; this.desenhar();
+    cv.style.visibility = "hidden";
+    somCubo(0);
+    this.arrastar(cubo);
+    this.laco();
+  },
+  // a cada quadro: a posição do cubo conforme o modo
+  laco() {
+    let antes = performance.now();
+    const quadro = agora => {
+      const cubo = this.$(".c11f-cubo"); if (!cubo) return;
+      const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .1); antes = agora;
+      if (this.modo === "giro1") {
+        const t = this.tempo("dialogo11_1A");
+        this.s = t === null ? this.GIRO1 : this.GIRO1 * (1 - Math.pow(1 - Math.max(0, Math.min(1, (t - 22) / 4)), 3));
+      } else if (this.modo === "auto") {
+        const t = this.tempo("dialogo11_1A2");
+        if (t !== null) { const x = Math.max(0, t - 2), n = Math.floor(x / 1.5), u = (x - 1.5 * n) / .5;
+          if (n !== this.passoAuto) { this.passoAuto = n; somCubo(0); }
+          this.s = this.sA + n + this.suave(u); }
+      } else if (this.modo === "agua") {
+        const a = this.volta; a.u = Math.min(1, a.u + dt / 1.4); this.s = a.de + (a.para - a.de) * this.suave(a.u);
+        if (a.u >= 1) { this.desenhar(); this.devolver(); return; }
+      } else if (this.modo === "solta") {
+        const a = this.encaixe; a.u = Math.min(1, a.u + dt / .35); this.s = a.de + (a.para - a.de) * this.suave(a.u);
+        if (a.u >= 1) this.modo = "mao";
+      }
+      this.desenhar();
+      requestAnimationFrame(quadro);
+    };
+    requestAnimationFrame(quadro);
+  },
+  // gira o cubo até s (s inteiro: uma face de frente) e põe em cada face a molécula que vai aparecer nela;
+  // as faces que viram de lado escurecem
+  desenhar() {
+    const cubo = this.$(".c11f-cubo"); if (!cubo) return;
+    const W = this.W, s = this.s, giro = cubo.querySelector(".c3-giro"), faces = cubo.querySelectorAll(".c3-face");
+    giro.style.transform = `translateZ(${-W / 2}px) rotateY(${-90 * s}deg)`;
+    const j0 = Math.floor(s), mod = (a, b) => ((a % b) + b) % b;
+    for (let j = j0 - 1; j <= j0 + 2; j++) {
+      const f = faces[mod(j, 4)], nome = this.SEQ[mod(j, 7)];
+      if (f.dataset.m !== nome) { f.dataset.m = nome; const img = f.querySelector("img"); img.src = this.imgs[nome]; img.alt = this.NOMES[nome]; }
+    }
+    faces.forEach((f, k) => { const c = Math.cos((90 * k - 90 * s) * Math.PI / 180); f.style.filter = `brightness(${(.35 + .65 * Math.max(0, c)).toFixed(3)})`; });
+    cubo.setAttribute("aria-label", `Cubo de moléculas: ${this.NOMES[this.SEQ[mod(Math.round(s), 7)]]}. Arraste para girar`);
+  },
+  // 26s do 11.1A: parou no CH₄; a mãozinha mostra o gesto e o aluno pode girar
+  liberar() {
+    if (!this.$(".c11f-cubo")) return;
+    this.s = this.GIRO1; this.modo = "mao"; this.desenhar();
+    const cubo = this.$(".c11f-cubo"), P = Palco.el.getBoundingClientRect(), r = cubo.getBoundingClientRect();
+    if (this.$(".c11f-mao")) return;
+    Palco.adicionar(`<div class="c11f-mao" style="left:${r.left - P.left + r.width / 2}px;top:${r.top - P.top + r.height * Math.min((this.baixo || .62) + .04, .9)}px">${Cena83.MAO}</div>`);
+  },
+  tirarMao() {
+    const mao = this.$(".c11f-mao"); if (!mao || mao.dataset.saindo) return;
+    mao.dataset.saindo = "1";
+    Palco.animar(mao, [{ opacity: getComputedStyle(mao).opacity }, { opacity: 0 }], { duracao: .3 }).finished.then(() => mao.remove(), () => {});
+  },
+  // o dedo gira o cubo (arrastar para a esquerda traz a próxima face); ao soltar, encaixa na face mais perto
+  arrastar(cubo) {
+    let ini = null;
+    cubo.addEventListener("pointerdown", e => {
+      if (this.modo !== "mao" && this.modo !== "solta") return;
+      this.tirarMao(); this.modo = "mao";
+      ini = { x: e.clientX, s: this.s }; cubo.classList.add("pega");
+      try { cubo.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    cubo.addEventListener("pointermove", e => { if (!ini || this.modo !== "mao") return; this.s = ini.s - (e.clientX - ini.x) / Math.min(this.W, 420) * 1.1; });
+    const solta = e => {
+      if (!ini) return; const dx = e.clientX - ini.x, s0 = ini.s; ini = null; cubo.classList.remove("pega");
+      if (this.modo !== "mao") return;
+      // (um gesto rápido, de mais de 30px, já passa para a face do lado)
+      let para = Math.round(this.s);
+      if (Math.abs(dx) > 30 && para === Math.round(s0)) para = Math.round(s0) - Math.sign(dx);
+      if (para !== Math.round(s0)) somCubo(0);
+      this.encaixe = { de: this.s, para, u: 0 }; this.modo = "solta";
+    };
+    cubo.addEventListener("pointerup", solta); cubo.addEventListener("pointercancel", solta);
+  },
+  // 2s do 11.1A2: volta a girar sozinho (1,5s em cada molécula), a partir de onde o aluno deixou
+  auto() {
+    if (!this.$(".c11f-cubo")) { this.virar(); if (!this.$(".c11f-cubo")) return; }
+    this.tirarMao();
+    this.sA = Math.round(this.modo === "solta" ? this.encaixe.para : this.s); this.passoAuto = -1; this.modo = "auto";
+  },
+  // 17s do 11.1A2: gira até a próxima água e para
+  paraAgua() {
+    if (!this.$(".c11f-cubo")) return;
+    this.tirarMao();
+    const de = this.s; let para = Math.ceil(de + .5); while (((para % 7) + 7) % 7 !== 0) para++;
+    this.volta = { de, para, u: 0 }; this.modo = "agua"; somCubo(0);
+  },
+  // a água de frente: o cubo sai e a molécula 3D do copo (no mesmo lugar, igual à foto) volta
+  devolver() {
+    const ctx = Cena11Copo.ctx; if (ctx) ctx.renderer.domElement.style.visibility = "";
+    Palco.el.querySelectorAll(".c11f-cubo, .c11f-mao").forEach(el => el.remove());
+    this.modo = null;
   }
 };
 
@@ -7382,7 +7601,7 @@ const Cena12A = {
   inicio() { if (!this.$(".c11-titulo")) { Cena11.tela(); Cena111.abrir(); } },
   // 0s: sai o que ficou do 11.3 (a água em 3D, a fórmula, o passo, a fileira) e o copo volta, com a molécula entrando nele
   voltarCopo() {
-    Palco.el.querySelectorAll(".c113-3d, .c111-corpo, .c12-fila, .c72-quiz, .c84-aviso, .c11-passo-bt").forEach(el => {
+    Palco.el.querySelectorAll(".c113-3d, .c111-corpo, .c12-fila, .c72-quiz, .c84-aviso, .c11-passo-bt, .c11f-cubo, .c11f-mao").forEach(el => {
       if (el.dataset.saindo) return; el.dataset.saindo = "1";
       Palco.animar(el, [{ opacity: getComputedStyle(el).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => el.remove(), () => {});
     });
