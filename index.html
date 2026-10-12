@@ -696,6 +696,8 @@
     /* 11.1A: a molécula que sai do copo para mais alta (o quadro 3D sobe junto com a saída) */
     .c11-copo canvas { transition: translate 2.2s cubic-bezier(.4,0,.2,1); }
     .c11-copo.solto canvas { translate: calc(var(--pw, 356px) * .003) calc(var(--ph, 655px) * -.194); }
+    /* o esqueleto das moléculas (água, amônia e metano), 40% maior — ajuste no metano, no 13.5, que vale para as três */
+    #conteudoPalco .c121-esqueleto { scale: 1.403; }
     /* 11.1A: a pergunta e as opções sobem */
     .c72-quiz.c11a .c72-pergunta { translate: calc(var(--pw, 356px) * .013) calc(var(--ph, 655px) * -.079); }
     .c72-quiz.c11a .c4-opcoes { translate: calc(var(--pw, 356px) * -.007) calc(var(--ph, 655px) * -.044); }
@@ -1358,7 +1360,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v234 · 12/10/2026</span>
+    <span class="versao" id="versao">v235 · 12/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3756,7 +3758,7 @@ const Cena2 = {
     const rampa = (t0, d) => suave((t - t0) / d);
 
     const quadro = () => {
-      if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      if (!renderer.domElement.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
       const agora = performance.now(), dt = (agora - antes) / 1000; antes = agora;
       if (Player.indice === 2 && Player.fonte && !Player.terminou) t = Player.fonte.currentTime;
       else if (!Palco.pausado) t += dt;
@@ -3917,6 +3919,8 @@ const Cena3 = {
 
 /* ---------- Copo d'água 3D (vidro e água com refração real, luz de estúdio) ---------- */
 const Copo = {
+  // a cena saiu da tela: libera a memória e devolve o contexto WebGL ao navegador
+  soltar(renderer) { try { renderer.dispose(); renderer.forceContextLoss(); } catch (_) {} },
   // ambiente de estúdio: sala escura com softboxes; gera os reflexos e o que o vidro refrata
   estudio(renderer) {
     const env = new THREE.Scene();
@@ -4039,7 +4043,7 @@ const Copo = {
     };
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
     const quadro = () => {
-      if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      if (!renderer.domElement.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
       const t = Player.indice === 3 && Player.fonte ? Player.fonte.currentTime : Math.max(ultimoT, 0);
       if (t !== ultimoT || mudou) { posicionar(t); renderer.render(cena, camera); ultimoT = t; mudou = false; }
       requestAnimationFrame(quadro);
@@ -4064,7 +4068,7 @@ const Copo = {
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
     let antes = performance.now();
     const quadro = agora => {
-      if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      if (!renderer.domElement.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
       const dt = Math.min((agora - antes) / 1000, .1); antes = agora;
       if (!Palco.pausado) ctx.tAcao += dt;
       const t = Player.indice === roteiro.indice && Player.fonte ? Player.fonte.currentTime : Math.max(ultimoT, 0);
@@ -4387,7 +4391,7 @@ const Quantico = {
       sprite.material.opacity = opac;
     };
     const quadro = () => {
-      if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      if (!renderer.domElement.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
       const agora = performance.now(), dt = Math.min((agora - antes) / 1000, .1); antes = agora;
       if (!estado.visivel) { requestAnimationFrame(quadro); return; }   // montado e invisível: não gasta GPU
       if (!Palco.pausado) estado.t += dt;
@@ -7057,7 +7061,7 @@ const Cena11 = {
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
     let antes = performance.now();
     const quadro = agora => {
-      if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      if (!renderer.domElement.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
       const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora; t += dt;
       // sozinha, gira em torno do eixo vertical; na mão, segue o dedo
       if (!arraste && dt) { if (parado > 0) parado -= dt; else giroY += dt * .7; }
@@ -7804,7 +7808,7 @@ const Cena12A = {
     cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
     let antes = performance.now();
     const quadro = agora => {
-      if (!renderer.domElement.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      if (!renderer.domElement.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
       const dt = Math.min((agora - antes) / 1000, .1); antes = agora;
       if (!Palco.pausado) ctx.tAcao += dt;
       const t = ctx.tAcao;
@@ -8187,7 +8191,7 @@ const Cena137 = {
     const dir = new T.Vector3(), a = new T.Vector3();
     let t = 0, antes = performance.now();
     const quadro = agora => {
-      if (!cv.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      if (!cv.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
       const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora; t += dt;
       const ap = suave(t / .6), k = suave((t - .5) / (this.DUR - .9));   // aparecer; a transformação (do plano ao tetraedro)
       mats.forEach(x => { x.opacity = ap; });
@@ -8844,13 +8848,15 @@ const Cena121 = {
   },
   // o par da ligação "indo e vindo": cada elétron sai do seu átomo (um do H, outro do O), vai até o meio e volta, repetindo
   vaiVem(lado, dur, idas = 2) {
-    const s = this.$(".c121-esqueleto"); if (!s || !this.apagarTraco(lado, dur, .15)) return;
-    // (em qualquer direção: cada elétron sai da sua ponta, deslocado para um lado do traço, vai até o meio e volta)
-    const { x1, y1, x2, y2, mx, my, nx, ny } = this.pontas(lado);
+    const s = this.$(".c121-esqueleto"); if (!s || !this.apagarTraco(lado, dur, .22)) return;
+    // (em qualquer direção: cada elétron sai da sua ponta, no eixo do traço, vai até o meio e volta)
+    const { x1, y1, x2, y2, mx, my } = this.pontas(lado);
     s.insertAdjacentHTML("beforeend", `<g class="vai"></g>`);
     const g = s.lastElementChild;
-    [[x1, y1, -3.5], [x2, y2, 3.5]].forEach(([xa, ya, d]) => {
-      g.insertAdjacentHTML("beforeend", `<circle cx="${mx + nx * d}" cy="${my + ny * d}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
+    [[x1, y1], [x2, y2]].forEach(([xa, ya]) => {
+      // o elétron: um núcleo claro e um halo celeste, como os do áudio 2
+      g.insertAdjacentHTML("beforeend", `<g class="c121-e"><circle cx="${mx}" cy="${my}" r="10" fill="#A3DBF7" opacity=".38" style="filter:blur(2.5px)"/>`
+        + `<circle cx="${mx}" cy="${my}" r="4.6" fill="#E6F6FF" style="filter:drop-shadow(0 0 4px rgba(163,219,247,.95))"/></g>`);
       const c = g.lastElementChild, ini = `translate(${xa - mx}px, ${ya - my}px)`, q = [{ transform: ini, opacity: 0, offset: 0 }, { opacity: 1, offset: .06 }];
       for (let i = 0; i < idas; i++) q.push({ transform: "translate(0px, 0px)", offset: (i + .5) / idas }, { transform: ini, offset: (i + 1) / idas });
       q.splice(q.length - 1, 0, { opacity: 1, offset: .94 });
@@ -8859,8 +8865,10 @@ const Cena121 = {
     });
     Palco.animar(g, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => g.remove(), () => {});
   },
-  // o par de elétrons aparece dentro do traço (que fica transparente) por dur segundos
-  parDentro(lado, dur) {
+  // o traço fica transparente por dur segundos, com o par indo e vindo dentro dele (o mesmo efeito do áudio 2)
+  parDentro(lado, dur) { return this.vaiVem(lado, dur, Math.max(1, Math.round(dur / 1.4))); },
+  // (antes: o par parado dentro do traço)
+  parParado(lado, dur) {
     const s = this.$(".c121-esqueleto"); if (!s || !this.apagarTraco(lado, dur, .3)) return;
     const { mx, my, nx, ny } = this.pontas(lado), ent = Math.min(.3 / dur, .2);   // (lado a lado, atravessando o traço, em qualquer direção)
     s.insertAdjacentHTML("beforeend", `<g class="vai">${[-4, 4].map(d => `<circle cx="${mx + nx * d}" cy="${my + ny * d}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`).join("")}</g>`);
@@ -9370,7 +9378,7 @@ const Cena113C = {
     const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
     let antes = performance.now();
     const quadro = agora => {
-      if (!cv.isConnected) { obs.disconnect(); renderer.dispose(); return; }
+      if (!cv.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
       const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora;
       if (!arraste && dt) { if (parado > 0) parado -= dt; else giroY += dt * .6; }
       mol.rotation.x = giroX; mol.rotation.y = giroY;
