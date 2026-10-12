@@ -1354,7 +1354,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v232 · 12/10/2026</span>
+    <span class="versao" id="versao">v233 · 12/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -7289,6 +7289,9 @@ const Cena11Copo = {
           if (tA >= 15.75 && tA < 16.5) fa = (tA - 15.75) / .75;
           const w = (tA - 18) / .6; if (w > 0 && w < 2) pul = 1 + .35 * Math.abs(Math.sin(Math.PI * w));
         }
+        // 26s do 11.1A2: a água (de volta do cubo) dá um giro de 360°
+        const tB = n && n.id === "dialogo11_1A2" && Player.fonte ? Player.fonte.currentTime : null;
+        if (tB !== null && p > 0) { const e = cena.suave((tB - 26) / 1.6); if (e > 0 && e < 1) m.quaternion.multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), 2 * Math.PI * e)); }
         u.O.scale.setScalar(u.rO * pulO);
         const eixoY = new T.Vector3(0, 1, 0);
         // um cilindro de "de" até "para", com raio r
@@ -7422,8 +7425,9 @@ const Cena11Copo = {
     const cv = { left: r0.left, top: topo, width: r0.width, height: r0.height };
     if (box && Math.abs(ty - novo) > .5) { box.style.transition = `translate ${dur}s cubic-bezier(.45,0,.55,1)`; box.style.translate = `${tx}px ${novo}px`; }
     let meio = fr.height * .45, x = fr.left - cv.left - 14 - meio, y = fr.top + fr.height / 2 - cv.top;
-    // (celular: a água pequena um pouco mais à esquerda e mais baixa — ajuste da professora no 11.1B, numa tela de 356 × 655)
-    if (ctx === this.ctx && matchMedia("(orientation: portrait) and (max-width: 600px)").matches) {
+    // (celular: a molécula pequena um pouco mais à esquerda e mais baixa — ajuste da professora na água, no 11.1B, numa tela de 356 × 655;
+    //  vale também para a amônia e o metano)
+    if (matchMedia("(orientation: portrait) and (max-width: 600px)").matches) {
       x -= Palco.el.clientWidth * .069; y += Palco.el.clientHeight * .044;
     }
     const ray = new T.Raycaster(); ray.setFromCamera(new T.Vector2(x / cv.width * 2 - 1, -(y / cv.height * 2 - 1)), ctx.camera);
@@ -7536,7 +7540,6 @@ const Cena11F = {
     cubo.querySelectorAll(".c3-face").forEach((f, k) => { f.style.transform = `rotateY(${90 * k}deg) translateZ(${W / 2}px)`; });
     this.W = W; this.s = 0; this.modo = "giro1"; this.desenhar();
     cv.style.visibility = "hidden";
-    somCubo(0);
     this.arrastar(cubo);
     this.laco();
   },
@@ -7552,7 +7555,6 @@ const Cena11F = {
       } else if (this.modo === "auto") {
         const t = this.tempo("dialogo11_1A2");
         if (t !== null) { const x = Math.max(0, t - 2), n = Math.floor(x / 1.5), u = (x - 1.5 * n) / .5;
-          if (n !== this.passoAuto) { this.passoAuto = n; somCubo(0); }
           this.s = this.sA + n + this.suave(u); }
       } else if (this.modo === "agua") {
         const a = this.volta; a.u = Math.min(1, a.u + dt / 1.4); this.s = a.de + (a.para - a.de) * this.suave(a.u);
@@ -7609,7 +7611,6 @@ const Cena11F = {
       // (um gesto rápido, de mais de 30px, já passa para a face do lado)
       let para = Math.round(this.s);
       if (Math.abs(dx) > 30 && para === Math.round(s0)) para = Math.round(s0) - Math.sign(dx);
-      if (para !== Math.round(s0)) somCubo(0);
       this.encaixe = { de: this.s, para, u: 0 }; this.modo = "solta";
     };
     cubo.addEventListener("pointerup", solta); cubo.addEventListener("pointercancel", solta);
@@ -7625,7 +7626,7 @@ const Cena11F = {
     if (!this.$(".c11f-cubo")) return;
     this.tirarMao();
     const de = this.s; let para = Math.ceil(de + .5); while (((para % 7) + 7) % 7 !== 0) para++;
-    this.volta = { de, para, u: 0 }; this.modo = "agua"; somCubo(0);
+    this.volta = { de, para, u: 0 }; this.modo = "agua";
   },
   // a água de frente: o cubo sai e a molécula 3D do copo (no mesmo lugar, igual à foto) volta
   devolver() {
@@ -7781,8 +7782,7 @@ const Cena12A = {
     // Para os lados gira, para cima/baixo inclina; ela fica como o aluno deixou
     const giro = { x: 0, y: 0 }, qGiro = new T.Quaternion(), eGiro = new T.Euler();
     const cv = renderer.domElement; cv.style.touchAction = "none";
-    const podeGirar = () => ctx.t0 !== undefined && ctx.tAcao - ctx.t0 >= this.SAIDA && ctx.tSai === undefined;
-    const qSaiV = new T.Vector3();
+    const podeGirar = () => ctx.t0 !== undefined && ctx.tAcao - ctx.t0 >= this.SAIDA && ctx.t1 === undefined;
     let arraste = null;
     cv.addEventListener("pointerdown", e => { if (!podeGirar()) return; arraste = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} cv.style.cursor = "grabbing"; });
     cv.addEventListener("pointermove", e => {
@@ -7812,13 +7812,12 @@ const Cena12A = {
         mol.scale.setScalar(ctx.escMol * (.12 + .88 * k));
       }
       if (!arraste) cv.style.cursor = podeGirar() ? "grab" : "";
-      // a resposta: enquanto a fórmula sobe, a molécula gira, vai para o lado (a esquerda) e some
-      if (ctx.tSai !== undefined) {
-        const q0 = Math.min((t - ctx.tSai) / this.ENCOLHE, 1), q = q0 * q0 * (3 - 2 * q0);
-        mol.visible = q0 < 1;
-        mol.position.copy(ctx.centro).add(qSaiV.set(-(ctx.meiaLargura + .8) * q, .5 * Math.sin(q * Math.PI), 0));
-        mol.quaternion.premultiply(qGiro.setFromEuler(eGiro.set(0, -Math.PI * 2.2 * q, Math.PI * .6 * q)));
-        mol.scale.setScalar(ctx.escMol * (1 - q));
+      // a resposta (12.2, 13.2): a molécula encolhe e vai para o lado esquerdo da fórmula, lá no topo (como a água no 11.1B;
+      // o lugar e o tamanho vêm de Cena11Copo.encolher)
+      if (ctx.t1 !== undefined) {
+        const q0 = Math.min((t - ctx.t1) / this.ENCOLHE, 1), q = q0 * q0 * (3 - 2 * q0);
+        mol.position.lerpVectors(ctx.centro, ctx.pPeq, q);
+        mol.scale.setScalar(ctx.escMol + (ctx.escPeq - ctx.escMol) * q);
       }
       renderer.render(cena, camera);
       requestAnimationFrame(quadro);
@@ -7865,11 +7864,10 @@ const Cena12A = {
     [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
       { duracao: .45, atraso: i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
   },
-  // a resposta: a opção certa voa e vira a fórmula no topo; ao mesmo tempo, a molécula gira para o lado e some
-  // (ela não fica pequena ao lado da fórmula, como a água)
+  // a resposta: a opção certa voa e vira a fórmula no topo; ao mesmo tempo, a molécula sobe e fica pequena ao lado dela,
+  // no mesmo lugar da água no 11.1B
   formulaSobe() {
-    Cena11Copo.formulaSobe({ formula: this.FORMULA, ctx: null, dur: this.ENCOLHE });
-    if (this.ctx) this.ctx.tSai = this.ctx.tAcao;
+    Cena11Copo.formulaSobe({ formula: this.FORMULA, ctx: this.ctx, dur: this.ENCOLHE });
   }
 };
 
@@ -7893,9 +7891,9 @@ const Cena13A = Object.assign(Object.create(Cena12A), {
       const c = this.$(".c113-3d"); c.getAnimations().forEach(a => a.finish()); c.style.opacity = "";
     }
   },
-  // 0s: sai o que ficou da amônia em volta (a fórmula, o passo, a fileira, o botão); a amônia em 3D fica para a virada
+  // 0s: sai o que ficou da amônia em volta (a fórmula com a amônia pequena, o passo, a fileira, o botão); a amônia em 3D fica para a virada
   limpar() {
-    Palco.el.querySelectorAll(".c111-corpo, .c12-fila, .c72-quiz, .c84-aviso, .c11-passo-bt, .c121-esqueleto").forEach(el => {
+    Palco.el.querySelectorAll(".c111-corpo, .c12-fila, .c72-quiz, .c84-aviso, .c11-passo-bt, .c121-esqueleto, .c11-copo.c12-amonia").forEach(el => {
       if (el.dataset.saindo) return; el.dataset.saindo = "1";
       Palco.animar(el, [{ opacity: getComputedStyle(el).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => el.remove(), () => {});
     });
