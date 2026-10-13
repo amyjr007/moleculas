@@ -677,6 +677,11 @@
     /* 11.1A: "Qual a fórmula da água?" e as três opções, mais baixas */
     .c72-quiz.c11a .c72-pergunta { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * .08); }
     .c72-quiz.c11a .c4-opcoes { translate: calc(var(--pw, 965px) * .005) calc(var(--ph, 448px) * .127); }
+    /* 14.1: o CO₂ (que sai do cilindro) mais alto; a pergunta e as opções um pouco mais baixas */
+    .c11-copo.c14-co2 canvas { transition: translate 2.2s cubic-bezier(.4,0,.2,1); }
+    .c11-copo.c14-co2.solto canvas { translate: calc(var(--pw, 965px) * -.003) calc(var(--ph, 448px) * -.202); }
+    .c72-quiz.c11a.c14q .c72-pergunta { translate: calc(var(--pw, 965px) * .004) calc(var(--ph, 448px) * .106); }
+    .c72-quiz.c11a.c14q .c4-opcoes { translate: calc(var(--pw, 965px) * .004) calc(var(--ph, 448px) * .145); }
     /* os cilindros de gás (cloro, oxigênio, nitrogênio, HCl) e o "Exemplo 0N" em cima deles, mais baixos (ajuste no 7.1A, vale para todos) */
     /* (com o id do palco: estas classes são definidas mais abaixo, e a regra de lá venceria) */
     #conteudoPalco .c71-cilindro { translate: calc(-50% + var(--pw, 965px) * .006) calc(var(--ph, 448px) * .144); }
@@ -1368,7 +1373,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v239 · 13/10/2026</span>
+    <span class="versao" id="versao">v240 · 13/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -7451,14 +7456,14 @@ const Cena11Copo = {
   // enquanto a molécula encolhe e fica pequena e discreta do lado esquerdo dela. A pergunta e as outras opções saem
   ENCOLHE: 1,
   // (formula: o HTML da fórmula — a da água por padrão; ctx: a cena 3D da molécula; dur: quanto dura o voo e o encolher)
-  formulaSobe({ formula = Cena12.FORMULA, ctx = this.ctx, dur = this.ENCOLHE, peq = this.PEQ } = {}) {
+  formulaSobe({ formula = Cena12.FORMULA, ctx = this.ctx, dur = this.ENCOLHE, peq = this.PEQ, peqTab = null } = {}) {
     if (!this.$(".c111-corpo")) Palco.adicionar(`<div class="c111-corpo"></div>`);
     const corpo = this.$(".c111-corpo"); if (corpo.querySelector(".c111-formula")) return;
     corpo.insertAdjacentHTML("afterbegin", formula);
     const f = corpo.querySelector(".c111-formula"); f.style.visibility = "hidden";
     f.style.translate = `0 ${-Palco.el.clientHeight * (noTablet() ? .053 - .044 : .053)}px`;   // um pouco mais alta (35px numa tela de 655px; ajuste da professora); no tablet, 4,4% da altura mais baixa que isso
     const P = Palco.el.getBoundingClientRect(), fr = f.getBoundingClientRect();
-    this.encolher(fr, ctx, dur, peq);
+    this.encolher(fr, ctx, dur, peq, peqTab);
     const quiz = this.$(".c72-quiz"), b = quiz && (quiz.querySelector(".c4-op.certa") || quiz.querySelector(".c4-op"));
     if (quiz) Palco.animar(quiz, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => quiz.remove(), () => {});
     if (!b) { f.style.visibility = ""; return; }
@@ -7527,7 +7532,8 @@ const Cena11Copo = {
   // da fórmula, sairia por cima dele (cortada): então o quadro sobe junto, até o lugar sem o deslocamento, e a conta já usa esse lugar
   // peq: o ajuste do lugar no celular ([x, y], em fração do palco), medido pela professora para cada molécula; e, opcionais,
   // [2] o raio da molécula (em "meios", 1,25 por padrão — o CO₂, em linha, é mais largo) e [3] o tamanho (1 = o da água)
-  encolher(fr, ctx = this.ctx, dur = this.ENCOLHE, peq = null) {
+  // peqTab: o mesmo ajuste ([x, y]) no tablet e no Chromebook
+  encolher(fr, ctx = this.ctx, dur = this.ENCOLHE, peq = null, peqTab = null) {
     if (!ctx) return;
     const T = ctx.THREE, r0 = ctx.renderer.domElement.getBoundingClientRect(), box = ctx.caixa;
     const [tx, ty] = (box && getComputedStyle(box).translate !== "none" ? getComputedStyle(box).translate : "0px 0px").split(" ").map(v => parseFloat(v) || 0);
@@ -7535,6 +7541,7 @@ const Cena11Copo = {
     const meio = fr.height * .45 * ((peq && peq[3]) || 1), raio = meio * ((peq && peq[2]) || 1.25);
     let X = fr.left - 14 - meio, Y = fr.top + fr.height / 2;
     if (peq && matchMedia("(orientation: portrait) and (max-width: 600px)").matches) { X += Palco.el.clientWidth * peq[0]; Y += Palco.el.clientHeight * peq[1]; }
+    if (peqTab && noTablet()) { X += Palco.el.clientWidth * peqTab[0]; Y += Palco.el.clientHeight * peqTab[1]; }
     X = Math.max(X, Palco.el.getBoundingClientRect().left + raio + 4);   // (nunca passa da borda esquerda do palco)
     // o quadro 3D volta para o lugar sem o deslocamento (ou sobe até o alto da fórmula); e, se a molécula não couber
     // inteira dentro dele (a bola da ponta cortada), ele sobe ou vai para a esquerda o que faltar
@@ -8005,7 +8012,7 @@ const Cena12A = {
   // a resposta: a opção certa voa e vira a fórmula no topo; ao mesmo tempo, a molécula sobe e fica pequena ao lado dela,
   // no mesmo lugar da água no 11.1B
   formulaSobe() {
-    Cena11Copo.formulaSobe({ formula: this.FORMULA, ctx: this.ctx, dur: this.ENCOLHE, peq: this.PEQ });
+    Cena11Copo.formulaSobe({ formula: this.FORMULA, ctx: this.ctx, dur: this.ENCOLHE, peq: this.PEQ, peqTab: this.PEQ_TAB });
   }
 };
 
@@ -8102,7 +8109,9 @@ const Cena133 = {
     const topo = yFila + rC + 16, fundo = filaTopo - 16;
     const d = this.mol === "co2" ? Math.max(rC + rH + 18, Math.min(W / 2 - rH * 2.4 - 14, m * .22))   // (o CO₂ é em linha: só a largura conta; e sobra lugar, do lado de fora dos O, para os pares)
       : Math.max(rC + rH + 10, Math.min(Math.max(58, Math.min(108, m * .17)), (fundo - topo - 2 * rH - 12) / 2));
-    return { W, H, cx: W / 2, cy: (topo + fundo) / 2, d, rC, rH, xs, yFila };
+    // (tablet e Chromebook: o CO₂ montado — e o esqueleto, que nasce no mesmo lugar — mais alto; ajuste da professora no 14.4)
+    const sobe = this.mol === "co2" && noTablet();
+    return { W, H, cx: W / 2 + (sobe ? W * -.002 : 0), cy: (topo + fundo) / 2 + (sobe ? H * -.124 : 0), d, rC, rH, xs, yFila };
   },
   // 14s: os contornos no centro e o C, o primeiro da fileira embaixo da fórmula
   comecar(mol = "metano") {
@@ -8279,6 +8288,9 @@ const Cena14A = Object.assign(Object.create(Cena13A), {
   CLASSE: "c14-co2", ARIA: "Um cilindro de gás carbônico", ID: "dialogo14", ORIGEM: ".c13-metano", DEPOIS_DE_SAIR: false,
   TINTA: 0x46525F, ROTULO: ["Gás carbônico", -1.15, 2.3],
   PEQ: [-.152, .024, 1.7, .8],   // o CO₂ pequeno: no lugar do metano, um pouco menor (em linha, ele é mais largo)
+  PEQ_TAB: [-.09, .004],          // tablet e Chromebook: o CO₂ pequeno mais à esquerda, longe do "4 e⁻" (ajuste da professora no 14.2, tela de 965 × 448)
+  // a pergunta da fórmula, com a classe do CO₂ (no tablet, a pergunta e as opções num lugar próprio)
+  pergunta(logo = true) { Cena12A.pergunta.call(this, logo); const q = this.$(".c72-quiz"); if (q) q.classList.add("c14q"); },
   PERGUNTA: { texto: "Qual a fórmula molecular?", opcoes: [["CO", 0], ["CO<sub>2</sub>", 1], ["CO<sub>3</sub>", 0]], de: "dialogo14_1", para: "dialogo14_2" },
   // pela navegação rápida (entra aos 17s): o título e o cilindro de metano parado no lugar, para a virada vir em seguida
   inicio() {
@@ -9346,7 +9358,7 @@ const Cena113P = {
   // os lados do átomo central que recebem par: na água, em cima e embaixo do O; na amônia, só em cima do N (embaixo há um H)
   ladosPar() { return Cena121.arranjo().central === "N" ? ["cima"] : ["cima", "baixo"]; },
   // onde ficam os dois elétrons do par (j = 0 ou 1), em cima ou embaixo do átomo central
-  lugar(lado, j) { const [cx, cy] = Cena121.xy("meio"); return [cx + (j ? 4.5 : -4.5), cy + (lado === "cima" ? -34 : 34)]; },
+  lugar(lado, j) { const [cx, cy] = Cena121.xy("meio"); return [cx + (j ? 6.5 : -6.5), cy + (lado === "cima" ? -34 : 34)]; },   // (os dois do par, afastados um do outro)
   liberar() {
     this.tirarQuiz(); this.fila(true);
     if (this.$(".c84-toques")) return;
@@ -9405,7 +9417,7 @@ const Cena14P = {
   LADOS: { dir: ["cima", "baixo", "dir"], esq: ["cima", "baixo", "esq"] },
   // onde ficam os dois elétrons (j = 0 ou 1) do par, num lado do O (o: "esq" ou "dir")
   lugar(o, lado, j) {
-    const [x, y] = Cena121.xy(o), r = Cena121.RAIO.O + 8, d = j ? 4.5 : -4.5;
+    const [x, y] = Cena121.xy(o), r = Cena121.RAIO.O + 8, d = j ? 6.5 : -6.5;
     return lado === "cima" ? [x + d, y - r] : lado === "baixo" ? [x + d, y + r] : [x + (lado === "dir" ? r : -r), y + d];
   },
   // 14.4, 3s: um retângulo em volta dos elétrons de baixo (entra e sai em fade)
@@ -9551,7 +9563,7 @@ const Cena14D = {
   dupla(o) {
     this.feitos[o] = true;
     Vibra.tocar("toqueEletron");
-    const s = Cena121.svg(), lin = s.querySelector(`.lig [data-l="${o}"]`), { x1, y1, x2, y2, mx, my } = Cena121.pontas(o), off = 4.5;
+    const s = Cena121.svg(), lin = s.querySelector(`.lig [data-l="${o}"]`), { x1, y1, x2, y2, mx, my } = Cena121.pontas(o), off = 6.5;   // (off: o meio-vão entre os dois traços)
     const par = this.pares(o).filter(c => c.dataset.lado === "cima");
     par.forEach((c, j) => {
       const tx = mx + (j ? 3.5 : -3.5) - +c.getAttribute("cx"), ty = my - off - +c.getAttribute("cy");
@@ -9648,7 +9660,7 @@ const Cena113F = {
     const traco = 52 * .7, borda = 13, folga = 4, hMeio = 11.5;   // o traço; meia largura do O; o vão até a letra; meia largura do H
     const xe = 100 - borda - folga, xd = 100 + borda + folga;     // onde os traços encostam no O
     const hEsq = xe - traco - folga - hMeio, hDir = xd + traco + folga + hMeio;
-    const dx = 4.5 * K, dy = 17 * K;                                // os pares, em cima e embaixo do O
+    const dx = 6 * K, dy = 17 * K;                                  // os pares, em cima e embaixo do O (os dois pontos afastados)
     if (Cena121.arranjo().central === "C") {
       // o metano: o C no meio e os quatro H em cruz (nos mesmos lugares do desenho de bolas), ligados por traços
       const P2 = Cena121.arranjo().pos, [cx, cy] = P2.meio, sy = (x, y, t) => simbolo(x, t).replace('y="25"', `y="${y}"`);
@@ -9789,7 +9801,7 @@ const Cena113C = {
    Cabem dois em cada lado; o terceiro: o O treme em verde e aparece "Organize os elétrons em pares". */
 const Cena124 = {
   $(sel) { return Palco.el.querySelector(sel); },
-  LUGAR: { cima: [[95.5, -9], [104.5, -9]], baixo: [[95.5, 59], [104.5, 59]] },   // os pares em cima e embaixo do O (afastados para o O 20% maior)
+  LUGAR: { cima: [[93.5, -9], [106.5, -9]], baixo: [[93.5, 59], [106.5, 59]] },   // os pares em cima e embaixo do O (afastados para o O 20% maior)
   pergunta() {
     Cena71.pergunta("nitrogenio", { texto: "Quantos pares faltam pro octeto?", opcoes: [["1", 0], ["2", 1], ["3", 0]], de: "dialogo12_3", para: "dialogo12_4" });
     const q = this.$(".c72-quiz"); if (q) q.classList.add("c123");
