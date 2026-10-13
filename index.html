@@ -719,6 +719,12 @@
   }
   /* celular em pé: ajustes medidos pela professora numa tela de 356 × 655 (em proporção do palco, como os do tablet) */
   @media (orientation: portrait) and (max-width: 600px) {
+    /* a capa (ajustes da professora no celular, tela de 384 × 783; a capa ocupa a tela toda, então vw/vh = % da capa):
+       o cubo de átomos à direita do título, 70% maior; o título um pouco mais alto; o "Iniciar" 19% menor; a "Demonstração" mais à direita */
+    #capa #logoCubo { translate: 60.4vw 4.9vh; scale: 1.701; }
+    #capa h1 { translate: -3vw -5.7vh; }
+    #capa #btnIniciar { scale: .811; }
+    #capa #btnDemo { translate: 23.8vw .3vh; }
     /* o copo (11.1) e a molécula que sai dele (11.1A em diante): menores e mais baixos, no mesmo lugar o tempo todo */
     .c11-copo, .c11-copo.solto { translate: calc(var(--pw, 356px) * .001) calc(var(--ph, 655px) * .154); scale: .825; }
     /* 11.1A: a molécula que sai do copo para mais alta (o quadro 3D sobe junto com a saída) */
@@ -1388,7 +1394,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v244 · 13/10/2026</span>
+    <span class="versao" id="versao">v245 · 13/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
