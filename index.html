@@ -113,7 +113,9 @@
   /* crédito do autor: retrato em "átomo" com anel celeste */
   #capa .credit { display: flex; align-items: center; gap: 14px; margin-top: 2.2rem; }
   /* versão publicada (atualizada automaticamente pelo publicar.ps1) */
-  #capa .versao { position: absolute; right: var(--pad-x); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: .72rem; letter-spacing: .08em; color: #93A3BA; opacity: .75; font-variant-numeric: tabular-nums; }
+  #capa .versao { position: absolute; right: var(--pad-x); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: .72rem; letter-spacing: .08em; color: #93A3BA; opacity: .75; font-variant-numeric: tabular-nums;
+    /* segurar a versão liga o editor da capa: sem seleção de texto (no celular, ela cancelava o toque longo) e com uma área de toque maior */
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none; cursor: pointer; padding: 8px 10px; margin: -8px -10px; }
   #capa .avatar {
     position: relative; flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%; overflow: hidden;
     background: var(--celeste-claro);
@@ -629,6 +631,9 @@
   /* 11.3B: o foco — o que sai de foco escurece 90%; os pares do O também brilham */
   .c121-esqueleto .at > g, .c121-esqueleto .c124-e, .c121-esqueleto .c113-estavel { transition: opacity .5s ease, filter .45s ease; }
   .c121-esqueleto .c113-escuro { opacity: .1; }
+  /* 14.6A: o par de cima do O escolhido pulsa até virar a ligação dupla */
+  .c121-esqueleto .c124-e.pulsa { transform-box: fill-box; transform-origin: center; animation: c14Pulsa .55s ease-in-out infinite alternate; }
+  @keyframes c14Pulsa { from { scale: 1; } to { scale: 1.6; filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 9px rgba(163,219,247,1)); } }
   .c121-esqueleto .c124-e.brilha { fill: #F2FBFF; filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 7px rgba(163,219,247,1)) drop-shadow(0 0 13px rgba(163,219,247,.85)) !important; }
   .c121-esqueleto .lig line.brilha { stroke: #F2FBFF; filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 7px rgba(163,219,247,1)) drop-shadow(0 0 14px rgba(163,219,247,.85)); animation: c113Brilho 1.1s ease-in-out .45s infinite alternate; }
   @keyframes c113Brilho { to { filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px rgba(163,219,247,1)) drop-shadow(0 0 22px rgba(163,219,247,1)); } }
@@ -685,6 +690,8 @@
     .c11-copo.c14-co2.solto canvas { translate: calc(var(--pw, 965px) * -.003) calc(var(--ph, 448px) * -.202); }
     .c72-quiz.c11a.c14q .c72-pergunta { translate: calc(var(--pw, 965px) * .004) calc(var(--ph, 448px) * .106); }
     .c72-quiz.c11a.c14q .c4-opcoes { translate: calc(var(--pw, 965px) * .004) calc(var(--ph, 448px) * .145); }
+    /* 14.2: as opções do total de elétrons do CO₂ mais baixas */
+    .c72-quiz.c12nq.c14t .c4-opcoes { translate: calc(var(--pw, 965px) * .002) calc(var(--ph, 448px) * .079); }
     /* os cilindros de gás (cloro, oxigênio, nitrogênio, HCl) e o "Exemplo 0N" em cima deles, mais baixos (ajuste no 7.1A, vale para todos) */
     /* (com o id do palco: estas classes são definidas mais abaixo, e a regra de lá venceria) */
     #conteudoPalco .c71-cilindro { translate: calc(-50% + var(--pw, 965px) * .006) calc(var(--ph, 448px) * .144); }
@@ -1376,7 +1383,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v242 · 13/10/2026</span>
+    <span class="versao" id="versao">v243 · 13/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3447,7 +3454,7 @@ const NARRACOES = [
       { tempo: 26.5, acao: () => Cena12.letra("2") },                       // o 2 cresce
       { tempo: 29.3, acao: () => { Cena12.letra("2", false); Cena12N.mais("dir", 6); } },   // "+ 6 e⁻" ao lado do "6 e⁻" (o outro O)
       { tempo: 32,   acao: () => Cena12N.pergunta("Qual o total de elétrons de valência nessa molécula?",
-                                   [["10 e<sup>−</sup>", 0], ["12 e<sup>−</sup>", 0], ["16 e<sup>−</sup>", 1]], "dialogo14_2", "dialogo14_3", true) }
+                                   [["10 e<sup>−</sup>", 0], ["12 e<sup>−</sup>", 0], ["16 e<sup>−</sup>", 1]], "dialogo14_2", "dialogo14_3", true) || Cena12N.$(".c12nq").classList.add("c14t") }   // (c14t: a posição própria das opções no tablet)
     ],
     aoFim: () => { ui.semPlay(true); Cena12N.opcoes(); } },   // quem leva adiante é a resposta certa (o 14.3)
   // os 16 elétrons descem para a fileira (4 do C, 12 dos O); aos 22s, o C e os dois O embaixo da fórmula e os contornos no
@@ -3489,7 +3496,7 @@ const NARRACOES = [
     aoFim: () => { ui.semPlay(true); Cena14P.liberar("esq"); } },
   // os dois O estáveis; o C ainda não: 0s tudo volta ao normal; 9s os O pulsam; 10s os pares dos O e as ligações brilham (1s);
   // 12,4s os O apagam (fica o C); 13s o "estável" dos O some; 16,8s a ligação da esquerda brilha, 17,6s a da direita; 24s o
-  // retângulo onde ficavam os elétrons, com "acabaram os elétrons" (até 28s). Aos 28s o áudio é cortado; 1s depois, o 14.6A
+  // retângulo onde ficavam os elétrons, com "acabaram os elétrons" (até 28s). Aos 28s o áudio é cortado; 1,5s depois, o 14.6A
   { id: "dialogo14_6", titulo: "Gás carbônico: as ligações duplas", src: "audio/audio_moleculas_14.6.mp3", semNav: true, extra: true,
     eventos: [
       { tempo: 0,    acao: () => Cena14D.normal() },
@@ -3507,7 +3514,8 @@ const NARRACOES = [
   // e vira o segundo traço. As duas duplas: o C estável, confetes, aplausos e fanfarra; depois, o 14.7 (quando existir)
   { id: "dialogo14_6A", titulo: "Gás carbônico: as ligações duplas", src: "audio/audio_moleculas_14.6A.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 0,    acao: () => { Cena14D.apagarO(false); Cena14D.liberar(); } }   // os O voltam; os toques já valem
+      { tempo: 0,    acao: () => { Cena14D.apagarO(false); Cena14D.liberar(); } },  // os O voltam; os toques já valem
+      { tempo: 2,    acao: () => Cena14D.piscarPares(2) }                   // os pares não ligantes piscam, um de cada vez (até 4s)
     ],
     aoFim: () => { ui.semPlay(true); Cena14D.liberar(); } },
 
@@ -9543,12 +9551,18 @@ const Cena14D = {
       Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => t.remove(), () => {});
     });
   },
-  // 28s: o 14.6 é cortado; 1s depois, o 14.6A
+  // os pares não ligantes piscam um de cada vez, dando a volta (o O da esquerda: em cima, fora, embaixo; o da direita: embaixo, fora, em cima)
+  piscarPares(dur) {
+    const ordem = [["esq", "cima"], ["esq", "esq"], ["esq", "baixo"], ["dir", "baixo"], ["dir", "dir"], ["dir", "cima"]];
+    const grupos = ordem.map(([o, l]) => this.pares(o).filter(c => c.dataset.lado === l)).filter(g => g.length), passo = dur / Math.max(grupos.length, 1);
+    grupos.forEach((g, k) => Palco.animar(Cena121.svg(), [{}, {}], { duracao: k * passo + .01, fill: "none" }).finished.then(() => this.brilhar(g, passo * .85), () => {}));
+  },
+  // 28s: o 14.6 é cortado; 1,5s depois, o 14.6A
   cortar() {
     const i = Player.indice; if (!NARRACOES[i] || NARRACOES[i].id !== "dialogo14_6" || this.cortado === i) return;
     this.cortado = i;
     Player.calar();
-    Palco.animar(Palco.el, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => {
+    Palco.animar(Palco.el, [{}, {}], { duracao: 1.5, fill: "none" }).finished.then(() => {
       this.cortado = null;
       if (Player.indice !== i) return;
       Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo14_6A"), true);
@@ -9580,14 +9594,16 @@ const Cena14D = {
     if (!alvo) return;
     Cena84.circulo(x, y, "");
     if (alvo !== "meio") {
-      if (this.feitos[alvo]) { Cena112L.selecionar(null, false); this.sel = null; return Cena112L.erro([alvo], "Tente o outro oxigênio"); }
-      if (this.sel === alvo) { Cena112L.selecionar(null, false); this.sel = null; return; }   // tocou de novo no mesmo: desseleciona
-      this.sel = alvo; return Cena112L.selecionar(alvo);
+      if (this.feitos[alvo]) { Cena112L.selecionar(null, false); this.sel = null; this.marcar(null); return Cena112L.erro([alvo], "Tente o outro oxigênio"); }
+      if (this.sel === alvo) { Cena112L.selecionar(null, false); this.sel = null; this.marcar(null); return; }   // tocou de novo no mesmo: desseleciona
+      this.sel = alvo; this.marcar(alvo); return Cena112L.selecionar(alvo);
     }
     if (!this.sel) return Cena112L.erro(["meio"], "Toque primeiro num oxigênio");
     const o = this.sel; this.sel = null; Cena112L.selecionar(null, false);
     this.dupla(o);
   },
+  // o O escolhido: o par de cima dele pulsa até virar a ligação dupla (o: null — nenhum pulsa)
+  marcar(o) { this.pares().forEach(c => c.classList.toggle("pulsa", !!o && c.dataset.o === o && c.dataset.lado === "cima")); },
   // a ligação dupla: o par de cima do O vai para dentro da ligação; o traço de antes desce um pouco e o par vira o traço de cima
   dupla(o) {
     this.feitos[o] = true;
@@ -10697,7 +10713,8 @@ const Dev = {
   // textos e imagens/moléculas entram na disputa; vale o retângulo na tela, então um texto por cima de uma cena 3D ganha
   achar(x, y) {
     let melhor = null, area = Infinity;
-    this.raiz().querySelectorAll(this.ALVOS + ", " + this.VISUAIS).forEach(el => {
+    // (na capa também os botões, os créditos e o conjunto do logo)
+    this.raiz().querySelectorAll(this.ALVOS + ", " + this.VISUAIS + (this.raiz().id === "capa" ? ", button, .credit, .logo-linha" : "")).forEach(el => {
       if (el.closest(".dev-barra")) return;
       if (el === this.camada || el.closest(".dev-camada")) return;
       const r = el.getBoundingClientRect();
