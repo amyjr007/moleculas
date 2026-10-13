@@ -500,6 +500,7 @@
     background: radial-gradient(closest-side, rgba(163,219,247,.3), rgba(163,219,247,0)); animation: c71Chama 1.8s ease-in-out infinite; }
   .c11-riso { font-size: .85em; margin-left: .15em; }
   .c11-passo-bt { top: auto; bottom: 9%; translate: none; }
+  .c12n-mais { display: inline-block; }
   /* 12.1 e 13.1: "Gire a molécula", discreto, embaixo da amônia e do metano */
   .c12-dica { position: absolute; z-index: 3; transform: translateX(-50%); margin-top: .4em; color: #FFC24B; font-family: var(--display); font-weight: 600;
     font-size: clamp(.8rem, 1.1vmin + .55rem, 1rem); letter-spacing: .03em; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .6s ease; }
@@ -1360,7 +1361,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v236 · 12/10/2026</span>
+    <span class="versao" id="versao">v237 · 13/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3396,7 +3397,44 @@ const NARRACOES = [
   // 6s: no fim, a molécula do caderno se transforma na 3D (os H saem do plano para os cantos do tetraedro) e gira
   { id: "dialogo13_7", titulo: "O metano em 3D", src: "audio/audio_moleculas_13.7.mp3", semNav: true, extra: true,
     eventos: [],
-    aoFim: () => { ui.semPlay(true); Cena137.transformar(); } },
+    // no fim, a transformação; terminada, o botão "Entendi" (leva ao 14)
+    aoFim: () => { ui.semPlay(true); Cena137.transformar();
+      Palco.animar(Palco.el, [{}, {}], { duracao: 3, fill: "none" }).finished.then(() => { if (NARRACOES[Player.indice].id === "dialogo13_7") Cena11Copo.botaoPasso1("e", "Entendi"); }, () => {}); } },
+  // capítulo 14, o gás carbônico: 0s sai o que sobrou do metano (a fórmula, a molécula pequena); 3s o cilindro de metano
+  // volta pela esquerda e o metano 3D entra nele girando até sumir; 18s a área vira como face de cubo e a nova face traz o
+  // cilindro de gás carbônico; a partir dos 19s, tocar nele (corta o áudio) — sai o CO₂ girando até o meio e entra o 14.1
+  { id: "dialogo14", titulo: "A molécula de gás carbônico", num: 53, entrada: 17, src: "audio/audio_moleculas_14.mp3",
+    inicio: () => Cena14A.inicio(),
+    eventos: [
+      { tempo: 0,    acao: () => Cena14A.limpar() },
+      { tempo: 3,    acao: () => Cena14A.metanoEntra() },
+      { tempo: 18,   acao: () => Cena14A.virar() },
+      { tempo: 19,   acao: () => Cena14A.liberar() }
+    ],
+    aoFim: () => ui.semPlay(true) },   // sem play: quem leva adiante é o toque no cilindro
+  // o CO₂ no meio: aos 5s, "Qual a fórmula molecular?"; as opções no fim (o certo: CO₂)
+  { id: "dialogo14_1", titulo: "Qual a fórmula molecular?", src: "audio/audio_moleculas_14.1.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 5,    acao: () => Cena14A.pergunta(false) }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena14A.opcoes(); } },
+  // a resposta: a fórmula sobe (e a molécula, girando, encolhe para o lado dela) de 1s a 4s; o C e o O ganham a família
+  // e os elétrons ("4 e⁻" à esquerda, "6 e⁻" à direita, e "+ 6 e⁻" pelo 2); aos 32s, o total de elétrons de valência (16)
+  { id: "dialogo14_2", titulo: "Resposta: CO₂", src: "audio/audio_moleculas_14.2.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 1,    acao: () => Cena14A.formulaSobe() },
+      { tempo: 13,   acao: () => Cena121.pulsar(".c12-l[data-l='C']", 2) },   // o C da fórmula pulsa
+      { tempo: 14.2, acao: () => Cena12N.familia("C", "4A") },              // "4A" em cima do C
+      { tempo: 16.7, acao: () => Cena12N.lado("esq", 4, "C") },             // "4 e⁻" à esquerda da fórmula
+      { tempo: 19,   acao: () => Cena12.letra("O") },                       // o O cresce
+      { tempo: 21,   acao: () => { Cena12.letra("O", false); Cena12N.familia("O", "6A"); } },   // volta; "6A" em cima do O
+      { tempo: 23,   acao: () => Cena12N.lado("dir", 6, "O") },             // "6 e⁻" à direita
+      { tempo: 26.5, acao: () => Cena12.letra("2") },                       // o 2 cresce
+      { tempo: 29.3, acao: () => { Cena12.letra("2", false); Cena12N.mais("dir", 6); } },   // "+ 6 e⁻" ao lado do "6 e⁻" (o outro O)
+      { tempo: 32,   acao: () => Cena12N.pergunta("Qual o total de elétrons de valência nessa molécula?",
+                                   [["10 e<sup>−</sup>", 0], ["12 e<sup>−</sup>", 0], ["16 e<sup>−</sup>", 1]], "dialogo14_2", "dialogo14_3", true) }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena12N.opcoes(); } },   // (o 14.3 ainda não tem eventos: o acerto fica só na festa)
 
 ];
 
@@ -7426,15 +7464,17 @@ const Cena11Copo = {
   // (ctx: a cena 3D da molécula — a do copo, ou a do frasco de amônia)
   // dur: quanto dura a subida. No tablet e no celular o quadro 3D fica mais baixo (ajuste da professora) e a molécula, ao lado
   // da fórmula, sairia por cima dele (cortada): então o quadro sobe junto, até o lugar sem o deslocamento, e a conta já usa esse lugar
-  // peq: o ajuste do lugar no celular ([x, y], em fração do palco), medido pela professora para cada molécula
+  // peq: o ajuste do lugar no celular ([x, y], em fração do palco), medido pela professora para cada molécula; e, opcionais,
+  // [2] o raio da molécula (em "meios", 1,25 por padrão — o CO₂, em linha, é mais largo) e [3] o tamanho (1 = o da água)
   encolher(fr, ctx = this.ctx, dur = this.ENCOLHE, peq = null) {
     if (!ctx) return;
     const T = ctx.THREE, r0 = ctx.renderer.domElement.getBoundingClientRect(), box = ctx.caixa;
     const [tx, ty] = (box && getComputedStyle(box).translate !== "none" ? getComputedStyle(box).translate : "0px 0px").split(" ").map(v => parseFloat(v) || 0);
     // o lugar da molécula, na tela: à esquerda da fórmula, na altura dela; raio: até a borda da bola mais longe (com folga)
-    const meio = fr.height * .45, raio = meio * 1.25;
+    const meio = fr.height * .45 * ((peq && peq[3]) || 1), raio = meio * ((peq && peq[2]) || 1.25);
     let X = fr.left - 14 - meio, Y = fr.top + fr.height / 2;
     if (peq && matchMedia("(orientation: portrait) and (max-width: 600px)").matches) { X += Palco.el.clientWidth * peq[0]; Y += Palco.el.clientHeight * peq[1]; }
+    X = Math.max(X, Palco.el.getBoundingClientRect().left + raio + 4);   // (nunca passa da borda esquerda do palco)
     // o quadro 3D volta para o lugar sem o deslocamento (ou sobe até o alto da fórmula); e, se a molécula não couber
     // inteira dentro dele (a bola da ponta cortada), ele sobe ou vai para a esquerda o que faltar
     const base = r0.top - ty, topo = Math.min(base, fr.top - 12, Y - raio - 4), novo = topo - base;
@@ -7741,7 +7781,9 @@ const Cena12A = {
     const ge = etq.getContext("2d");
     ge.fillStyle = "#EEF3F7"; ge.strokeStyle = "#9FB0C2"; ge.lineWidth = 6;
     ge.beginPath(); ge.roundRect ? ge.roundRect(6, 6, 500, 164, 22) : ge.rect(6, 6, 500, 164); ge.fill(); ge.stroke();
-    ge.fillStyle = "#1B2330"; ge.font = "800 96px 'Bricolage Grotesque', 'Segoe UI', sans-serif"; ge.textAlign = "center"; ge.textBaseline = "middle";
+    let tam = 96; const fonte = () => { ge.font = `800 ${tam}px 'Bricolage Grotesque', 'Segoe UI', sans-serif`; };
+    fonte(); while (ge.measureText(nome).width > 460 && tam > 40) { tam -= 4; fonte(); }
+    ge.fillStyle = "#1B2330"; ge.textAlign = "center"; ge.textBaseline = "middle";
     ge.fillText(nome, 256, 94);
     const tex = new T.CanvasTexture(etq); tex.encoding = T.sRGBEncoding; tex.anisotropy = 4;
     return new T.Mesh(new T.CylinderGeometry(raio, raio, alto, 48, 1, true, ini, abre), new T.MeshStandardMaterial({ map: tex, transparent: true, roughness: .65, metalness: 0 }));
@@ -7814,7 +7856,9 @@ const Cena12A = {
       const t = ctx.tAcao;
       if (ctx.animarRecipiente) ctx.animarRecipiente(t);
       // depois do toque: o recipiente sai pela esquerda e a molécula sobe de dentro dele, girando, até o centro
-      const p = ctx.t0 === undefined ? 0 : Math.min((t - ctx.t0) / this.SAIDA, 1), k = 1 - Math.pow(1 - p, 3);
+      // (na volta — voltar() —, o mesmo caminho ao contrário: o recipiente entra pela esquerda e a molécula, do meio, desce girando para dentro dele)
+      const p = ctx.volta0 !== undefined ? 1 - Math.min((t - ctx.volta0) / this.SAIDA, 1)
+        : ctx.t0 === undefined ? 0 : Math.min((t - ctx.t0) / this.SAIDA, 1), k = 1 - Math.pow(1 - p, 3);
       frasco.position.x = -(ctx.meiaLargura + 2.4) * (p * p * (3 - 2 * p));
       mol.visible = p > 0;
       if (p > 0) {
@@ -7851,6 +7895,13 @@ const Cena12A = {
     renderer.render(cena, camera);
     requestAnimationFrame(quadro);
     caixa.addEventListener("click", () => this.tocar());
+  },
+  // o recipiente volta (no lugar de sempre do copo), com a molécula entrando nele (pronto: já dentro, sem animação)
+  voltar(pronto = false) {
+    if (this.$(`.${this.CLASSE}.volta`)) return;
+    Palco.adicionar(`<div class="c11-copo ${this.CLASSE} volta" aria-label="${this.ARIA}"></div>`);
+    this.montar(this.$(`.${this.CLASSE}.volta`));
+    if (this.ctx) this.ctx.volta0 = pronto ? -99 : this.ctx.tAcao;
   },
   // o recipiente chama o toque (o mesmo halo do copo)
   liberar() {
@@ -7926,8 +7977,9 @@ const Cena13A = Object.assign(Object.create(Cena12A), {
     });
   },
   // o cilindro de gás em 3D: corpo pintado, ombro arredondado, gargalo e válvula de metal, anel na base e a etiqueta "Metano"
+  TINTA: 0xB4480E, ROTULO: ["Metano", -.78, 1.56],   // a cor do cilindro; a etiqueta: o nome, onde começa e quanto abre (rad)
   recipiente(ctx, T, cil) {
-    const tinta = new T.MeshPhysicalMaterial({ color: 0xB4480E, metalness: .2, roughness: .38, clearcoat: .6, clearcoatRoughness: .2, envMapIntensity: .7 });
+    const tinta = new T.MeshPhysicalMaterial({ color: this.TINTA, metalness: .2, roughness: .38, clearcoat: .6, clearcoatRoughness: .2, envMapIntensity: .7 });
     const metal = new T.MeshStandardMaterial({ color: 0xB9C2CC, metalness: .9, roughness: .28 });
     const r = .64, base = .06, alto = 2.05;
     const corpo = new T.Mesh(new T.CylinderGeometry(r, r, alto, 64), tinta); corpo.position.y = base + alto / 2; cil.add(corpo);
@@ -7937,7 +7989,7 @@ const Cena13A = Object.assign(Object.create(Cena12A), {
     const valvula = new T.Mesh(new T.CylinderGeometry(.11, .11, .26, 24), metal); valvula.position.y = gargalo.position.y + .24; cil.add(valvula);
     const volante = new T.Mesh(new T.TorusGeometry(.2, .035, 12, 40), metal); volante.rotation.x = Math.PI / 2; volante.position.y = valvula.position.y + .16; cil.add(volante);
     const saida = new T.Mesh(new T.CylinderGeometry(.05, .05, .22, 16), metal); saida.rotation.z = Math.PI / 2; saida.position.set(.16, valvula.position.y, 0); cil.add(saida);
-    const etiqueta = this.etiqueta(T, "Metano", r + .012, .62, -.78, 1.56); etiqueta.position.y = base + alto * .55; cil.add(etiqueta);
+    const etiqueta = this.etiqueta(T, this.ROTULO[0], r + .012, .62, this.ROTULO[1], this.ROTULO[2]); etiqueta.position.y = base + alto * .55; cil.add(etiqueta);
     ctx.animarRecipiente = null;
     return base + alto * .55;
   },
@@ -8137,6 +8189,42 @@ const Cena133 = {
    No fim do 13.7, a molécula 3D nasce exatamente em cima da do caderno, ainda plana (o C no meio, os H em cruz, do mesmo tamanho),
    enquanto os símbolos se apagam; então os H saem do plano e vão para os cantos do tetraedro (109,5°) e a molécula começa a girar
    (sozinha, e com o dedo). */
+/* ---------- Narrações 14, 14.1 e 14.2: o gás carbônico (a mesma cena do metano, com outro cilindro e outra molécula) ---------- */
+const Cena14A = Object.assign(Object.create(Cena13A), {
+  ENCOLHE: 3,   // 14.2: a fórmula (e a molécula, girando) sobe de 1s a 4s
+  FORMULA: `<p class="c111-formula c12-formula c12n"><span class="c12-l" data-l="C">C</span><span class="c12-l" data-l="O">O</span><sub class="c12-l" data-l="2">2</sub></p>`,
+  CLASSE: "c14-co2", ARIA: "Um cilindro de gás carbônico", ID: "dialogo14", ORIGEM: ".c13-metano", DEPOIS_DE_SAIR: false,
+  TINTA: 0x46525F, ROTULO: ["Gás carbônico", -1.15, 2.3],
+  PEQ: [-.152, .024, 1.7, .8],   // o CO₂ pequeno: no lugar do metano, um pouco menor (em linha, ele é mais largo)
+  PERGUNTA: { texto: "Qual a fórmula molecular?", opcoes: [["CO", 0], ["CO<sub>2</sub>", 1], ["CO<sub>3</sub>", 0]], de: "dialogo14_1", para: "dialogo14_2" },
+  // pela navegação rápida (entra aos 17s): o título e o cilindro de metano parado no lugar, para a virada vir em seguida
+  inicio() {
+    Cena12A.inicio();
+    if (Player.desde >= 5 && !this.$(".c13-metano")) Cena13A.voltar(true);
+  },
+  // 0s: sai o que sobrou do metano (a fórmula com a molécula pequena, o desenho do caderno, o botão); o metano em 3D fica
+  limpar() {
+    Palco.el.querySelectorAll(".c111-corpo, .c12-fila, .c72-quiz, .c84-aviso, .c11-passo-bt, .c121-esqueleto, .c13-carrossel, .c11-copo.c13-metano").forEach(el => {
+      if (el.dataset.saindo) return; el.dataset.saindo = "1";
+      Palco.animar(el, [{ opacity: getComputedStyle(el).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => el.remove(), () => {});
+    });
+  },
+  // 3s: o metano em 3D sai em fade e, no lugar dele, o cilindro de metano volta com a molécula entrando nele
+  metanoEntra() {
+    const m3d = this.$(".c137-3d");
+    if (m3d && !m3d.dataset.saindo) { m3d.dataset.saindo = "1";
+      Palco.animar(m3d, [{ opacity: getComputedStyle(m3d).opacity }, { opacity: 0 }], { duracao: .35, easing: "ease-in" }).finished.then(() => m3d.remove(), () => {}); }
+    Cena13A.voltar();
+  },
+  // a molécula de CO₂: o C (cinza-escuro) no meio e um O de cada lado, em linha, encostados nele
+  molecula(T, mat, esf) {
+    const mol = new T.Group(), rC = .58, rO = .62, d = (rC + rO) * .86;
+    const C = new T.Mesh(esf, mat(0x1E232B)); C.scale.setScalar(rC); mol.add(C);
+    [-1, 1].forEach(s => { const o = new T.Mesh(esf, mat(Quantico.CORES.O)); o.scale.setScalar(rO); o.position.set(s * d, 0, 0); mol.add(o); });
+    return mol;
+  }
+});
+
 const Cena137 = {
   $(sel) { return Palco.el.querySelector(sel); },
   L: 1.7, DUR: 2.6,   // a distância C–H (no 3D) e quanto dura a transformação
@@ -8290,7 +8378,7 @@ const Cena13C = {
    aos 14s, "Qual dos elementos fica no centro?" (N). */
 const Cena12N = {
   $(sel) { return Palco.el.querySelector(sel); },
-  CORES: { N: "#8FA8FF", H: "#FFFFFF", C: "#AEB9CC" },
+  CORES: { N: "#8FA8FF", H: "#FFFFFF", C: "#AEB9CC", O: "#FF7A66" },
   // a tela (se o áudio começar sem ela): o título numa linha e a fórmula NH₃ no topo
   tela() {
     if (!this.$(".c11-titulo")) { Cena11.tela(); Cena111.abrir(); }
@@ -8316,6 +8404,13 @@ const Cena12N = {
     const f = this.$(".c12n"); if (!f || f.querySelector(`.c12n-e.${lado}`)) return;
     f.insertAdjacentHTML("beforeend", `<span class="c12n-e ${lado}" style="color:${this.CORES[l]}">${n}&nbsp;e<sup>−</sup></span>`);
     Palco.animar(f.lastElementChild, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1.15)", offset: .6 }, { opacity: 1, transform: "scale(1)" }],
+      { duracao: .5, easing: "ease-out" });
+  },
+  // "+ 6 e⁻" logo depois do "6 e⁻" de um lado (14.2: o segundo O), na mesma cor
+  mais(lado, n) {
+    const e = this.$(`.c12n .c12n-e.${lado}`); if (!e || e.querySelector(".c12n-mais")) return;
+    e.insertAdjacentHTML("beforeend", `<span class="c12n-mais">&nbsp;+&nbsp;${n}&nbsp;e<sup>−</sup></span>`);
+    Palco.animar(e.lastElementChild, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1.15)", offset: .6 }, { opacity: 1, transform: "scale(1)" }],
       { duracao: .5, easing: "ease-out" });
   },
   // a pergunta, digitada; as opções entram no fim do áudio (opcoes) ou logo depois da pergunta (logo = true)
