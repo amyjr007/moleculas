@@ -677,6 +677,11 @@
   /* tablets e Chromebooks (deitados, com altura de sobra; no celular fica tudo como está): ajustes medidos pela professora
      na ferramenta de desenvolvimento, numa tela de 965 × 448 — em proporção do palco (--pw, --ph, marcados pelo JS) */
   @media (orientation: landscape) and (min-height: 561px) {
+    /* a capa (ajustes da professora no Chromebook, tela de 1024 × 576; a capa ocupa a tela toda, então vw/vh = % da capa):
+       o botão "Demonstração" à direita, a fábrica um pouquinho para a esquerda e o cubo de átomos embaixo, 80% maior */
+    #capa #btnDemo { translate: 59.3vw 15.1vh; }
+    #capa .art { translate: -.6vw .4vh; }
+    #capa #logoCubo { translate: 25.3vw 61.8vh; scale: 1.798; }
     /* "As moléculas poliatômicas" e "Moléculas" (no alto): o padrão_título, o mesmo do "Regra do Octeto" */
     .c11-titulo:not(.medir), .c0-titulo.tit-mol { top: 2.4% !important; left: -.4%; right: .4%; font-size: calc(clamp(2.2rem, 6vmin + 1rem, 4.4rem) * .61) !important; }
     /* o copo (11.1) e, depois do toque, a molécula que sai dele (11.1A em diante): menores e mais baixos */
@@ -1383,7 +1388,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v243 · 13/10/2026</span>
+    <span class="versao" id="versao">v244 · 13/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
