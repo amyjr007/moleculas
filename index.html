@@ -1376,7 +1376,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v241 · 13/10/2026</span>
+    <span class="versao" id="versao">v242 · 13/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3488,20 +3488,26 @@ const NARRACOES = [
     ],
     aoFim: () => { ui.semPlay(true); Cena14P.liberar("esq"); } },
   // os dois O estáveis; o C ainda não: 0s tudo volta ao normal; 9s os O pulsam; 10s os pares dos O e as ligações brilham (1s);
-  // 12,4s os O apagam (fica o C); 16,8s a ligação da esquerda brilha, 17,6s a da direita; 24s o retângulo onde ficavam os
-  // elétrons, com "acabaram os elétrons" (até 26s); 30,8s os O voltam e os pares não ligantes brilham (1,5s). A partir dos 38s,
-  // o aluno toca num O e depois no C: o par de cima do O vira a segunda ligação (dupla). As duas duplas: o C estável, a festa e o 14.7
+  // 12,4s os O apagam (fica o C); 13s o "estável" dos O some; 16,8s a ligação da esquerda brilha, 17,6s a da direita; 24s o
+  // retângulo onde ficavam os elétrons, com "acabaram os elétrons" (até 28s). Aos 28s o áudio é cortado; 1s depois, o 14.6A
   { id: "dialogo14_6", titulo: "Gás carbônico: as ligações duplas", src: "audio/audio_moleculas_14.6.mp3", semNav: true, extra: true,
     eventos: [
       { tempo: 0,    acao: () => Cena14D.normal() },
       { tempo: 9,    acao: () => Cena121.pulsarAtomo(["esq", "dir"], 1) },
       { tempo: 10,   acao: () => Cena14D.brilhar([...Cena14D.pares(), ...Cena14D.linhas()], 1) },
       { tempo: 12.4, acao: () => Cena14D.apagarO() },
+      { tempo: 13,   acao: () => Cena14D.tirarEstavel() },
       { tempo: 16.8, acao: () => Cena14D.brilhar(Cena113F.partes(["lig-esq"]), 1) },
       { tempo: 17.6, acao: () => Cena14D.brilhar(Cena113F.partes(["lig-dir"]), 1) },
-      { tempo: 24,   acao: () => Cena14D.acabaram(2) },
-      { tempo: 30.8, acao: () => { Cena14D.apagarO(false); Cena14D.brilhar(Cena14D.pares(), 1.5); } },
-      { tempo: 38,   acao: () => Cena14D.liberar() }
+      { tempo: 24,   acao: () => Cena14D.acabaram(4) },
+      { tempo: 28,   acao: () => Cena14D.cortar() }
+    ],
+    aoFim: () => Cena14D.cortar() },   // (se o áudio acabar antes dos 28s)
+  // o aluno faz as ligações duplas: toca num O e depois no C — o par de cima do O vai, numa curva, para dentro da ligação
+  // e vira o segundo traço. As duas duplas: o C estável, confetes, aplausos e fanfarra; depois, o 14.7 (quando existir)
+  { id: "dialogo14_6A", titulo: "Gás carbônico: as ligações duplas", src: "audio/audio_moleculas_14.6A.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 0,    acao: () => { Cena14D.apagarO(false); Cena14D.liberar(); } }   // os O voltam; os toques já valem
     ],
     aoFim: () => { ui.semPlay(true); Cena14D.liberar(); } },
 
@@ -9529,15 +9535,34 @@ const Cena14D = {
     Cena113F.escurecer(["esq", "dir"], ligar);
     this.pares().forEach(c => c.classList.toggle("c113-escuro", ligar));
   },
+  // 13s: o "estável" dos dois O some em fade
+  tirarEstavel() {
+    Palco.el.querySelectorAll(".c121-esqueleto .c113-estavel").forEach(t => {
+      if (t.dataset.saindo) return; t.dataset.saindo = "1";
+      t.getAnimations().forEach(a => a.cancel());
+      Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => t.remove(), () => {});
+    });
+  },
+  // 28s: o 14.6 é cortado; 1s depois, o 14.6A
+  cortar() {
+    const i = Player.indice; if (!NARRACOES[i] || NARRACOES[i].id !== "dialogo14_6" || this.cortado === i) return;
+    this.cortado = i;
+    Player.calar();
+    Palco.animar(Palco.el, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => {
+      this.cortado = null;
+      if (Player.indice !== i) return;
+      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo14_6A"), true);
+    }, () => {});
+  },
   // 24s: o retângulo onde ficavam os elétrons, com "acabaram os elétrons" (entra e sai em fade)
   acabaram(dur) {
     const f = this.$(".c12-fila"); if (!f || this.$(".c14-caixa")) return;
     const P = Palco.el.getBoundingClientRect(), r = f.getBoundingClientRect(), m = 10;
     Palco.adicionar(`<div class="c14-caixa" style="left:${r.left - P.left - m}px;top:${r.top - P.top - m}px;width:${r.width + 2 * m}px;height:${r.height + 2 * m}px"><span class="c14-acabaram">acabaram os elétrons</span></div>`);
     const c = Palco.el.lastElementChild;
-    Palco.animar(c, [{ opacity: 0 }, { opacity: 1, offset: .15 }, { opacity: 1, offset: .75 }, { opacity: 0 }], { duracao: dur, easing: "ease-in-out" }).finished.then(() => c.remove(), () => {});
+    Palco.animar(c, [{ opacity: 0 }, { opacity: 1, offset: .1 }, { opacity: 1, offset: .88 }, { opacity: 0 }], { duracao: dur, easing: "ease-in-out" }).finished.then(() => c.remove(), () => {});
   },
-  // a partir dos 38s: os toques valem (um O e depois o C)
+  // 14.6A: os toques valem (um O e depois o C)
   liberar() {
     if (this.$(".c84-toques")) return;
     this.feitos = { esq: !!this.$('.c121-esqueleto .lig [data-l="esq2"]'), dir: !!this.$('.c121-esqueleto .lig [data-l="dir2"]') };
@@ -9569,12 +9594,16 @@ const Cena14D = {
     Vibra.tocar("toqueEletron");
     const s = Cena121.svg(), lin = s.querySelector(`.lig [data-l="${o}"]`), { x1, y1, x2, y2, mx, my } = Cena121.pontas(o), off = 6.5;   // (off: o meio-vão entre os dois traços)
     const par = this.pares(o).filter(c => c.dataset.lado === "cima");
+    // (o par vai numa curva: sobe um pouco e desce até o meio da ligação, como num salto)
     par.forEach((c, j) => {
-      const tx = mx + (j ? 3.5 : -3.5) - +c.getAttribute("cx"), ty = my - off - +c.getAttribute("cy");
-      Palco.animar(c, [{ transform: "translate(0px, 0px)" }, { transform: `translate(${tx}px, ${ty}px)` }], { duracao: .6, easing: "cubic-bezier(.45,0,.55,1)" });
+      const tx = mx + (j ? 3.5 : -3.5) - +c.getAttribute("cx"), ty = my - off - +c.getAttribute("cy"), cx = tx * .5, cy = Math.min(ty * .5, 0) - 16;
+      const q = Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u;
+        return { transform: `translate(${(a * cx + b * tx).toFixed(2)}px, ${(a * cy + b * ty).toFixed(2)}px)`, offset: u }; });
+      Palco.animar(c, q, { duracao: .7, easing: "ease-in-out" });
     });
-    if (lin) Palco.animar(lin, [{ transform: "translate(0px, 0px)" }, { transform: `translate(0px, ${off}px)` }], { duracao: .6, easing: "cubic-bezier(.45,0,.55,1)" });
-    Palco.animar(s, [{}, {}], { duracao: .6, fill: "none" }).finished.then(() => {
+    Cena74.somSalto(Cena121.svg());   // o som do salto
+    if (lin) Palco.animar(lin, [{ transform: "translate(0px, 0px)" }, { transform: `translate(0px, ${off}px)` }], { duracao: .7, easing: "cubic-bezier(.45,0,.55,1)" });
+    Palco.animar(s, [{}, {}], { duracao: .7, fill: "none" }).finished.then(() => {
       if (!s.isConnected) return;
       par.forEach(c => c.remove());
       // o traço de baixo: o de antes, já no lugar (sem a animação presa); o de cima: novo, crescendo do meio
@@ -9598,10 +9627,10 @@ const Cena14D = {
       const sons = ["audio/vfx/applause.mp3", "audio/funfare.mp3"].map(src => { const a = new Audio(src); a.play().catch(() => {}); return a; });
       const fim = a => new Promise(r => { a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 8000); });
       const i = Player.indice;
+      // depois dos sons: o 14.7 (se ele existir; se o 14.6A ainda estiver falando, entra quando ele acabar)
       Promise.all(sons.map(fim)).then(() => {
-        const prox = NARRACOES.findIndex(n => n.id === "dialogo14_7");
-        if (prox < 0 || Player.indice !== i || !s.isConnected) return;
-        Player.calar(); Player.terminou = false; Player.irPara(prox, true);
+        if (NARRACOES.findIndex(n => n.id === "dialogo14_7") < 0 || Player.indice !== i || !s.isConnected) return;
+        Player.seguirSozinho();
       });
     }, () => {});
   }
@@ -11171,7 +11200,7 @@ const Demo = {
       const A = Cena112L.naTela(lado); if (!A) return null;
       return () => this.tocar(toques, emJanela(A));
     }
-    if (id === "dialogo14_6" && Cena14D.feitos) {
+    if (id === "dialogo14_6A" && Cena14D.feitos) {
       const o = Cena14D.sel || ["esq", "dir"].find(l => !Cena14D.feitos[l]); if (!o) return null;
       const A = Cena112L.naTela(Cena14D.sel ? "meio" : o); if (!A) return null;
       return () => this.tocar(toques, emJanela(A));
