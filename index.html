@@ -1394,7 +1394,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v245 · 13/10/2026</span>
+    <span class="versao" id="versao">v246 · 13/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3529,6 +3529,31 @@ const NARRACOES = [
       { tempo: 2,    acao: () => Cena14D.piscarPares(2) }                   // os pares não ligantes piscam, um de cada vez (até 4s)
     ],
     aoFim: () => { ui.semPlay(true); Cena14D.liberar(); } },
+  // o CO₂ pronto: 5s o C apaga e os O crescem (até 6s); 6s os traços de cima das duplas brilham, 7s os de baixo, 7,8s os
+  // pares dos lados, 8s os de baixo; 10,4s os O apagam (ficam o C e as quatro ligações); cada traço pulsa (12,4s, 13s, 14s,
+  // 14,7s); 17s pausa de 1,5s com a festa de quiz certo (tudo volta); 20,8s as duas duplas brilham (1s). No fim, a molécula
+  // do caderno e o botão "Entendi" (leva ao 14.8)
+  { id: "dialogo14_7", titulo: "O gás carbônico", src: "audio/audio_moleculas_14.7.mp3", semNav: true, extra: true,
+    eventos: [
+      { tempo: 5,    acao: () => { Cena113F.escurecer(["meio"]); Cena14F.crescerO(1); } },
+      { tempo: 6,    acao: () => Cena14F.acender(Cena14F.linhas(["esq2", "dir2"])) },
+      { tempo: 7,    acao: () => Cena14F.acender(Cena14F.linhas(["esq", "dir"])) },
+      { tempo: 7.8,  acao: () => Cena14F.acender(Cena14F.pares(["esq-esq", "dir-dir"])) },
+      { tempo: 8,    acao: () => Cena14F.acender(Cena14F.pares(["esq-baixo", "dir-baixo"])) },
+      { tempo: 10.4, acao: () => Cena14F.soC() },
+      { tempo: 12.4, acao: () => Cena14D.brilhar(Cena14F.linhas(["esq2"]), .6) },
+      { tempo: 13,   acao: () => Cena14D.brilhar(Cena14F.linhas(["esq"]), .6) },
+      { tempo: 14,   acao: () => Cena14D.brilhar(Cena14F.linhas(["dir2"]), .6) },
+      { tempo: 14.7, acao: () => Cena14D.brilhar(Cena14F.linhas(["dir"]), .6) },
+      { tempo: 17,   acao: () => Cena14F.festa(1.5) },
+      { tempo: 20.8, acao: () => Cena14D.brilhar(Cena14F.linhas(["esq", "esq2", "dir", "dir2"]), 1) }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena12N.caderno(); } },
+  // no fim, a molécula do caderno se transforma na 3D (as letras se apagam e as bolas aparecem por cima, do mesmo tamanho)
+  // e começa a girar (sozinha, e com o dedo)
+  { id: "dialogo14_8", titulo: "O gás carbônico em 3D", src: "audio/audio_moleculas_14.8.mp3", semNav: true, extra: true,
+    eventos: [],
+    aoFim: () => { ui.semPlay(true); Cena148.transformar(); } },
 
 ];
 
@@ -9663,6 +9688,108 @@ const Cena14D = {
   }
 };
 
+/* ---------- Narração 14.7: o CO₂ pronto (os destaques) ---------- */
+const Cena14F = {
+  // os traços pelo nome ("esq", "dir": os de antes, embaixo; "esq2", "dir2": os de cima das duplas)
+  linhas(nomes) { return nomes.map(n => Palco.el.querySelector(`.c121-esqueleto .lig [data-l="${n}"]`)).filter(Boolean); },
+  // os pares pelo O e pelo lado ("esq-esq": o de fora do O da esquerda; "dir-baixo": o de baixo do da direita)
+  pares(nomes) { return nomes.flatMap(n => { const [o, l] = n.split("-"); return Cena14D.pares(o).filter(c => c.dataset.lado === l); }); },
+  // os dois O crescem e ficam grandes por dur segundos
+  crescerO(dur) {
+    ["esq", "dir"].forEach(o => { const g = Cena112L.g(o); if (!g) return;
+      Palco.animar(g, [{ scale: "1" }, { scale: "1.35", offset: .25 }, { scale: "1.35", offset: .75 }, { scale: "1" }], { duracao: dur, easing: "ease-in-out", fill: "none" }); });
+  },
+  // acendem e ficam acesos (até soC ou a festa)
+  acender(els) { els.forEach(e => e.classList.add("brilha")); },
+  apagarBrilhos() { Palco.el.querySelectorAll(".c121-esqueleto .brilha").forEach(e => e.classList.remove("brilha")); },
+  // 10,4s: os O (e os pares) apagam; ficam acesos o C e as quatro ligações
+  soC() { this.apagarBrilhos(); Cena14D.apagarO(true); Cena113F.escurecer(["meio"], false); },
+  // 17s: o áudio pausa (dur segundos) com a festa de quiz certo — o verde, confetes, aplausos e fanfarra; tudo volta ao normal
+  festa(dur) {
+    // tudo volta ao normal na hora, sem a transição de 0,5s (a pausa congelaria a transição no meio, com os O ainda escuros)
+    const els = [...Cena113F.partes(["meio", "esq", "dir"]), ...Cena14D.pares()];
+    els.forEach(e => { e.style.transition = "none"; });
+    this.apagarBrilhos(); Cena14D.apagarO(false); Cena113F.escurecer(["meio"], false);
+    void Palco.el.offsetWidth;
+    requestAnimationFrame(() => els.forEach(e => { e.style.transition = ""; }));
+    Cena121.respiro(dur, true);
+    Palco.adicionar(`<div class="c4-verde"></div>`);
+    const v = Palco.el.lastElementChild;
+    v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
+    Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+    Vibra.tocar("cloroCerta");
+    ["audio/vfx/applause.mp3", "audio/funfare.mp3"].forEach(src => { try { const a = new Audio(src); a.play().catch(() => {}); } catch (_) {} });
+  }
+};
+
+/* ---------- Narração 14.8: o CO₂ do caderno vira 3D ----------
+   No fim do 14.8, a molécula 3D nasce exatamente em cima da do caderno (O=C=O em linha, do mesmo tamanho), enquanto os
+   símbolos se apagam; depois ela inclina um pouco e gira (sozinha, e com o dedo). As ligações duplas: dois bastões. */
+const Cena148 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  L: 1.7, DUR: 1.3,   // a distância C–O (no 3D) e quanto dura o aparecer
+  transformar() {
+    const s = this.$(".c121-esqueleto"); if (!s || this.$(".c148-3d") || !window.THREE) return;
+    const T = THREE, P = Palco.el.getBoundingClientRect(), m = s.getScreenCTM(); if (!m) return;
+    const [cx0, cy0] = Cena121.xy("meio"), [ox] = Cena121.xy("dir");
+    const pt = s.createSVGPoint(); pt.x = cx0; pt.y = cy0; const c = pt.matrixTransform(m);
+    const d = (ox - cx0) * m.a, cy = c.y - P.top, alto = 3.4 * d;      // d: a distância C–O do caderno, em px
+    Palco.adicionar(`<div class="c148-3d" aria-label="Molécula de gás carbônico em 3D: em linha, O=C=O, com duas ligações duplas. Arraste para girar"
+      style="position:absolute;left:0;right:0;top:${cy - alto / 2}px;height:${alto}px;z-index:4"></div>`);
+    const caixa = this.$(".c148-3d");
+    let renderer;
+    try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return; }
+    renderer.outputEncoding = T.sRGBEncoding; renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    caixa.appendChild(renderer.domElement);
+    const cv = renderer.domElement; Object.assign(cv.style, { display: "block", width: "100%", height: "100%", touchAction: "none" });
+    const cena = new T.Scene(), fov = 35, camera = new T.PerspectiveCamera(fov, 1, .1, 100);
+    const dist = 3.4 * this.L / (2 * Math.tan(T.MathUtils.degToRad(fov / 2)));   // 1,7 (o C–O) vira d px: do tamanho do caderno
+    cena.add(new T.HemisphereLight(0xdfefff, 0x1b2a40, .85));
+    const luz = new T.DirectionalLight(0xffffff, 1.2); luz.position.set(3, 5, 7); cena.add(luz);
+    const luz2 = new T.DirectionalLight(0xA3DBF7, .5); luz2.position.set(-6, -3, -4); cena.add(luz2);
+    const mat = cor => new T.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18, transparent: true, opacity: 0 });
+    const esf = new T.SphereGeometry(1, 48, 32), bas = new T.CylinderGeometry(.1, .1, 1, 24);
+    const mol = new T.Group(); cena.add(mol);
+    const C = new T.Mesh(esf, mat(0x2A3038)); C.scale.setScalar(.6); mol.add(C);
+    const Os = [-1, 1].map(sx => { const o = new T.Mesh(esf, mat(Quantico.CORES.O)); o.scale.setScalar(.6); o.position.set(sx * this.L, 0, 0); mol.add(o); return o; });
+    // as duplas: dois bastões, um de cada lado do eixo (no plano da tela)
+    const lig = [];
+    [-1, 1].forEach(sx => [-.17, .17].forEach(dy => {
+      const b = new T.Mesh(bas, mat(0xC8C8C8)); b.rotation.z = Math.PI / 2; b.scale.set(1, this.L, 1); b.position.set(sx * this.L / 2, dy, 0); mol.add(b); lig.push(b);
+    }));
+    const mats = [C, ...Os, ...lig].map(o => o.material);
+    const ajustar = () => { const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h; camera.position.set(0, 0, dist); camera.updateProjectionMatrix(); };
+    const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
+    let giroY = 0, giroX = 0, arraste = null, parado = 0, t = 0;
+    cv.addEventListener("pointerdown", e => { if (t < this.DUR) return; arraste = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} cv.style.cursor = "grabbing"; });
+    cv.addEventListener("pointermove", e => {
+      if (!arraste) return;
+      giroY += (e.clientX - arraste.x) * .012; giroX = Math.max(-1.3, Math.min(1.3, giroX + (e.clientY - arraste.y) * .012));
+      arraste = { x: e.clientX, y: e.clientY };
+    });
+    const soltar = () => { arraste = null; parado = 1.5; cv.style.cursor = "grab"; };
+    cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
+    // as letras do caderno se apagam enquanto as bolas aparecem por cima delas
+    s.getAnimations().forEach(x => { if (x.playState === "finished") x.cancel(); });
+    Palco.animar(s, [{ opacity: 1 }, { opacity: 0 }], { duracao: .7, easing: "ease-in", fill: "none" }).finished.then(() => { s.style.opacity = "0"; }, () => {});
+    const suave = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+    let antes = performance.now();
+    const quadro = agora => {
+      if (!cv.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
+      const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora; t += dt;
+      mats.forEach(x => { x.opacity = suave(t / .6); });
+      // depois de aparecer: inclina um pouco e gira sozinho (na mão, segue o dedo)
+      const fim = suave((t - this.DUR) / 1.2);
+      if (t > this.DUR && !arraste && dt) { if (parado > 0) parado -= dt; else giroY += dt * .6 * fim; }
+      mol.rotation.set(giroX + .35 * fim, giroY, 0);
+      if (t > this.DUR && !arraste) cv.style.cursor = "grab";
+      renderer.render(cena, camera);
+      requestAnimationFrame(quadro);
+    };
+    requestAnimationFrame(quadro);
+  }
+};
+
 /* ---------- Narração 11.3B: a molécula de água pronta ----------
    Festa aos 3s; dos 7s aos 16s, o foco passa pelas partes da molécula (o que não está em foco escurece 90%; o que está
    brilha); aos 16s, tudo volta e a festa de novo. O texto do passo sai aos 17s, a molécula de bolas aos 30s e, no fim,
@@ -9721,7 +9848,19 @@ const Cena113F = {
     const xe = 100 - borda - folga, xd = 100 + borda + folga;     // onde os traços encostam no O
     const hEsq = xe - traco - folga - hMeio, hDir = xd + traco + folga + hMeio;
     const dx = 6 * K, dy = 17 * K;                                  // os pares, em cima e embaixo do O (os dois pontos afastados)
-    if (Cena121.arranjo().central === "C") {
+    if (Cena121.arranjo().ponta === "O") {
+      // o CO₂: O=C=O em linha (nos mesmos lugares do desenho de bolas), as duplas com dois traços e, em cada O, os dois
+      // pares que ficaram: o de fora e o de baixo
+      const P2 = Cena121.arranjo().pos, [cx, cy] = P2.meio, sy = (x, y, t) => simbolo(x, t).replace('y="25"', `y="${y}"`);
+      const mC = 15, mO = 14, gap = 4, vao = 3.6;   // meia largura do C e do O, o vão até a letra e o meio-vão entre os dois traços
+      const linhas = ["esq", "dir"].map(l => { const [x] = P2[l], sx = Math.sign(x - cx), a = cx + sx * (mC + gap), b = x - sx * (mO + gap);
+        return [-vao, vao].map(v => `<line x1="${a}" y1="${cy + v}" x2="${b}" y2="${cy + v}"/>`).join(""); }).join("");
+      const paresO = ["esq", "dir"].map(l => { const [x] = P2[l], sx = Math.sign(x - cx), fora = x + sx * 21;
+        return ponto(fora, cy - 6) + ponto(fora, cy + 6) + ponto(x - 6, cy + 22) + ponto(x + 6, cy + 22); }).join("");
+      s.innerHTML = `<g class="caderno" stroke="${cor}" stroke-width="${2.2 * 1.2}" stroke-linecap="round">${linhas}</g>
+        ${sy(P2.esq[0], cy, "O")}${sy(cx, cy, "C")}${sy(P2.dir[0], cy, "O")}${paresO}`;
+      s.setAttribute("aria-label", "Estrutura de Lewis do gás carbônico: O=C=O, com duas ligações duplas e dois pares de elétrons em cada oxigênio");
+    } else if (Cena121.arranjo().central === "C") {
       // o metano: o C no meio e os quatro H em cruz (nos mesmos lugares do desenho de bolas), ligados por traços
       const P2 = Cena121.arranjo().pos, [cx, cy] = P2.meio, sy = (x, y, t) => simbolo(x, t).replace('y="25"', `y="${y}"`);
       const mC = 15, mH = 12, gap = 4;   // meia largura do C e do H (no tamanho do caderno) e o vão até a letra
