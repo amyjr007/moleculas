@@ -520,6 +520,9 @@
     -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); }
   .c11l-fita span { display: block; height: 40px; line-height: 40px; text-align: center; font-size: 1.5rem; color: rgba(255,255,255,.45); transition: color .2s, scale .2s; }
   .c11l-fita span.atual { color: var(--ambar); scale: 1.25; }
+  .c11l-fechar { position: absolute; top: 6px; right: 8px; width: 34px; height: 34px; border: 0; border-radius: 50%; background: none; cursor: pointer;
+    color: rgba(255,255,255,.6); font: 700 1.5rem/1 var(--display); }
+  .c11l-fechar:hover { color: #fff; background: rgba(255,255,255,.08); }
   .c11l-ok { font-size: clamp(1rem, 1.6vmin + .55rem, 1.3rem); }
   .c11l-checar { position: absolute; left: 0; right: 0; z-index: 6; display: flex; justify-content: center; translate: 0 -100%; }
   .c11l-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 4; pointer-events: none; }
@@ -1421,7 +1424,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v252 · 14/10/2026</span>
+    <span class="versao" id="versao">v253 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8175,7 +8178,9 @@ const Cena133 = {
   // o que muda de uma molécula para outra: os lugares e o átomo das pontas (o desenho das ligações é o arranjo de mesmo nome)
   CFG: { metano: { lados: ["meio", "cima", "dir", "baixo", "esq"], ponta: "H" }, co2: { lados: ["meio", "esq", "dir"], ponta: "O" },
          livre: { lados: ["meio", "esq", "dir"], ponta: "H", primeiro: "O" },                 // (livre: a água do modo livre)
-         livreN: { lados: ["meio", "esq", "dir", "baixo"], ponta: "H", primeiro: "N" } },    // (livreN: a amônia do modo livre)
+         livreN: { lados: ["meio", "esq", "dir", "baixo"], ponta: "H", primeiro: "N" },      // (livreN: a amônia do modo livre)
+         livreC: { lados: ["meio", "cima", "dir", "baixo", "esq"], ponta: "H", primeiro: "C" },   // (livreC: o metano do modo livre)
+         livreCO2: { lados: ["meio", "esq", "dir"], ponta: "O", primeiro: "C" } },            // (livreCO2: o CO₂ do modo livre)
   mol: "metano",
   // 6s: os 8 elétrons brilham por 1s, com o texto em cima da fileira (os dois somem juntos)
   total() {
@@ -8193,14 +8198,14 @@ const Cena133 = {
   // que sobra entre essa fileira e a fileira de elétrons (cy: o centro; d: a distância até os de fora)
   medidas() {
     const P = Palco.el, Pr = P.getBoundingClientRect(), W = P.clientWidth, H = P.clientHeight, m = Math.min(W, H);
-    const base = Math.max(20, Math.min(32, m * .055)), rC = base * 1.15, rH = this.mol === "co2" ? rC : base * .8 * 1.1, vao = 12, n = this.LADOS.length - 1;   // (rH: o raio das pontas — no CO₂, os O, do tamanho do C)
+    const base = Math.max(20, Math.min(32, m * .055)), rC = base * 1.15, rH = (this.mol === "co2" || this.mol === "livreCO2") ? rC : base * .8 * 1.1, vao = 12, n = this.LADOS.length - 1;   // (rH: o raio das pontas — no CO₂, os O, do tamanho do C)
     const f = this.$(".c12n") || this.$(".c111-formula"), fb = f ? f.getBoundingClientRect().bottom - Pr.top : H * .3;   // (a fórmula: a da amônia, do metano, do CO₂ ou a da água)
     const yFila = fb + rC + 14;
     const larg = 2 * rC + n * (2 * rH + vao), x0 = W / 2 - larg / 2;
     const xs = [x0 + rC, ...Array.from({ length: n }, (_, k) => x0 + 2 * rC + vao + rH + k * (2 * rH + vao))];
     const fila = this.$(".c12-fila"), filaTopo = fila ? fila.getBoundingClientRect().top - Pr.top : H * .92;
     const topo = yFila + rC + 16, fundo = filaTopo - 16;
-    const d = this.mol !== "metano" && this.mol !== "livreN" ? Math.max(rC + rH + 18, Math.min(W / 2 - rH * 2.4 - 14, m * .22))   // (o CO₂ é em linha: só a largura conta; e sobra lugar, do lado de fora dos O, para os pares)
+    const d = !["metano", "livreN", "livreC"].includes(this.mol) ? Math.max(rC + rH + 18, Math.min(W / 2 - rH * 2.4 - 14, m * .22))   // (o CO₂ é em linha: só a largura conta; e sobra lugar, do lado de fora dos O, para os pares)
       : Math.max(rC + rH + 10, Math.min(Math.max(58, Math.min(108, m * .17)), (fundo - topo - 2 * rH - 12) / 2));
     // (tablet e Chromebook: o CO₂ montado — e o esqueleto, que nasce no mesmo lugar — mais alto; ajuste da professora no 14.4)
     const sobe = this.mol === "co2" && noTablet();
@@ -8340,7 +8345,7 @@ const Cena133 = {
   // os cinco no lugar: certo se o C está no meio (e os H em volta)
   conferir() {
     this.conferindo = false;
-    if (this.mol === "livre" || this.mol === "livreN") return ModoLivre.montado();   // (no modo livre, qualquer arrumação vale: o "Checar" diz se está certo)
+    if (this.mol.startsWith("livre")) return ModoLivre.montado();   // (no modo livre, qualquer arrumação vale: o "Checar" diz se está certo)
     const certo = this.slots.meio.ocupante && this.slots.meio.ocupante.tipo === "C";
     if (certo && this.mol === "co2") return this.prontoCO2();
     if (certo) {
@@ -9843,12 +9848,17 @@ const ModoLivre = {
   // (Cena133), os lados das pontas e o que é o certo. proxima: o que acontece depois do acerto
   CFG: {
     agua:   { narr: "dialogo11_1B", fam: "H = 1A&nbsp; · &nbsp;O = 6A", formula: "H<sub>2</sub>O", letra: k => k < 6 ? "O" : "H", montagem: "livre",
-              certo: { n: 8, meio: "O", pontas: "H", paresMeio: 2 }, proxima: () => ModoLivre.paraAmonia() },
+              certo: { n: 8, meio: "O", pontas: "H", lig: 1, paresMeio: 2, paresPonta: 0 }, proxima: () => ModoLivre.paraAmonia() },
     amonia: { narr: "dialogo12_2", fam: "H = 1A&nbsp; · &nbsp;N = 5A", formula: "NH<sub>3</sub>", letra: k => k < 5 ? "N" : "H", montagem: "livreN",
-              certo: { n: 8, meio: "N", pontas: "H", paresMeio: 1 }, proxima: () => ModoLivre.paraMetano() }
+              certo: { n: 8, meio: "N", pontas: "H", lig: 1, paresMeio: 1, paresPonta: 0 }, proxima: () => ModoLivre.paraMetano() },
+    // (comPlay: a tela tem o play — o 13.2 e o 14.2 parados —: ele some no modo livre e volta quando ele sai; pode: até a pergunta)
+    metano: { narr: "dialogo13_2", fam: "H = 1A&nbsp; · &nbsp;C = 4A", formula: "CH<sub>4</sub>", letra: k => k < 4 ? "C" : "H", montagem: "livreC", comPlay: true,
+              pode: () => !ModoLivre.$(".c72-quiz"), certo: { n: 8, meio: "C", pontas: "H", lig: 1, paresMeio: 0, paresPonta: 0 }, proxima: () => ModoLivre.paraCO2() },
+    co2:    { narr: "dialogo14_2", fam: "C = 4A&nbsp; · &nbsp;O = 6A", formula: "CO<sub>2</sub>", letra: k => k < 4 ? "C" : "O", montagem: "livreCO2", comPlay: true,
+              pode: () => !ModoLivre.$(".c72-quiz"), certo: { n: 16, meio: "C", pontas: "O", lig: 2, paresMeio: 0, paresPonta: 2 } }
   },
   OPOSTO: { esq: "dir", dir: "esq", cima: "baixo", baixo: "cima" },
-  COR: { O: ["#FF5A4E", "#8E1E16", "#fff"], N: ["#4F74F7", "#1B2F86", "#fff"], H: ["#F4F7FB", "#7C8BA0", "#0A1322"] },
+  COR: { O: ["#FF5A4E", "#8E1E16", "#fff"], N: ["#4F74F7", "#1B2F86", "#fff"], C: ["#3B414C", "#12161C", "#fff"], H: ["#F4F7FB", "#7C8BA0", "#0A1322"] },
   // fim do 11.1B (água) e do 12.2 (amônia): segurar a fórmula por 2s abre o modo livre (enquanto o dedo segura, ela vai acendendo)
   armar(mol = "agua") {
     const f = this.$(".c111-formula"); if (!f || f.dataset.livre) return;
@@ -9857,7 +9867,8 @@ const ModoLivre = {
     const solta = () => { clearTimeout(timer); timer = null; f.classList.remove("c11l-segura"); };
     f.addEventListener("pointerdown", e => {
       const n = NARRACOES[Player.indice];
-      if (this.ativo || Palco.pausado || !this.$(".c11-passo-bt") || !n || n.id !== this.CFG[mol].narr) return;   // (só na tela do fim daquela narração)
+      const cfg = this.CFG[mol], pode = cfg.pode ? cfg.pode() : !!this.$(".c11-passo-bt");
+      if (this.ativo || !pode || !n || n.id !== cfg.narr || (!cfg.comPlay && Palco.pausado)) return;   // (só na tela daquela narração)
       try { f.setPointerCapture(e.pointerId); } catch (_) {}
       f.classList.add("c11l-segura");
       timer = setTimeout(() => { solta(); this.abrir(mol); }, 2000);
@@ -9869,6 +9880,7 @@ const ModoLivre = {
   abrir(mol = this.mol || "agua") {
     if (this.$(".c11l-pop")) return;
     this.mol = mol; this.cfg = this.CFG[mol]; this.ativo = true; Vibra.tocar("toqueEletron");
+    if (this.cfg.comPlay) { if (Player.tocando) Player.pausar(); ui.semPlay(true); }
     const P = Palco.el.getBoundingClientRect(), f = this.$(".c111-formula"), b = this.$(".c11-passo-bt .c10-bt");
     const topo = f ? f.getBoundingClientRect().bottom - P.top : P.height * .25, base = b ? b.getBoundingClientRect().top - P.top : P.height * .85;
     Palco.adicionar(`<div class="c11l-pop" role="dialog" aria-label="Modo livre: quantos elétrons de valência no total?" style="top:${(topo + base) / 2}px">
@@ -9880,11 +9892,13 @@ const ModoLivre = {
             <button class="c11l-seta baixo" aria-label="Mais">▼</button>
           </div><span class="c11l-e">e<sup>−</sup></span></div>
         <button class="c10-bt c11l-ok">Confirma</button>
+        <button class="c11l-fechar" aria-label="Sair do modo livre">×</button>
       </div>`);
     const pop = this.$(".c11l-pop");
     Palco.animar(pop, [{ opacity: 0, transform: "translate(-50%, -50%) scale(.9)" }, { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }], { duracao: .35, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "none" });
     this.valor = 1; this.roda(pop.querySelector(".c11l-roda"));
     pop.querySelector(".c11l-ok").addEventListener("click", () => this.confirmar());
+    pop.querySelector(".c11l-fechar").addEventListener("click", () => this.fechar());
   },
   // a roda: arrastar para cima ou para baixo (ou as setas, ou a rodinha do mouse) e ela encaixa num número
   roda(r) {
@@ -10065,7 +10079,7 @@ const ModoLivre = {
   // "Checar": a molécula certa (o átomo do meio, as pontas, só ligações simples, os pares do meio, nenhum nas pontas, nenhum elétron sobrando)
   certa() {
     const c = this.cfg.certo; if (!this.at || this.n !== c.n || this.at.meio.sim !== c.meio) return false;
-    return this.pontas().every(l => this.at[l].sim === c.pontas && this.lig[l] === 1 && !Object.keys(this.pares[l]).length)
+    return this.pontas().every(l => this.at[l].sim === c.pontas && this.lig[l] === c.lig && Object.keys(this.pares[l]).length === c.paresPonta)
       && Object.keys(this.pares.meio).length === c.paresMeio && this.livres().length === 0;
   },
   checar() {
@@ -10094,6 +10108,7 @@ const ModoLivre = {
     this.ativo = false;
     if (this.cfg.proxima) { Palco.animar(Palco.el, [{}, {}], { duracao: 2.4, fill: "none" }).finished.then(() => this.cfg.proxima(), () => {}); return; }
     const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "";   // o "Passo 1" volta
+    if (this.cfg.comPlay) ui.semPlay(false);                                // (ou o play volta: a narração segue dali)
   },
   // da água certa para a amônia: a tela (menos o título) vira para a esquerda como um cubo; na face nova, a amônia — que
   // termina na tela do fim do 12.2 (a fórmula NH₃ sobe e a amônia fica pequena ao lado; o "Passo 1" leva ao 12.3)
@@ -10111,7 +10126,14 @@ const ModoLivre = {
   paraMetano() {
     this.virar(Cena13A, () => {
       const i = NARRACOES.findIndex(n => n.id === "dialogo13_2");
-      Player.calar(); Player.pararEm(i, 20);
+      Player.calar(); Player.pararEm(i, 20); this.armar("metano");
+    });
+  },
+  // do metano certo para o CO₂: a mesma virada; o áudio 14.2 fica parado aos 12s (a fórmula CO₂ no topo, o CO₂ pequeno ao lado)
+  paraCO2() {
+    this.virar(Cena14A, () => {
+      const i = NARRACOES.findIndex(n => n.id === "dialogo14_2");
+      Player.calar(); Player.pararEm(i, 12); this.armar("co2");
     });
   },
   // a tela (menos o título) vira para a esquerda como um cubo; a face nova traz a molécula da cena (Cena12A, Cena13A...)
@@ -10146,6 +10168,8 @@ const ModoLivre = {
     Cena133.feito = false; Cena133.conferindo = false; this.at = null;
     const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "";
   },
+  // o "×" do pop-up: o modo livre sai e o play (ou o "Passo 1") volta
+  fechar() { this.limpar(); this.ativo = false; if (this.cfg && this.cfg.comPlay) ui.semPlay(false); },
   // o "Passo 1" leva ao 11.1C (ou ao 12.3): o modo livre sai de cena
   sair() { if (this.ativo || this.$(".c11l-svg, .c11l-pop")) { this.limpar(); this.ativo = false; } }
 };
