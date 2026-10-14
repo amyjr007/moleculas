@@ -505,6 +505,25 @@
     background: radial-gradient(closest-side, rgba(163,219,247,.3), rgba(163,219,247,0)); animation: c71Chama 1.8s ease-in-out infinite; }
   .c11-riso { font-size: .85em; margin-left: .15em; }
   .c11-passo-bt { top: auto; bottom: 9%; translate: none; }
+  /* o modo livre da água: a fórmula acende enquanto o dedo segura; o pop-up com a roda; o "Checar"; o desenho montado */
+  .c111-formula.c11l-segura { transition: text-shadow 2s linear, scale 2s linear; text-shadow: 0 0 34px rgba(255,194,75,1), 0 0 64px rgba(255,194,75,.7); scale: 1.08; }
+  .c11l-pop { position: absolute; left: 50%; z-index: 7; transform: translate(-50%, -50%); width: min(92%, 25rem); padding: 18px 18px 16px; border-radius: 22px; text-align: center;
+    background: linear-gradient(180deg, #1B2A40, #0A1322); border: 2px solid rgba(255,194,75,.55); box-shadow: 0 24px 60px rgba(0,0,0,.55); }
+  .c11l-txt { margin: 0 0 10px; font-family: var(--display); font-weight: 700; color: #fff; font-size: clamp(1rem, 1.8vmin + .6rem, 1.3rem); line-height: 1.3; }
+  .c11l-fam { display: block; color: var(--ambar); margin-bottom: .25em; }
+  .c11l-linha { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px; font-family: var(--display); font-weight: 800; color: var(--ambar); }
+  .c11l-f { font-size: clamp(1.8rem, 4vmin + .8rem, 2.6rem); } .c11l-f sub { font-size: .55em; }
+  .c11l-igual, .c11l-e { font-size: clamp(1.4rem, 3vmin + .6rem, 2rem); color: #fff; }
+  .c11l-roda { display: flex; flex-direction: column; align-items: center; outline: none; }
+  .c11l-seta { border: 0; background: none; color: var(--celeste); font-size: 1rem; padding: 2px 10px; cursor: pointer; }
+  .c11l-janela { height: 120px; width: 70px; overflow: hidden; touch-action: none; cursor: grab; border-radius: 14px; background: rgba(163,219,247,.06);
+    -webkit-mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); mask-image: linear-gradient(transparent, #000 28%, #000 72%, transparent); }
+  .c11l-fita span { display: block; height: 40px; line-height: 40px; text-align: center; font-size: 1.5rem; color: rgba(255,255,255,.45); transition: color .2s, scale .2s; }
+  .c11l-fita span.atual { color: var(--ambar); scale: 1.25; }
+  .c11l-ok { font-size: clamp(1rem, 1.6vmin + .55rem, 1.3rem); }
+  .c11l-checar { position: absolute; left: 0; right: 0; z-index: 6; display: flex; justify-content: center; translate: 0 -100%; }
+  .c11l-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 4; pointer-events: none; }
+  .c11l-sel { fill: none; stroke: #FFC24B; stroke-width: 2.5; stroke-dasharray: 6 4; filter: drop-shadow(0 0 6px rgba(255,194,75,.9)); }
   .c12n-mais { display: inline-block; }
   /* 12.1 e 13.1: "Gire a molécula", discreto, embaixo da amônia e do metano */
   .c12-dica { position: absolute; z-index: 3; transform: translateX(-50%); margin-top: .4em; color: #FFC24B; font-family: var(--display); font-weight: 600;
@@ -627,6 +646,9 @@
   /* 11.3C: a água em 3D, no meio da tela (no lugar da molécula do caderno) */
   .c113-3d { position: absolute; left: 0; right: 0; top: 22%; bottom: 15%; z-index: 4; }
   .c113-3d canvas { display: block; width: 100%; height: 100%; }
+  /* as moléculas 3D: "Você pode girar a molécula", em amarelo, embaixo */
+  .c3d-dica { position: absolute; left: 0; right: 0; bottom: 2%; margin: 0; z-index: 2; text-align: center; pointer-events: none; opacity: .85;
+    color: #FFC24B; font-family: var(--display); font-weight: 600; font-size: clamp(.85rem, 1.2vmin + .55rem, 1.05rem); letter-spacing: .02em; }
   .c113-3d.amonia { top: 30%; bottom: 17%; }   /* a amônia em 3D: abaixo da fórmula (o par do N fica em cima) e acima do "Entendi" */
   /* 11.3B: o foco — o que sai de foco escurece 90%; os pares do O também brilham */
   .c121-esqueleto .at > g, .c121-esqueleto .c124-e, .c121-esqueleto .c113-estavel { transition: opacity .5s ease, filter .45s ease; }
@@ -1398,7 +1420,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v248 · 14/10/2026</span>
+    <span class="versao" id="versao">v249 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3144,12 +3166,12 @@ const NARRACOES = [
     eventos: [
       { tempo: 4,    acao: () => Cena11Copo.formulaSobe() }            // a opção marcada vira o H₂O no topo; a molécula, pequena, ao lado (até 5s)
     ],
-    aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1(); } },   // no lugar do play, o botão "Passo 1" (leva ao 11.1C)
+    aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1(); ModoLivre.armar(); } },   // no lugar do play, o botão "Passo 1" (leva ao 11.1C); segurar a fórmula 2s abre o modo livre
   // o passo 1 (entra pelo botão "Passo 1"): os eventos do 11.1 antigo a partir do "Passo 1..." (que era aos 11s),
   // todos 11s mais cedo — o H₂O já está no topo, vindo do 11.1B
   { id: "dialogo11_1C", titulo: "Passo 1", src: "audio/audio_moleculas_11.1C.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 0,    acao: () => Cena12.passo1(5) },                       // "Passo 1: Somar os elétrons de valência" (até 5s)
+      { tempo: 0,    acao: () => { ModoLivre.sair(); Cena12.passo1(5); } },   // (o modo livre sai); "Passo 1: Somar os elétrons de valência" (até 5s)
       { tempo: 14,   acao: () => Cena12.letra("O") },                      // o O cresce
       { tempo: 15.4, acao: () => Cena12.familia("O", "6A") },              // "6A" em cima do O
       ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 17.8 + k * .35, acao: () => Cena12.eletron("O", k) })),   // os 6 elétrons saem do O para a fileira (até 19,55s)
@@ -3221,7 +3243,7 @@ const NARRACOES = [
       { tempo: 0,    acao: () => Cena113P.tirarQuiz() },                   // a pergunta e as opções saem em fade
       { tempo: 5,    acao: () => Cena113P.fila(true) }                     // os 4 elétrons de baixo e o "4 e⁻" voltam em fade
     ],
-    aoFim: () => { ui.semPlay(true); Cena113P.liberar(); } },
+    aoFim: () => { ui.semPlay(true); Cena113F.tirarEstavel(); Cena113P.liberar(); } },   // (o "estável" em cima dos H some em fade)
   // a molécula pronta (35s): festa, o foco nos H e nas ligações e depois no O, nos pares e nas ligações; no fim,
   // a molécula de bolas sai e entra a mesma, como feita no caderno (só símbolos, traços e os pontinhos dos pares)
   { id: "dialogo11_3B", titulo: "A molécula de água", src: "audio/audio_moleculas_11.3B.mp3", semNav: true, extra: true,
@@ -7334,6 +7356,7 @@ const Cena11Copo = {
   $(sel) { return Palco.el.querySelector(sel); },
   SAIDA: 2.2,   // quanto dura a saída da molécula (e a do copo)
   PEQ: [-.123, .048],   // celular: a água pequena (11.1B) mais à esquerda e mais baixa (ajustes da professora, tela de 356 × 655)
+  PEQ_TAB: [-.034, .083],   // tablet e Chromebook: a água pequena mais à esquerda e mais baixa (ajuste da professora no 11.1B, tela de 965 × 448)
   suave(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); },
   // 15,75s do 11.1A: a "cola" arrebenta — o som (o mesmo das ligações que se quebram), a vibração e um tranco na tela
   ruptura() {
@@ -7513,7 +7536,7 @@ const Cena11Copo = {
   // enquanto a molécula encolhe e fica pequena e discreta do lado esquerdo dela. A pergunta e as outras opções saem
   ENCOLHE: 1,
   // (formula: o HTML da fórmula — a da água por padrão; ctx: a cena 3D da molécula; dur: quanto dura o voo e o encolher)
-  formulaSobe({ formula = Cena12.FORMULA, ctx = this.ctx, dur = this.ENCOLHE, peq = this.PEQ, peqTab = null } = {}) {
+  formulaSobe({ formula = Cena12.FORMULA, ctx = this.ctx, dur = this.ENCOLHE, peq = this.PEQ, peqTab = this.PEQ_TAB } = {}) {
     if (!this.$(".c111-corpo")) Palco.adicionar(`<div class="c111-corpo"></div>`);
     const corpo = this.$(".c111-corpo"); if (corpo.querySelector(".c111-formula")) return;
     corpo.insertAdjacentHTML("afterbegin", formula);
@@ -8076,7 +8099,7 @@ const Cena12A = {
   // a resposta: a opção certa voa e vira a fórmula no topo; ao mesmo tempo, a molécula sobe e fica pequena ao lado dela,
   // no mesmo lugar da água no 11.1B
   formulaSobe() {
-    Cena11Copo.formulaSobe({ formula: this.FORMULA, ctx: this.ctx, dur: this.ENCOLHE, peq: this.PEQ, peqTab: this.PEQ_TAB });
+    Cena11Copo.formulaSobe({ formula: this.FORMULA, ctx: this.ctx, dur: this.ENCOLHE, peq: this.PEQ, peqTab: this.PEQ_TAB || null });   // (null: sem o ajuste da água)
   }
 };
 
@@ -8148,7 +8171,8 @@ const Cena133 = {
   $(sel) { return Palco.el.querySelector(sel); },
   LADOS: ["meio", "cima", "dir", "baixo", "esq"],
   // o que muda de uma molécula para outra: os lugares e o átomo das pontas (o desenho das ligações é o arranjo de mesmo nome)
-  CFG: { metano: { lados: ["meio", "cima", "dir", "baixo", "esq"], ponta: "H" }, co2: { lados: ["meio", "esq", "dir"], ponta: "O" } },
+  CFG: { metano: { lados: ["meio", "cima", "dir", "baixo", "esq"], ponta: "H" }, co2: { lados: ["meio", "esq", "dir"], ponta: "O" },
+         livre: { lados: ["meio", "esq", "dir"], ponta: "H", primeiro: "O" } },   // (livre: a água do modo livre)
   mol: "metano",
   // 6s: os 8 elétrons brilham por 1s, com o texto em cima da fileira (os dois somem juntos)
   total() {
@@ -8167,13 +8191,13 @@ const Cena133 = {
   medidas() {
     const P = Palco.el, Pr = P.getBoundingClientRect(), W = P.clientWidth, H = P.clientHeight, m = Math.min(W, H);
     const base = Math.max(20, Math.min(32, m * .055)), rC = base * 1.15, rH = this.mol === "co2" ? rC : base * .8 * 1.1, vao = 12, n = this.LADOS.length - 1;   // (rH: o raio das pontas — no CO₂, os O, do tamanho do C)
-    const f = this.$(".c12n"), fb = f ? f.getBoundingClientRect().bottom - Pr.top : H * .3;
+    const f = this.$(".c12n") || this.$(".c111-formula"), fb = f ? f.getBoundingClientRect().bottom - Pr.top : H * .3;   // (a fórmula: a da amônia, do metano, do CO₂ ou a da água)
     const yFila = fb + rC + 14;
     const larg = 2 * rC + n * (2 * rH + vao), x0 = W / 2 - larg / 2;
     const xs = [x0 + rC, ...Array.from({ length: n }, (_, k) => x0 + 2 * rC + vao + rH + k * (2 * rH + vao))];
     const fila = this.$(".c12-fila"), filaTopo = fila ? fila.getBoundingClientRect().top - Pr.top : H * .92;
     const topo = yFila + rC + 16, fundo = filaTopo - 16;
-    const d = this.mol === "co2" ? Math.max(rC + rH + 18, Math.min(W / 2 - rH * 2.4 - 14, m * .22))   // (o CO₂ é em linha: só a largura conta; e sobra lugar, do lado de fora dos O, para os pares)
+    const d = this.mol !== "metano" ? Math.max(rC + rH + 18, Math.min(W / 2 - rH * 2.4 - 14, m * .22))   // (o CO₂ é em linha: só a largura conta; e sobra lugar, do lado de fora dos O, para os pares)
       : Math.max(rC + rH + 10, Math.min(Math.max(58, Math.min(108, m * .17)), (fundo - topo - 2 * rH - 12) / 2));
     // (tablet e Chromebook: o CO₂ montado — e o esqueleto, que nasce no mesmo lugar — mais alto; ajuste da professora no 14.4)
     const sobe = this.mol === "co2" && noTablet();
@@ -8193,12 +8217,12 @@ const Cena133 = {
       Palco.animar(el, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1)" }], { duracao: .5, atraso: this.LADOS.indexOf(l) * .08, easing: "ease-out" });
       this.slots[l] = { el, x, y, ocupante: null };
     });
-    this.atomo("C", M.xs[0], M.yFila, M.rC);
+    this.atomo(this.CFG[mol].primeiro || "C", M.xs[0], M.yFila, M.rC);
   },
   // 15s: os quatro H, ao lado do C, na mesma fileira
   // (no CO₂: os dois O)
   hidrogenios() {
-    if (!this.M || this.atomos.some(a => a.tipo !== "C")) return;
+    if (!this.M || this.atomos.length > 1) return;
     const M = this.M, tipo = this.CFG[this.mol].ponta;
     M.xs.slice(1).forEach((x, j) => setTimeout(() => this.atomo(tipo, x, M.yFila, M.rH), j * 120));
   },
@@ -8312,6 +8336,7 @@ const Cena133 = {
   // os cinco no lugar: certo se o C está no meio (e os H em volta)
   conferir() {
     this.conferindo = false;
+    if (this.mol === "livre") return ModoLivre.montado();   // (no modo livre, qualquer arrumação vale: o "Checar" diz se está certo)
     const certo = this.slots.meio.ocupante && this.slots.meio.ocupante.tipo === "C";
     if (certo && this.mol === "co2") return this.prontoCO2();
     if (certo) {
@@ -8399,6 +8424,7 @@ const Cena137 = {
     Palco.adicionar(`<div class="c137-3d" aria-label="Molécula de metano em 3D: um tetraedro, com o C no meio e os quatro H nos cantos. Arraste para girar"
       style="position:absolute;left:0;right:0;top:${cy - alto / 2}px;height:${alto}px;z-index:4"></div>`);
     const caixa = this.$(".c137-3d");
+    Cena113C.dica(caixa, this.DUR + .3);   // "Você pode girar a molécula", depois da transformação
     let renderer;
     try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return; }
     renderer.outputEncoding = T.sRGBEncoding; renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
@@ -9593,13 +9619,7 @@ const Cena14D = {
     this.pares().forEach(c => c.classList.toggle("c113-escuro", ligar));
   },
   // 13s: o "estável" dos dois O some em fade
-  tirarEstavel() {
-    Palco.el.querySelectorAll(".c121-esqueleto .c113-estavel").forEach(t => {
-      if (t.dataset.saindo) return; t.dataset.saindo = "1";
-      t.getAnimations().forEach(a => a.cancel());
-      Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => t.remove(), () => {});
-    });
-  },
+  tirarEstavel() { Cena113F.tirarEstavel(); },
   // os pares não ligantes piscam um de cada vez, dando a volta (o O da esquerda: em cima, fora, embaixo; o da direita: embaixo, fora, em cima)
   piscarPares(dur) {
     const ordem = [["esq", "cima"], ["esq", "esq"], ["esq", "baixo"], ["dir", "baixo"], ["dir", "dir"], ["dir", "cima"]];
@@ -9750,6 +9770,7 @@ const Cena148 = {
     Palco.adicionar(`<div class="c148-3d" aria-label="Molécula de gás carbônico em 3D: em linha, O=C=O, com duas ligações duplas. Arraste para girar"
       style="position:absolute;left:0;right:0;top:${cy - alto / 2}px;height:${alto}px;z-index:4"></div>`);
     const caixa = this.$(".c148-3d");
+    Cena113C.dica(caixa, this.DUR + .5);   // "Você pode girar a molécula", depois de aparecer
     let renderer;
     try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return; }
     renderer.outputEncoding = T.sRGBEncoding; renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
@@ -9803,6 +9824,259 @@ const Cena148 = {
   }
 };
 
+/* ---------- O modo livre da água (depois do 11.1B) ----------
+   Segurar a fórmula H₂O por 2s abre o modo livre: um pop-up (entre a fórmula e o "Passo 1") pergunta o total de elétrons de
+   valência, numa roda vertical de 1 a 16. "Confirma": descem os elétrons escolhidos; os átomos (O, H, H) ficam enfileirados
+   embaixo da fórmula e os três lugares no meio — o aluno monta como quiser. Com os três no lugar: as ligações (um toque num
+   átomo e depois noutro, sempre com o do meio). Com as duas ligações: os pares, um toque em volta de um átomo. Tocar numa ponta
+   já ligada e depois no centro (ou o contrário), com um par na ponta: a ligação vira dupla. "Checar": errado — a tela treme em
+   vermelho e tudo volta ao começo (o pop-up); certo — a festa de quiz. */
+const ModoLivre = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  ativo: false, valor: 8, MAX: 16,
+  // fim do 11.1B: segurar a fórmula por 2s abre o modo livre (enquanto o dedo segura, a fórmula vai acendendo)
+  armar() {
+    const f = this.$(".c111-formula"); if (!f || f.dataset.livre) return;
+    f.dataset.livre = "1"; Object.assign(f.style, { pointerEvents: "auto", touchAction: "none", cursor: "pointer" });
+    let timer = null;
+    const solta = () => { clearTimeout(timer); timer = null; f.classList.remove("c11l-segura"); };
+    f.addEventListener("pointerdown", e => {
+      if (this.ativo || Palco.pausado || !this.$(".c11-passo-bt")) return;
+      try { f.setPointerCapture(e.pointerId); } catch (_) {}
+      f.classList.add("c11l-segura");
+      timer = setTimeout(() => { solta(); this.abrir(); }, 2000);
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(ev => f.addEventListener(ev, solta));
+    f.addEventListener("contextmenu", e => e.preventDefault());
+  },
+  // o pop-up: a pergunta e a roda de 1 a 16 (no meio, entre a fórmula e o "Passo 1")
+  abrir() {
+    if (this.$(".c11l-pop")) return;
+    this.ativo = true; Vibra.tocar("toqueEletron");
+    const P = Palco.el.getBoundingClientRect(), f = this.$(".c111-formula"), b = this.$(".c11-passo-bt .c10-bt");
+    const topo = f ? f.getBoundingClientRect().bottom - P.top : P.height * .25, base = b ? b.getBoundingClientRect().top - P.top : P.height * .85;
+    Palco.adicionar(`<div class="c11l-pop" role="dialog" aria-label="Modo livre: quantos elétrons de valência no total?" style="top:${(topo + base) / 2}px">
+        <p class="c11l-txt"><span class="c11l-fam">H = 1A&nbsp; · &nbsp;O = 6A</span>Quantos elétrons de valência no total?</p>
+        <div class="c11l-linha"><span class="c11l-f">H<sub>2</sub>O</span><span class="c11l-igual">=</span>
+          <div class="c11l-roda" tabindex="0" role="spinbutton" aria-valuemin="1" aria-valuemax="${this.MAX}" aria-label="Número de elétrons">
+            <button class="c11l-seta cima" aria-label="Menos">▲</button>
+            <div class="c11l-janela"><div class="c11l-fita">${Array.from({ length: this.MAX }, (_, i) => `<span>${i + 1}</span>`).join("")}</div></div>
+            <button class="c11l-seta baixo" aria-label="Mais">▼</button>
+          </div><span class="c11l-e">e<sup>−</sup></span></div>
+        <button class="c10-bt c11l-ok">Confirma</button>
+      </div>`);
+    const pop = this.$(".c11l-pop");
+    Palco.animar(pop, [{ opacity: 0, transform: "translate(-50%, -50%) scale(.9)" }, { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }], { duracao: .35, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "none" });
+    this.valor = 1; this.roda(pop.querySelector(".c11l-roda"));
+    pop.querySelector(".c11l-ok").addEventListener("click", () => this.confirmar());
+  },
+  // a roda: arrastar para cima ou para baixo (ou as setas, ou a rodinha do mouse) e ela encaixa num número
+  roda(r) {
+    const fita = r.querySelector(".c11l-fita"), alto = () => fita.firstElementChild.offsetHeight || 40;
+    const mostrar = (anim = true) => {
+      fita.style.transition = anim ? "translate .25s cubic-bezier(.3,1.2,.5,1)" : "none";
+      fita.style.translate = `0 ${-(this.valor - 2) * alto()}px`;
+      [...fita.children].forEach((s, i) => s.classList.toggle("atual", i + 1 === this.valor));
+      r.setAttribute("aria-valuenow", this.valor);
+    };
+    const ir = v => { const n = Math.max(1, Math.min(this.MAX, v)); if (n !== this.valor) { this.valor = n; Vibra.tocar("toqueEletron"); } mostrar(); };
+    r.querySelector(".cima").addEventListener("click", () => ir(this.valor - 1));
+    r.querySelector(".baixo").addEventListener("click", () => ir(this.valor + 1));
+    r.addEventListener("wheel", e => { e.preventDefault(); ir(this.valor + Math.sign(e.deltaY)); }, { passive: false });
+    r.addEventListener("keydown", e => { if (e.key === "ArrowUp") ir(this.valor - 1); if (e.key === "ArrowDown") ir(this.valor + 1); });
+    const janela = r.querySelector(".c11l-janela"); let ini = null;
+    janela.addEventListener("pointerdown", e => { ini = { y: e.clientY, v: this.valor }; try { janela.setPointerCapture(e.pointerId); } catch (_) {} fita.style.transition = "none"; });
+    janela.addEventListener("pointermove", e => {
+      if (!ini) return; const dy = e.clientY - ini.y;
+      fita.style.translate = `0 ${-(ini.v - 2) * alto() + dy}px`;
+      const v = Math.max(1, Math.min(this.MAX, Math.round(ini.v - dy / alto())));
+      if (v !== this.valor) { this.valor = v; Vibra.tocar("toqueEletron"); [...fita.children].forEach((s, i) => s.classList.toggle("atual", i + 1 === v)); }
+    });
+    const solta = () => { if (!ini) return; ini = null; mostrar(); };
+    janela.addEventListener("pointerup", solta); janela.addEventListener("pointercancel", solta);
+    requestAnimationFrame(() => mostrar(false));
+  },
+  // "Confirma": o pop-up sai; descem os elétrons escolhidos; os átomos em cima e os lugares no meio; o "Passo 1" dá lugar ao "Checar"
+  confirmar() {
+    const pop = this.$(".c11l-pop"); if (!pop || pop.dataset.saindo) return;
+    pop.dataset.saindo = "1";
+    Espoca.botao(pop.querySelector(".c11l-ok"));
+    Palco.animar(pop, [{ opacity: 1 }, { opacity: 0 }], { duracao: .35, fill: "none" }).finished.then(() => pop.remove(), () => {});
+    this.n = this.valor;
+    const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "hidden";
+    Palco.el.querySelectorAll(".c12-fila").forEach(f => f.remove());
+    Cena12.fila(this.n);
+    // (de onde sai cada elétron: os 6 primeiros do O, os outros do H)
+    for (let k = 0; k < this.n; k++) Palco.animar(Palco.el, [{}, {}], { duracao: .4 + k * .15, fill: "none" }).finished.then(() => Cena12.eletron(k < 6 ? "O" : "H", k), () => {});
+    Palco.animar(Palco.el, [{}, {}], { duracao: .6 + this.n * .15, fill: "none" }).finished.then(() => {
+      if (!this.ativo) return;
+      Cena133.comecar("livre"); Palco.animar(Palco.el, [{}, {}], { duracao: .35, fill: "none" }).finished.then(() => Cena133.hidrogenios(), () => {});
+      this.botaoChecar();
+    }, () => {});
+  },
+  botaoChecar() {
+    if (this.$(".c11l-checar")) return;
+    const P = Palco.el.getBoundingClientRect(), f = this.$(".c12-fila"), base = f ? f.getBoundingClientRect().top - P.top : P.height * .88;
+    Palco.adicionar(`<div class="c11l-checar" style="top:${base - 16}px"><button class="c10-bt">Checar</button></div>`);
+    const b = this.$(".c11l-checar .c10-bt");
+    Palco.animar(b, [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duracao: .4, easing: "ease-out" });
+    b.addEventListener("click", () => this.checar());
+  },
+  // os três átomos nos lugares (certo ou errado): viram o desenho das ligações, no mesmo lugar; os toques valem
+  montado() {
+    const S = Cena133.slots, M = Cena133.M; Cena133.feito = true;
+    this.at = {}; ["meio", "esq", "dir"].forEach(l => {
+      const s = S[l]; this.at[l] = { sim: s.ocupante.tipo, x: s.x, y: s.y, R: s.ocupante.tipo === "H" ? M.rH : M.rC };
+    });
+    this.lig = { esq: 0, dir: 0 }; this.pares = { meio: {}, esq: {}, dir: {} }; this.sel = null;
+    const W = Palco.el.clientWidth, H = Palco.el.clientHeight;
+    Palco.adicionar(`<svg class="c11l-svg" viewBox="0 0 ${W} ${H}" aria-label="O esqueleto montado"><g class="lig"></g><g class="par"></g><g class="at"></g></svg>`);
+    const at = this.$(".c11l-svg .at"), cor = { O: ["#FF5A4E", "#8E1E16", "#fff"], H: ["#F4F7FB", "#7C8BA0", "#0A1322"] };
+    Object.entries(this.at).forEach(([l, a]) => {
+      const [fundo, borda, letra] = cor[a.sim];
+      at.insertAdjacentHTML("beforeend", `<g data-l="${l}" style="transform-origin:${a.x}px ${a.y}px"><circle cx="${a.x}" cy="${a.y}" r="${a.R}" fill="${fundo}" stroke="${borda}" stroke-width="2"/>
+        <text x="${a.x}" y="${a.y + a.R * .36}" text-anchor="middle" font-size="${a.R}" font-weight="800" fill="${letra}" font-family="Bricolage Grotesque, sans-serif">${a.sim}</text></g>`);
+    });
+    Palco.el.querySelectorAll(".c133-at, .c133-slot").forEach(el => Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => el.remove(), () => {}));
+    Palco.adicionar(`<div class="c84-toques c11l-toques" aria-label="Toque num átomo e depois em outro para ligar; depois, em volta dos átomos para colocar os pares"></div>`);
+    this.$(".c11l-toques").addEventListener("pointerdown", e => this.toque(e));
+    const ch = this.$(".c11l-checar"); if (ch) ch.style.zIndex = "6";   // (o "Checar" por cima da camada dos toques)
+  },
+  aviso(lados, msg) {
+    lados.forEach(l => { const g = this.$(`.c11l-svg .at [data-l="${l}"]`); if (!g) return;
+      Palco.animar(g, [0, -5, 5, -4, 4, -2, 0].map((x, i, a) => ({ translate: `${x}px 0`, filter: `drop-shadow(0 0 ${i === 0 || i === a.length - 1 ? 0 : 9}px rgba(255,60,60,.95))` })), { duracao: .5, easing: "ease-out", fill: "none" }); });
+    Vibra.tocar("toqueErrado");
+    let av = this.$(".c84-aviso"); const a = this.at.meio;
+    if (!av) { Palco.adicionar(`<p class="c84-aviso" style="top:${a.y + a.R * 2.6}px"></p>`); av = this.$(".c84-aviso"); }
+    av.textContent = msg; av.getAnimations().forEach(x => x.cancel());
+    Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: .08 }, { opacity: 1, offset: .82 }, { opacity: 0 }], { duracao: 2.6, easing: "linear" }).finished.then(() => av.remove(), () => {});
+  },
+  selecionar(l) {
+    Palco.el.querySelectorAll(".c11l-svg .c11l-sel").forEach(c => c.remove());
+    this.sel = l; if (!l) return;
+    const a = this.at[l];
+    this.$(`.c11l-svg .at [data-l="${l}"]`).insertAdjacentHTML("beforeend", `<circle class="c11l-sel" cx="${a.x}" cy="${a.y}" r="${a.R + 6}"/>`);
+    Vibra.tocar("toqueEletron");
+  },
+  toque(e) {
+    if (Palco.pausado) return;
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    let alvo = null, d0 = Infinity;
+    Object.entries(this.at).forEach(([l, a]) => { const d = Math.hypot(x - a.x, y - a.y); if (d < d0) { d0 = d; alvo = l; } });
+    const a = this.at[alvo];
+    Cena84.circulo(x, y, "");
+    if (d0 <= a.R * 1.15) return this.tocouAtomo(alvo);
+    if (d0 <= a.R * 3.2) return this.par(alvo, x - a.x, y - a.y);
+  },
+  // toque num átomo: o primeiro seleciona; o segundo liga os dois (sempre com o do meio) ou faz a dupla
+  tocouAtomo(l) {
+    if (!this.sel) return this.selecionar(l);
+    if (this.sel === l) return this.selecionar(null);
+    const de = this.sel; this.selecionar(null);
+    if (de !== "meio" && l !== "meio") return this.aviso([de, l], "Ligue ao átomo do meio");
+    const ponta = de === "meio" ? l : de;
+    if (this.lig[ponta] === 0) return this.ligar(ponta);
+    if (this.lig[ponta] === 2) return this.aviso([ponta], "Essa ligação já é dupla");
+    const lados = Object.keys(this.pares[ponta]); if (!lados.length) return this.aviso([ponta], "Esse átomo não tem par para ligar");
+    this.dupla(ponta, lados.includes("cima") ? "cima" : lados[0]);
+  },
+  livres() { return Cena113P.livres(); },
+  // um elétron da fileira (índice k) voa num arco até o ponto [x, y] do palco
+  voar(k, [x, y], atraso, depois) {
+    const el = Cena12.fila().children[k]; if (!el) return;
+    const P = Palco.el.getBoundingClientRect(), o = el.getBoundingClientRect(), dx = x - (o.left + o.width / 2 - P.left), dy = y - (o.top + o.height / 2 - P.top), H = Math.max(50, Math.abs(dy) * .4);
+    el.style.visibility = "hidden";
+    Palco.el.insertAdjacentHTML("beforeend", `<span class="c12-voo" style="left:${o.left - P.left}px;top:${o.top - P.top}px;width:${o.width}px"></span>`);
+    const v = Palco.el.lastElementChild;
+    Cena74.somSalto(v, atraso);
+    Palco.animar(v, Array.from({ length: 13 }, (_, i) => { const u = i / 12; return { transform: `translate(${dx * u}px,${dy * u - 4 * H * u * (1 - u)}px)`, offset: u }; }),
+      { duracao: .7, atraso, easing: "linear" }).finished.then(() => { v.remove(); if (depois) depois(); }, () => {});
+  },
+  // a ligação simples: dois elétrons da fileira voam para o meio da ligação e viram o traço
+  ligar(ponta) {
+    const ks = this.livres().slice(-2); if (ks.length < 2) return this.aviso([ponta, "meio"], "Acabaram os elétrons");
+    this.lig[ponta] = 1;
+    const A = this.at.meio, B = this.at[ponta], s = Math.sign(B.x - A.x), x1 = A.x + s * (A.R + 3), x2 = B.x - s * (B.R + 3), mx = (x1 + x2) / 2;
+    ks.forEach(k => { Cena12.fila().children[k].style.visibility = "hidden"; });
+    ks.forEach((k, j) => this.voar(k, [mx + (j ? 4 : -4), A.y], j * .06, j ? () => {
+      const g = this.$(".c11l-svg .lig");
+      g.insertAdjacentHTML("beforeend", `<line data-l="${ponta}" x1="${x1}" y1="${A.y}" x2="${x2}" y2="${A.y}" stroke="#fff" stroke-width="5" stroke-linecap="round" style="transform-origin:${mx}px ${A.y}px"/>`);
+      Palco.animar(g.lastElementChild, [{ transform: "scale(0)" }, { transform: "scale(1.12)", offset: .7 }, { transform: "scale(1)" }], { duracao: .35, easing: "ease-out" });
+    } : null));
+  },
+  // onde ficam os dois elétrons (j = 0 ou 1) de um par, num lado do átomo
+  lugar(l, lado, j) {
+    const a = this.at[l], r = a.R + 10, d = j ? 6.5 : -6.5;
+    return lado === "cima" ? [a.x + d, a.y - r] : lado === "baixo" ? [a.x + d, a.y + r] : [a.x + (lado === "dir" ? r : -r), a.y + d];
+  },
+  // um par em volta de um átomo (só com as duas ligações feitas); o lado das ligações não vale
+  par(l, dx, dy) {
+    if (!this.lig.esq || !this.lig.dir) return this.aviso(["meio", "esq", "dir"], "Faça as ligações primeiro");
+    const lado = Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "cima" : "baixo") : (dx > 0 ? "dir" : "esq");
+    const ladoLig = l === "meio" ? ["esq", "dir"] : [l === "esq" ? "dir" : "esq"];
+    if (ladoLig.includes(lado)) return this.aviso([l], "Desse lado fica a ligação");
+    if (this.pares[l][lado]) return this.aviso([l], "Só cabe um par em cada lado");
+    const ks = this.livres().slice(-2); if (ks.length < 2) return this.aviso([l], "Acabaram os elétrons");
+    this.pares[l][lado] = 1;
+    ks.forEach(k => { Cena12.fila().children[k].style.visibility = "hidden"; });
+    ks.forEach((k, j) => { const p = this.lugar(l, lado, j); this.voar(k, p, j * .08, () => {
+      this.$(".c11l-svg .par").insertAdjacentHTML("beforeend", `<circle data-l="${l}" data-lado="${lado}" cx="${p[0]}" cy="${p[1]}" r="4.5" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`); }); });
+  },
+  // a dupla: o par da ponta vai, numa curva, para dentro da ligação e vira o segundo traço
+  dupla(ponta, lado) {
+    this.lig[ponta] = 2; delete this.pares[ponta][lado];
+    const A = this.at.meio, B = this.at[ponta], s = Math.sign(B.x - A.x), x1 = A.x + s * (A.R + 3), x2 = B.x - s * (B.R + 3), mx = (x1 + x2) / 2, off = 6.5;
+    const lin = this.$(`.c11l-svg .lig [data-l="${ponta}"]`), par = [...Palco.el.querySelectorAll(`.c11l-svg .par [data-l="${ponta}"][data-lado="${lado}"]`)];
+    par.forEach((c, j) => {
+      const tx = mx + (j ? 3.5 : -3.5) - +c.getAttribute("cx"), ty = A.y - off - +c.getAttribute("cy"), cx = tx * .5, cy = Math.min(ty * .5, 0) - 18;
+      Palco.animar(c, Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u; return { transform: `translate(${a * cx + b * tx}px, ${a * cy + b * ty}px)`, offset: u }; }), { duracao: .7, easing: "ease-in-out" });
+    });
+    Cena74.somSalto(Palco.el);
+    Palco.animar(Palco.el, [{}, {}], { duracao: .7, fill: "none" }).finished.then(() => {
+      par.forEach(c => c.remove());
+      if (lin) { lin.setAttribute("y1", A.y + off); lin.setAttribute("y2", A.y + off); }
+      this.$(".c11l-svg .lig").insertAdjacentHTML("beforeend", `<line data-l="${ponta}2" x1="${x1}" y1="${A.y - off}" x2="${x2}" y2="${A.y - off}" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`);
+    }, () => {});
+  },
+  // "Checar": a água certa — O no meio, H nas pontas, duas ligações simples, dois pares no O, nenhum nos H, 8 elétrons, nenhum sobrando
+  checar() {
+    const b = this.$(".c11l-checar .c10-bt"); if (!b || b.disabled) return;
+    const ok = this.n === 8 && this.at && this.at.meio.sim === "O" && this.at.esq.sim === "H" && this.at.dir.sim === "H"
+      && this.lig.esq === 1 && this.lig.dir === 1 && Object.keys(this.pares.meio).length === 2
+      && !Object.keys(this.pares.esq).length && !Object.keys(this.pares.dir).length && this.livres().length === 0;
+    if (ok) return this.acertou();
+    // errado: a tela treme em vermelho, o "error", e tudo volta ao começo do modo livre
+    b.disabled = true;
+    document.getElementById("palco").animate([0, -14, 12, -10, 8, -5, 3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 520, easing: "ease-out" });
+    Palco.adicionar(`<div class="c4-vermelho"></div>`);
+    const v = Palco.el.lastElementChild;
+    v.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }], { duration: 900, easing: "ease-out" }).finished.then(() => v.remove());
+    try { const e = new Audio("audio/vfx/error.mp3"); e.play().catch(() => {}); } catch (_) {}
+    Vibra.tocar("cloroErrada");
+    Palco.animar(Palco.el, [{}, {}], { duracao: .9, fill: "none" }).finished.then(() => { this.limpar(); this.ativo = false; this.abrir(); }, () => {});
+  },
+  acertou() {
+    const b = this.$(".c11l-checar"); if (b) b.remove();
+    const t = this.$(".c11l-toques"); if (t) t.remove();
+    Palco.adicionar(`<div class="c4-verde"></div>`);
+    const v = Palco.el.lastElementChild;
+    v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
+    Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+    ["audio/vfx/applause.mp3", "audio/funfare.mp3"].forEach(src => { try { const a = new Audio(src); a.play().catch(() => {}); } catch (_) {} });
+    Vibra.tocar("cloroCerta");
+    const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "";   // o "Passo 1" volta
+    this.ativo = false;
+  },
+  // tira tudo o que o modo livre pôs na tela (o "Passo 1" volta)
+  limpar() {
+    Palco.el.querySelectorAll(".c11l-pop, .c11l-svg, .c11l-toques, .c11l-checar, .c133-at, .c133-slot, .c12-fila, .c12-voo, .c84-aviso").forEach(el => el.remove());
+    Cena133.feito = false; Cena133.conferindo = false; this.at = null;
+    const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "";
+  },
+  // o "Passo 1" leva ao 11.1C: o modo livre sai de cena
+  sair() { if (this.ativo || this.$(".c11l-svg, .c11l-pop")) { this.limpar(); this.ativo = false; } }
+};
+
 /* ---------- Narração 11.3B: a molécula de água pronta ----------
    Festa aos 3s; dos 7s aos 16s, o foco passa pelas partes da molécula (o que não está em foco escurece 90%; o que está
    brilha); aos 16s, tudo volta e a festa de novo. O texto do passo sai aos 17s, a molécula de bolas aos 30s e, no fim,
@@ -9847,6 +10121,14 @@ const Cena113F = {
   },
   // 17s: o texto do passo 3, todo
   tirarPasso() { this.apagar(this.$(".c111-passo"), .8); },
+  // os "estável" (em cima dos átomos) somem em fade (fim do 11.3A, nos H da água; 13s do 14.6, nos O do CO₂)
+  tirarEstavel() {
+    Palco.el.querySelectorAll(".c121-esqueleto .c113-estavel").forEach(t => {
+      if (t.dataset.saindo) return; t.dataset.saindo = "1";
+      t.getAnimations().forEach(a => a.cancel());
+      Palco.animar(t, [{ opacity: getComputedStyle(t).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => t.remove(), () => {});
+    });
+  },
   // 30s: a molécula de bolas
   tirarMolecula() { this.apagar(this.$(".c121-esqueleto"), 1); },
   // fim: no mesmo lugar, a molécula como no caderno — H–O–H com os dois pares do O (em cima e embaixo), em fade
@@ -9924,6 +10206,17 @@ const Cena113C = {
     Palco.animar(caixa, [{ opacity: 0, transform: "scale(.85)" }, { opacity: 1, transform: "scale(1)" }], { duracao: 1, atraso: .4, easing: "ease-out", fill: "none" })
       .finished.then(() => { caixa.style.opacity = ""; }, () => {});
     this.montar(caixa, mol);
+    this.dica(caixa, 1.6);
+  },
+  // "Você pode girar a molécula", em amarelo, embaixo da molécula 3D (entra em fade depois de "atraso" segundos)
+  // (vale para todas as moléculas 3D: a água, a amônia, o metano e o gás carbônico)
+  dica(caixa, atraso = 1) {
+    if (!caixa || caixa.querySelector(".c3d-dica")) return;
+    caixa.insertAdjacentHTML("beforeend", `<p class="c3d-dica" aria-hidden="true">Você pode girar a molécula</p>`);
+    const d = caixa.lastElementChild; d.style.opacity = "0";
+    Palco.animar(d, [{ opacity: 0 }, { opacity: 0 }], { duracao: atraso, fill: "none" }).finished.then(() => {
+      d.style.opacity = ""; Palco.animar(d, [{ opacity: 0, translate: "0 6px" }, { opacity: .85, translate: "0 0" }], { duracao: .6, easing: "ease-out", fill: "none" });
+    }, () => {});
   },
   montar(caixa, mol = "agua") {
     if (!window.THREE || caixa.querySelector("canvas")) return;
