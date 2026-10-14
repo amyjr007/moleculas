@@ -1424,7 +1424,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v254 · 14/10/2026</span>
+    <span class="versao" id="versao">v255 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3142,7 +3142,7 @@ const NARRACOES = [
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 0.5,  acao: () => Cena111.abrir() },                        // título numa linha só, no topo; molécula e legenda saem girando
-      { tempo: 5,    acao: () => Cena11Copo.mostrar() }                    // o copo de água, no centro
+      { tempo: 5,    acao: () => { Cena11Copo.mostrar(); Cena11Copo.lupa(); Cena11Copo.liberar(); } }   // o copo de água, no centro, com a lupa mostrando as moléculas; o toque já vale (corta o áudio)
     ],
     // no fim, o copo pode ser tocado: a molécula sai de dentro dele e vem o 11.1A
     aoFim: () => { ui.semPlay(true); Cena11Copo.liberar(); } },
@@ -4990,6 +4990,7 @@ const Cena4R = {
     });
     const soltar = () => { arrasto = null; lupa.classList.remove("arrastando"); };
     lupa.addEventListener("pointerup", soltar); lupa.addEventListener("pointercancel", soltar);
+    lupa.addEventListener("click", e => e.stopPropagation());   // (arrastar a lupa não conta como toque no copo)
 
     // a lente mostra o pedaço do "campo" de moléculas (do tamanho da água) que está embaixo dela
     Lupa.animar(lupa.querySelector("canvas"), d, { w: agua.x1 - agua.x0 + d, h: agua.y1 - agua.y0 + d },
@@ -7385,7 +7386,9 @@ const Cena11Copo = {
     this.mostrar();
     if (this.ctx) this.ctx.volta0 = this.ctx.tAcao;
   },
-  // fim do 11.1: o copo chama o toque (halo pulsando)
+  // 5s do 11.1: a lupa sobre a água, mostrando as moléculas lá dentro (arrastável — a mesma da narração 4R)
+  lupa() { if (!this.ctx) return; this.ctx.gx = 0; Cena4R.lupa(this.ctx, this.$(".c11-copo")); },
+  // o copo chama o toque (halo pulsando) — desde que aparece, no 11.1
   liberar() {
     const caixa = this.$(".c11-copo"); if (!caixa || this.saiu) return;
     this.liberado = true; caixa.classList.add("chama");
@@ -7395,6 +7398,8 @@ const Cena11Copo = {
     const caixa = this.$(".c11-copo"); if (!this.liberado || this.saiu || !this.ctx || Palco.pausado) return;
     this.saiu = true; caixa.classList.remove("chama"); caixa.classList.add("solto");   // (no tablet, a molécula que sai sobe um pouco)
     this.ctx.t0 = this.ctx.tAcao;
+    const lupa = this.$(".c5-lupa");   // a lupa sai: a molécula vai sair do copo
+    if (lupa) Palco.animar(lupa, [{ opacity: 1 }, { opacity: 0 }], { duracao: .3 }).finished.then(() => lupa.remove(), () => {});
     Vibra.tocar("toqueAgua");
     if (NARRACOES[Player.indice] && NARRACOES[Player.indice].id === "dialogo11_1") Player.seguirSozinho(true);
   },
