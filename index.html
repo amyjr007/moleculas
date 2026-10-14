@@ -1420,7 +1420,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v249 · 14/10/2026</span>
+    <span class="versao" id="versao">v250 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11170,7 +11170,8 @@ const Dev = {
   achar(x, y) {
     let melhor = null, area = Infinity;
     // (na capa também os botões, os créditos e o conjunto do logo)
-    this.raiz().querySelectorAll(this.ALVOS + ", " + this.VISUAIS + (this.raiz().id === "capa" ? ", button, .credit, .logo-linha" : "")).forEach(el => {
+    // (no palco também os botões amarelos — "Checar", "Passo", "Entendi", "Confirma" — e o pop-up do modo livre)
+    this.raiz().querySelectorAll(this.ALVOS + ", " + this.VISUAIS + (this.raiz().id === "capa" ? ", button, .credit, .logo-linha" : ", .c10-bt, .c11l-pop")).forEach(el => {
       if (el.closest(".dev-barra")) return;
       if (el === this.camada || el.closest(".dev-camada")) return;
       const r = el.getBoundingClientRect();
