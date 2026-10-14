@@ -513,8 +513,8 @@
   /* 11.1A: o cubo de moléculas (cada face, a foto de uma molécula) e a mãozinha que mostra o gesto de girar */
   .c11f-cubo { z-index: 2; touch-action: none; cursor: grab; -webkit-tap-highlight-color: transparent; }
   .c11f-cubo.pega { cursor: grabbing; }
-  .c11f-cubo .c3-face { overflow: visible; background: none; border-color: transparent; }
-  .c11f-cubo .c3-face img { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .c11f-cubo .c3-face { overflow: hidden; background: none; border-color: transparent; border-radius: 16px; }
+  .c11f-cubo .c3-face img { position: absolute; display: block; max-width: none; pointer-events: none; user-select: none; -webkit-user-drag: none; }
   .c11f-mao { position: absolute; z-index: 6; pointer-events: none; width: clamp(34px, 4.5vmin + 16px, 54px); translate: -50% 0;
     animation: c11fGesto 1.9s ease-in-out infinite; }
   .c11f-mao svg { display: block; width: 100%; height: auto; }
@@ -1398,7 +1398,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v247 · 14/10/2026</span>
+    <span class="versao" id="versao">v248 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -7689,6 +7689,9 @@ const Cena11F = {
     const A = this.medir(m, T), imgs = {};
     // (onde fica a borda de baixo da água na tela, de 0 a 1 da altura do quadro: a mãozinha fica logo abaixo)
     this.baixo = ctx.naTela(A.c.clone().setY(A.c.y - A.r)).y / (ctx.caixa.clientHeight || 1);
+    // (a área da molécula no quadro: o centro, em fração da largura e da altura, e o raio, em fração da largura — o cubo é só ela)
+    const pc = A.c.clone().project(ctx.camera), pr = A.c.clone().add(new T.Vector3(A.r, 0, 0)).project(ctx.camera);
+    this.area = { fx: (pc.x + 1) / 2, fy: (1 - pc.y) / 2, fr: Math.abs(pr.x - pc.x) / 2 };
     ctx.renderer.render(ctx.cena, ctx.camera); imgs.agua = cv.toDataURL("image/png");
     m.visible = false;
     this.SEQ.slice(1).forEach(nome => {
@@ -7704,16 +7707,20 @@ const Cena11F = {
     ctx.renderer.render(ctx.cena, ctx.camera);   // (o quadro volta a mostrar a água antes de a tela ser pintada)
     this.imgs = imgs; this.tam = tam;
   },
-  // 22s do 11.1A: o quadro da água vira um cubo (a face da frente é a foto da água, no lugar exato da molécula 3D)
+  // 22s do 11.1A: a área da água vira um cubo — só um quadrado em volta da molécula (a face da frente é o recorte da foto
+  // da água, no lugar exato da molécula 3D; cada face, o mesmo recorte da foto de outra molécula)
   virar() {
     if (this.$(".c11f-cubo")) return;
     const ctx = Cena11Copo.ctx; if (!ctx) return;
-    this.preparar(); if (!this.imgs) return;
-    const cv = ctx.renderer.domElement, r = cv.getBoundingClientRect(), P = Palco.el.getBoundingClientRect(), W = r.width;
+    this.preparar(); if (!this.imgs || !this.area) return;
+    const cv = ctx.renderer.domElement, r = cv.getBoundingClientRect(), P = Palco.el.getBoundingClientRect(), a = this.area;
+    const cx = r.left + a.fx * r.width, cy = r.top + a.fy * r.height, W = Math.round(2 * a.fr * r.width * 1.55), x0 = cx - W / 2, y0 = cy - W / 2;
+    // (a foto inteira dentro de cada face, deslocada para que só a área da molécula apareça)
+    const img = `<img alt="" draggable="false" style="left:${r.left - x0}px;top:${r.top - y0}px;width:${r.width}px;height:${r.height}px">`;
     Palco.adicionar(`<div class="c3-cubo c11f-cubo" role="img" aria-label="Um cubo com uma molécula em cada face: arraste para girar">
-      <div class="c3-giro">${[0, 1, 2, 3].map(k => `<div class="c3-face" data-k="${k}"><img alt="" draggable="false"></div>`).join("")}</div></div>`);
+      <div class="c3-giro">${[0, 1, 2, 3].map(k => `<div class="c3-face" data-k="${k}">${img}</div>`).join("")}</div></div>`);
     const cubo = this.$(".c11f-cubo");
-    Object.assign(cubo.style, { left: `${r.left - P.left}px`, top: `${r.top - P.top}px`, width: `${W}px`, height: `${r.height}px` });
+    Object.assign(cubo.style, { left: `${x0 - P.left}px`, top: `${y0 - P.top}px`, width: `${W}px`, height: `${W}px`, perspective: `${W * 3.2}px` });
     cubo.querySelectorAll(".c3-face").forEach((f, k) => { f.style.transform = `rotateY(${90 * k}deg) translateZ(${W / 2}px)`; });
     this.W = W; this.s = 0; this.modo = "giro1"; this.desenhar();
     cv.style.visibility = "hidden";
@@ -7765,7 +7772,7 @@ const Cena11F = {
     this.s = this.GIRO1; this.modo = "mao"; this.desenhar();
     const cubo = this.$(".c11f-cubo"), P = Palco.el.getBoundingClientRect(), r = cubo.getBoundingClientRect();
     if (this.$(".c11f-mao")) return;
-    Palco.adicionar(`<div class="c11f-mao" style="left:${r.left - P.left + r.width / 2}px;top:${r.top - P.top + r.height * Math.min((this.baixo || .62) + .04, .9)}px">${Cena83.MAO}</div>`);
+    Palco.adicionar(`<div class="c11f-mao" style="left:${r.left - P.left + r.width / 2}px;top:${r.bottom - P.top + 4}px">${Cena83.MAO}</div>`);   // (logo abaixo do cubo)
   },
   tirarMao() {
     const mao = this.$(".c11f-mao"); if (!mao || mao.dataset.saindo) return;
