@@ -1424,7 +1424,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v253 · 14/10/2026</span>
+    <span class="versao" id="versao">v254 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3407,7 +3407,7 @@ const NARRACOES = [
   // cima do H (25s); aos 26s, "quantos elétrons de valência no total…", respondida no carrossel (o certo: 8)
   { id: "dialogo13_2", titulo: "Resposta: CH₄", src: "audio/audio_moleculas_13.2.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 1,    acao: () => Cena13A.formulaSobe() },
+      { tempo: 1,    acao: () => { Cena13A.formulaSobe(); ModoLivre.armar("metano"); } },   // (segurar a fórmula CH₄ por 2s: o modo livre do metano)
       { tempo: 21.4, acao: () => Cena121.pulsar(".c12-l[data-l='C']", 2) },   // o C da fórmula pulsa
       { tempo: 22.5, acao: () => Cena12N.familia("C", "4A") },
       { tempo: 24,   acao: () => Cena121.pulsar(".c12-l[data-l='H']", 2) },   // o H da fórmula pulsa
@@ -3486,7 +3486,7 @@ const NARRACOES = [
   // e os elétrons ("4 e⁻" à esquerda, "6 e⁻" à direita, e "+ 6 e⁻" pelo 2); aos 32s, o total de elétrons de valência (16)
   { id: "dialogo14_2", titulo: "Resposta: CO₂", src: "audio/audio_moleculas_14.2.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 1,    acao: () => Cena14A.formulaSobe() },
+      { tempo: 1,    acao: () => { Cena14A.formulaSobe(); ModoLivre.armar("co2"); } },      // (segurar a fórmula CO₂ por 2s: o modo livre do CO₂)
       { tempo: 13,   acao: () => Cena121.pulsar(".c12-l[data-l='C']", 2) },   // o C da fórmula pulsa
       { tempo: 14.2, acao: () => Cena12N.familia("C", "4A") },              // "4A" em cima do C
       { tempo: 16.7, acao: () => Cena12N.lado("esq", 4, "C") },             // "4 e⁻" à esquerda da fórmula
