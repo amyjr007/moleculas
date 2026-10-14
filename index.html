@@ -1421,7 +1421,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v251 · 14/10/2026</span>
+    <span class="versao" id="versao">v252 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -9845,7 +9845,7 @@ const ModoLivre = {
     agua:   { narr: "dialogo11_1B", fam: "H = 1A&nbsp; · &nbsp;O = 6A", formula: "H<sub>2</sub>O", letra: k => k < 6 ? "O" : "H", montagem: "livre",
               certo: { n: 8, meio: "O", pontas: "H", paresMeio: 2 }, proxima: () => ModoLivre.paraAmonia() },
     amonia: { narr: "dialogo12_2", fam: "H = 1A&nbsp; · &nbsp;N = 5A", formula: "NH<sub>3</sub>", letra: k => k < 5 ? "N" : "H", montagem: "livreN",
-              certo: { n: 8, meio: "N", pontas: "H", paresMeio: 1 } }
+              certo: { n: 8, meio: "N", pontas: "H", paresMeio: 1 }, proxima: () => ModoLivre.paraMetano() }
   },
   OPOSTO: { esq: "dir", dir: "esq", cima: "baixo", baixo: "cima" },
   COR: { O: ["#FF5A4E", "#8E1E16", "#fff"], N: ["#4F74F7", "#1B2F86", "#fff"], H: ["#F4F7FB", "#7C8BA0", "#0A1322"] },
@@ -10098,6 +10098,25 @@ const ModoLivre = {
   // da água certa para a amônia: a tela (menos o título) vira para a esquerda como um cubo; na face nova, a amônia — que
   // termina na tela do fim do 12.2 (a fórmula NH₃ sobe e a amônia fica pequena ao lado; o "Passo 1" leva ao 12.3)
   paraAmonia() {
+    this.virar(Cena12A, () => {
+      // o Player passa a estar no fim do 12.2 (o "Passo 1" leva ao 12.3)
+      const i = NARRACOES.findIndex(n => n.id === "dialogo12_2");
+      Player.calar(); Player.indice = i; Player.terminou = true; Player.disparados = new Set();
+      Cena12A.formulaSobe();
+      ui.semPlay(true); Cena11Copo.botaoPasso1(1); this.armar("amonia");
+    });
+  },
+  // da amônia certa para o metano: a mesma virada; na face nova, o metano — e o áudio 13.2 fica parado aos 20s, com a tela
+  // como ela está nesse ponto (a fórmula CH₄ no topo, o metano pequeno ao lado); o play continua dali
+  paraMetano() {
+    this.virar(Cena13A, () => {
+      const i = NARRACOES.findIndex(n => n.id === "dialogo13_2");
+      Player.calar(); Player.pararEm(i, 20);
+    });
+  },
+  // a tela (menos o título) vira para a esquerda como um cubo; a face nova traz a molécula da cena (Cena12A, Cena13A...)
+  // no meio, já fora do recipiente; terminada a virada, "depois" arruma o resto
+  virar(cena, depois) {
     if (this.$(".c11l-cubo")) return;
     const P = Palco.el, W = P.clientWidth, H = P.clientHeight;
     Palco.adicionar(`<div class="c3-cubo c11l-cubo" style="left:0;top:0;width:${W}px;height:${H}px;z-index:8"><div class="c3-giro"><div class="c3-face c3-f1"></div><div class="c3-face c3-f2"></div></div></div>`);
@@ -10106,10 +10125,10 @@ const ModoLivre = {
     [...P.children].forEach(el => { if (el !== cubo && !el.matches(".c11-titulo")) f1.appendChild(el); });
     f1.style.transform = `translateZ(${W / 2}px)`; f2.style.transform = `rotateY(90deg) translateZ(${W / 2}px)`;
     const z = `translateZ(${-W / 2}px)`; giro.style.transform = z;
-    // a face nova: a amônia no meio (o frasco já saiu)
-    f2.insertAdjacentHTML("beforeend", `<div class="c11-copo c12-amonia solto" aria-label="${Cena12A.ARIA}"></div>`);
-    const caixa = f2.querySelector(".c12-amonia");
-    Cena12A.montar(caixa); if (Cena12A.ctx) Cena12A.ctx.t0 = -99;
+    // a face nova: a molécula no meio (o recipiente já saiu)
+    f2.insertAdjacentHTML("beforeend", `<div class="c11-copo ${cena.CLASSE} solto" aria-label="${cena.ARIA}"></div>`);
+    const caixa = f2.querySelector("." + cena.CLASSE);
+    cena.montar(caixa); if (cena.ctx) cena.ctx.t0 = -99;
     const easing = "cubic-bezier(.65,0,.35,1)";
     somCubo(.1);
     Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, atraso: .2, easing });
@@ -10118,11 +10137,7 @@ const ModoLivre = {
       // a face nova fica no palco; o resto (a água) sai com o cubo
       [...f2.children].forEach(el => P.insertBefore(el, cubo)); cubo.remove();
       this.mol = null; this.at = null; Cena133.feito = false; Cena133.conferindo = false;
-      // o Player passa a estar no fim do 12.2 (o "Passo 1" leva ao 12.3)
-      const i = NARRACOES.findIndex(n => n.id === "dialogo12_2");
-      Player.calar(); Player.indice = i; Player.terminou = true; Player.disparados = new Set();
-      Cena12A.formulaSobe();
-      ui.semPlay(true); Cena11Copo.botaoPasso1(1); this.armar("amonia");
+      depois();
     }, () => {});
   },
   // tira tudo o que o modo livre pôs na tela (o "Passo 1" volta)
@@ -10952,6 +10967,21 @@ const Player = {
     ui.atualizarBotao(false);
   },
 
+  // a narração i fica carregada e parada no segundo t, com a cena como ela estaria ali: os eventos de antes de t acontecem
+  // agora (a cena de agora continua no palco); o play continua dali (ex.: do modo livre da amônia para o 13.2, aos 20s)
+  pararEm(i, t) {
+    this.carregar(i, true, t);
+    const f = this.fonte;
+    f.currentTime = t;
+    if (f.addEventListener && f.readyState < 1) f.addEventListener("loadedmetadata", () => { if (f.currentTime < t) f.currentTime = t; }, { once: true });
+    NARRACOES[i].eventos.forEach((ev, k) => {
+      if (ev.tempo > t) return;
+      this.disparados.add(k);
+      try { ev.acao(Palco); } catch (e) { console.error(e); }
+    });
+    this.tocando = false; this.terminou = false;
+    ui.semPlay(false); ui.atualizarBotao(false);
+  },
   // desde: segundo do áudio em que a narração começa (ex.: o quiz, pela navegação rápida)
   irPara(i, continuar = false, desde = 0) {
     this.carregar(i, continuar, desde);
