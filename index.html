@@ -1424,7 +1424,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v255 · 14/10/2026</span>
+    <span class="versao" id="versao">v256 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3277,7 +3277,8 @@ const NARRACOES = [
     inicio: () => Cena12A.inicio(),
     eventos: [
       { tempo: 0,    acao: () => Cena12A.voltarCopo() },                   // sai a água em 3D (e o resto do 11.3); o copo volta e a molécula entra nele
-      { tempo: 7,    acao: () => Cena12A.virar() }                         // a área do copo vira como face de cubo: o frasco com amônia
+      { tempo: 7,    acao: () => Cena12A.virar() },                        // a área do copo vira como face de cubo: o frasco com amônia
+      { tempo: 8.6,  acao: () => Cena12A.liberar() }                       // virada a face, o frasco já chama o toque: tocar corta o áudio e leva ao 12.1
     ],
     aoFim: () => { ui.semPlay(true); Cena12A.liberar(); } },   // sem play: tocar no frasco leva ao 12.1
   // tocou no frasco: ele sai pelo lado e a molécula de NH₃ sobe de dentro dele e para no meio
