@@ -1424,7 +1424,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v257 · 14/10/2026</span>
+    <span class="versao" id="versao">v258 · 14/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3220,7 +3220,7 @@ const NARRACOES = [
   { id: "dialogo11_3", titulo: "O passo a passo: passo 3", src: "audio/audio_moleculas_11.3.mp3", semNav: true,
     inicio: () => { if (!Cena12.$(".c111-corpo")) { Cena11.tela(); Cena111.abrir(); } },   // (vindo do 11.2A, a tela já está pronta)
     eventos: [
-      { tempo: 0,    acao: () => Cena121.apagar(.6) },                     // o "2: ..." se apaga até sobrar "Passo "
+      { tempo: 0,    acao: () => { Cena121.apagar(.6); Cena113P.liberar(); } },   // o "2: ..." se apaga até sobrar "Passo "; desde já, tocar em cima ou embaixo do O põe um par
       { tempo: 0.7,  acao: () => Cena121.numero("3:") },                   // "3:"
       { tempo: 1.2,  acao: () => Cena121.texto(" Os elétrons que sobram são distribuídos na molécula até que todos estejam estáveis.", 6.1) },   // até 7,3s
       { tempo: 11.1, acao: () => Cena113P.brilhar("todos", 1) },           // os 4 elétrons da fileira brilham por 1s
@@ -9429,6 +9429,7 @@ const Cena113P = {
   // 60s: a pergunta, digitada; as três opções entram quando ela termina (acima da fileira, como no 12.3)
   pergunta() {
     if (this.$(".c72-quiz")) return;
+    const z = this.$(".c84-toques"); if (z) z.remove();   // (os toques nos pares param durante a pergunta: voltam no fim do 11.3A)
     const e = n => `${n} e<sup>−</sup>`;
     Cena71.pergunta("nitrogenio", { texto: "", opcoes: [[e(2), 0], [e(4), 1], [e(6), 0]], de: "dialogo11_3", para: "dialogo11_3A" });
     this.fila(false);   // os 4 elétrons de baixo e o "4 e⁻" somem enquanto a pergunta está na tela (voltam aos 5s do 11.3A)
@@ -9491,6 +9492,11 @@ const Cena113P = {
         `<circle class="c124-e" cx="${alvo[0]}" cy="${alvo[1]}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
       Palco.animar(fila, [{}, {}], { duracao: .01, atraso: j * .08, fill: "none" }).finished.then(() => Cena124.voar(fila.children[k], alvo, .75, pousar), () => {});
     });
+    // 11.3: o primeiro par corta o áudio (o foco volta ao normal) e o app espera o aluno pôr o outro
+    if (NARRACOES[Player.indice] && NARRACOES[Player.indice].id === "dialogo11_3" && Player.fonte) {
+      Player.calar();
+      Cena113F.escurecer(["meio", "esq", "dir", "lig-esq", "lig-dir"], false); ["esq", "dir"].forEach(l => this.engrossar(l, false));
+    }
     if (Object.values(this.lados).every(Boolean)) this.pronto();
   },
   // os dois pares no lugar: a conquista — brilho verde com aplausos, fanfarra e confetes
@@ -9503,7 +9509,10 @@ const Cena113P = {
       this.estabilizar("meio");   // com o octeto completo, o O para de tremer (a bola verde)
       Vibra.tocar("toqueEletron");
       // e entra o 11.3B (a festa é dele, aos 3s) — ou, na amônia, o 12.8
-      if (NARRACOES[Player.indice] && ["dialogo11_3A", "dialogo12_7"].includes(NARRACOES[Player.indice].id)) Player.seguirSozinho(true);
+      const id = NARRACOES[Player.indice] && NARRACOES[Player.indice].id;
+      if (["dialogo11_3A", "dialogo12_7"].includes(id)) Player.seguirSozinho(true);
+      // (os pares postos ainda no 11.3: direto para o 11.3B — a pergunta e o 11.3A ficam para trás)
+      else if (id === "dialogo11_3") { Player.calar(); Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo11_3B"), true); }
     }, () => {});
   }
 };
