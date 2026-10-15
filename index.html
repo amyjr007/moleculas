@@ -1447,7 +1447,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v277 · 15/10/2026</span>
+    <span class="versao" id="versao">v278 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2858,44 +2858,47 @@ const NARRACOES = [
       { tempo: 7,    acao: () => Cena82.liberar({ durante: true }) }
     ],
     aoFim: () => { ui.semPlay(true); Cena82.liberar(); } },        // sem play: segue quem separar os átomos
-  // os elétrons de valência do oxigênio (família 6A): 6 em cada um
-  { id: "dialogo8_3", titulo: "Oxigênio: 6 elétrons de valência", src: "audio/audio_moleculas_8.3.mp3",
+  // a pergunta (o áudio novo, de 18s): os dois O separados, ainda sem os elétrons
+  { id: "dialogo8_3", titulo: "Quantos elétrons faltam?", src: "audio/audio_moleculas_8.3.mp3",
     inicio: () => Cena71.montarSeparados("oxigenio"),              // pela navegação rápida: os dois O separados no meio da tela
     eventos: [
-      { tempo: 7,    acao: () => Cena71.pulsarTitulo(".fam") },                                   // "Família 6A" pulsa
-      { tempo: 9,    acao: () => Cena74.mostrar(10.5, "A", { qtd: 6, isolado: false, doAtomo: true }) },   // 6 saem do O e sobem para a fileira de cima,
-      { tempo: 10.5, acao: () => Cena74.mostrar(12, "B", { qtd: 6, isolado: false, embaixo: true, doAtomo: true }) },   // 6 saem do outro O e descem para a de baixo (até 12s)
-      // a mãozinha mostra que dá para tocar nos quatro lados do O da esquerda (até 28s)
-      { tempo: 24,   acao: () => Cena83.tocar("cima") },
-      { tempo: 25,   acao: () => Cena83.tocar("fora") },                                          // o lado esquerdo
-      { tempo: 26,   acao: () => Cena83.tocar("baixo") },
-      { tempo: 27,   acao: () => Cena83.tocar("frente") },                                        // o lado direito
-      { tempo: 28,   acao: () => Cena83.tirarMao() },
-      { tempo: 34.9, acao: () => Cena71.pulsarTitulo(".fam") },                                   // "Família 6A" pulsa de novo
-      { tempo: 36,   acao: () => Cena74.crescer([0, 1, 2, 3, 4, 5], true, 1.2, "A") },           // os 6 da fileira de cima brilham
-      { tempo: 37.8, acao: () => Cena74.crescer([0, 1, 2, 3, 4, 5], false, 1, "A") },
-      // a mãozinha coloca os elétrons no O da esquerda: um em cada lado, depois os pares
-      { tempo: 41,   acao: () => Cena83.colocar("cima", 0) },
-      { tempo: 41.9, acao: () => Cena83.colocar("fora", 1) },                                     // à esquerda
-      { tempo: 43,   acao: () => Cena83.colocar("baixo", 2) },
-      { tempo: 44,   acao: () => Cena83.colocar("frente", 3) },                                   // à direita
-      { tempo: 46.7, acao: () => Cena83.emparelhar("cima", 4, 0) },                               // emparelha em cima
-      { tempo: 48,   acao: () => Cena83.emparelhar("fora", 5, 1) },                               // e à esquerda
-      { tempo: 49,   acao: () => Cena83.conquista() }                                             // conquista no O da esquerda
+      { tempo: 14,   acao: () => Cena71.pergunta("oxigenio", {     // a pergunta é digitada; depois, as opções
+          texto: "Quantos elétrons faltam pra cada oxigênio completar seus octetos?", digitar: 2,
+          opcoes: [["1", 0], ["2", 1], ["3", 0]], de: "dialogo8_3", para: "dialogo8_4", classe: "c84q" }) }
     ],
-    aoFim: () => Cena84.liberar() },                               // o aluno monta o O da direita tocando nos lados (e a 8.4 entra sozinha)
-  // quantos elétrons faltam para o octeto de cada O
-  { id: "dialogo8_4", titulo: "Quantos elétrons faltam?", src: "audio/audio_moleculas_8.4.mp3",
-    inicio: () => Cena84.montar(),                                 // pela navegação rápida: os dois O com os seus elétrons
+    aoFim: () => ui.semPlay(true) },                               // o play some: quem leva ao áudio 8.4 é a resposta certa
+  // depois do acerto: os eventos do 8.3 antigo (de 7s em diante), 11,7s mais tarde
+  { id: "dialogo8_4", titulo: "Oxigênio: 6 elétrons de valência", src: "audio/audio_moleculas_8.4.mp3",
+    inicio: () => Cena71.montarSeparados("oxigenio"),              // pela navegação rápida: os dois O separados no meio da tela
     eventos: [
-      { tempo: 5,    acao: () => Cena83.destacarTodos() },            // os 6 elétrons de cada O crescem e brilham
-      { tempo: 6.7,  acao: () => Cena83.destacarTodos(false) },       // e voltam ao normal (os sozinhos com o seu brilho)
-      { tempo: 9,    acao: () => Cena71.pergunta("oxigenio", {
-          texto: "Quantos elétrons faltam pra cada oxigênio completar seu octeto?",
-          opcoes: [["1", 0], ["2", 1], ["3", 0]], de: "dialogo8_4", para: "dialogo8_5", classe: "c84q" }) }
+      { tempo: 0.5,  acao: () => Cena71.tirarPergunta() },                                        // a pergunta e as alternativas somem em fade
+      { tempo: 18.7, acao: () => Cena71.pulsarTitulo(".fam") },                                   // "Família 6A" pulsa
+      { tempo: 20.7, acao: () => Cena74.mostrar(22.2, "A", { qtd: 6, isolado: false, doAtomo: true }) },   // 6 saem do O e sobem para a fileira de cima,
+      { tempo: 22.2, acao: () => Cena74.mostrar(23.7, "B", { qtd: 6, isolado: false, embaixo: true, doAtomo: true }) },   // 6 saem do outro O e descem para a de baixo (até 23,7s)
+      // a mãozinha mostra que dá para tocar nos quatro lados do O da esquerda (até 39,7s)
+      { tempo: 35.7, acao: () => Cena83.tocar("cima") },
+      { tempo: 36.7, acao: () => Cena83.tocar("fora") },                                          // o lado esquerdo
+      { tempo: 37.7, acao: () => Cena83.tocar("baixo") },
+      { tempo: 38.7, acao: () => Cena83.tocar("frente") },                                        // o lado direito
+      { tempo: 39.7, acao: () => Cena83.tirarMao() },
+      { tempo: 46.6, acao: () => Cena71.pulsarTitulo(".fam") },                                   // "Família 6A" pulsa de novo
+      { tempo: 47.7, acao: () => Cena74.crescer([0, 1, 2, 3, 4, 5], true, 1.2, "A") },           // os 6 da fileira de cima brilham
+      { tempo: 49.5, acao: () => Cena74.crescer([0, 1, 2, 3, 4, 5], false, 1, "A") },
+      // a mãozinha coloca os elétrons no O da esquerda: um em cada lado, depois os pares
+      { tempo: 52.7, acao: () => Cena83.colocar("cima", 0) },
+      { tempo: 53.6, acao: () => Cena83.colocar("fora", 1) },                                     // à esquerda
+      { tempo: 54.7, acao: () => Cena83.colocar("baixo", 2) },
+      { tempo: 55.7, acao: () => Cena83.colocar("frente", 3) },                                   // à direita
+      { tempo: 58.4, acao: () => Cena83.emparelhar("cima", 4, 0) },                               // emparelha em cima
+      { tempo: 59.7, acao: () => Cena83.emparelhar("fora", 5, 1) },                               // e à esquerda
+      { tempo: 60.7, acao: () => Cena83.conquista() }                                             // conquista no O da esquerda
     ],
-    aoFim: () => ui.semPlay(true) },                               // o play some: quem leva ao áudio 8.5 é a resposta certa
-  // resposta: toca só depois do acerto (não aparece na navegação rápida). No fim, o aluno junta os dois O
+    // o aluno monta o O da direita tocando nos lados; pronto, a 8.5 entra sozinha
+    aoFim: () => Cena84.liberar({ depois: () => {
+      if (NARRACOES[Player.indice].id !== "dialogo8_4") return;
+      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo8_5"), true);
+    } }) },
+  // toca só depois do O da direita montado (não aparece na navegação rápida)
   { id: "dialogo8_5", titulo: "Resposta: 2 elétrons", src: "audio/audio_moleculas_8.5.mp3", oculta: true,
     inicio: () => Cena84.montar(),
     eventos: [
