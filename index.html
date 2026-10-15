@@ -813,6 +813,8 @@
   #conteudoPalco:has(.c72-quiz.imagens) .c10-questao { top: 30%; transition: top .4s ease; }
   .c77-texto.tripla { color: #8FA8FF; text-shadow: 0 0 20px rgba(80,110,248,.55); }   /* na cor do nitrogênio */
   /* áudio 7.8: o par compartilhado vira um traço (Cl–Cl); como tubo, mostra os dois elétrons indo e voltando */
+  .c79-cl { position: absolute; z-index: 4; translate: -50% -50%; margin: 0; line-height: 1; pointer-events: none; white-space: nowrap;
+    font-family: var(--display); font-weight: 700; color: #F4F7FB; }
   .c78-traco { position: absolute; z-index: 3; pointer-events: none; border-radius: 999px;
     background: linear-gradient(to bottom, #fff, #D3EFFC 45%, #6FC0EA); box-shadow: 0 0 10px rgba(163,219,247,.6);
     transition: background-color .3s; }
@@ -1424,7 +1426,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v258 · 14/10/2026</span>
+    <span class="versao" id="versao">v259 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2803,7 +2805,14 @@ const NARRACOES = [
       { tempo: 36.5, acao: () => Cena78.pulsarPar("B", "baixo") },
       { tempo: 43.9, acao: () => Cena77.texto("estrutural", "Fórmula estrutural", 1.1) }   // termina em 45s
     ],
-    aoFim: () => Cena78.tirarTexto() },                            // "Fórmula estrutural" sai em fade; o play volta
+    aoFim: () => Cena78.tirarTexto() },                            // "Fórmula estrutural" sai em fade; o play volta (leva ao 7.9)
+  // o Cl₂ como no caderno: no fim, as bolas viram os símbolos, os pares viram pontinhos e o traço afina — numa transformação
+  { id: "dialogo7_9", titulo: "O Cl₂ no caderno", src: "audio/audio_moleculas_7.9.mp3",
+    inicio: () => Cena75.montarPronta().then(() => { Cena75.travar(); Cena78.traco(); }),   // pela navegação rápida: o Cl₂ formado, com o traço
+    eventos: [
+      { tempo: 0,    acao: () => Cena75.travar() }
+    ],
+    aoFim: () => Cena79.caderno() },                              // a transformação; o play volta (leva ao 8)
   // o gás oxigênio: de volta ao cilindro, e o cubo traz o cilindro de O₂
   { id: "dialogo8", titulo: "O gás oxigênio", src: "audio/audio_moleculas_8.mp3",
     inicio: () => Cena75.montarPronta().then(() => Cena75.travar()),   // pela navegação rápida: parte do mundo quântico do Cl₂
@@ -6380,6 +6389,52 @@ const Cena78 = {
 /* ---------- Cenas da narração 8: o gás oxigênio ----------
    Do mundo quântico do cloro, um zoom de volta para o cilindro (mais rápido que a ida: 1,5s); a tela
    vira um cubo e a face nova traz o cilindro de gás oxigênio. Tocar nele leva ao mundo quântico do O₂. */
+/* ---------- Narração 7.9: o Cl₂ como no caderno ----------
+   No fim do 7.9, a molécula de bolas se transforma na do caderno (a mesma escrita do fim do 11.3B): cada bola encolhe e some
+   enquanto o símbolo "Cl", branco, nasce do tamanho dela e encolhe até o tamanho da letra; os pares não ligantes escorregam
+   para junto das letras e ficam pontinhos brancos; o traço da ligação afina numa linha branca, de uma letra à outra. */
+const Cena79 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  DUR: 1.4,
+  caderno() {
+    if (this.$(".c79-cl")) return;
+    const A = Cena74.atomo("A"), B = Cena74.atomo("B"); if (!A || !B) return;
+    const dur = this.DUR, easing = "cubic-bezier(.45,0,.25,1)", F = Math.round(A.R * 1.05), P = Palco.el.getBoundingClientRect();
+    // as bolas (e os rótulos 3D) encolhem e somem
+    const q = Cena71.quantum, s = Cena71.m && Cena71.m.userData.est;
+    if (q && s) { q.animar(s, "escalaO", .15, dur); q.animar(s, "escalaH", .15, dur); q.animar(s, "opac", 0, dur * .8); }
+    // o "Cl" do caderno nasce do tamanho da bola e encolhe até o tamanho da letra
+    [A, B].forEach(a => {
+      Palco.adicionar(`<span class="c79-cl" style="left:${a.x}px;top:${a.y}px;font-size:${F}px">Cl</span>`);
+      Palco.animar(Palco.el.lastElementChild, [{ opacity: 0, scale: "2" }, { opacity: 1, scale: "1" }], { duracao: dur, easing });
+    });
+    // os pares não ligantes: para junto das letras, menores e brancos (em cima, embaixo e do lado de fora)
+    const meiaL = F * .62, alto = F * .82, sep = F * .17, pt = Math.max(3.5, F * .12);
+    const alvo = (a, set, lado, j) => { const fora = set === "A" ? -1 : 1, d = j ? sep : -sep;
+      return lado === "cima" ? [a.x + d, a.y - alto] : lado === "baixo" ? [a.x + d, a.y + alto] : [a.x + fora * (meiaL + F * .22), a.y + d]; };
+    ["A", "B"].forEach(set => {
+      const a = set === "A" ? A : B;
+      ["cima", "fora", "baixo"].forEach(lado => Cena78.par(set, lado).forEach((el, j) => {
+        const r = el.getBoundingClientRect(), cx = r.left + r.width / 2 - P.left, cy = r.top + r.height / 2 - P.top, [tx, ty] = alvo(a, set, lado, j);
+        el.getAnimations().forEach(x => { if (x.playState === "finished") x.cancel(); });
+        Palco.animar(el, [{ transform: "translate(0px, 0px) scale(1)", filter: "saturate(1) brightness(1)" },
+          { transform: `translate(${tx - cx}px, ${ty - cy}px) scale(${pt / r.width})`, filter: "saturate(0) brightness(1.6)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }], { duracao: dur, easing });
+      }));
+    });
+    // o traço afina numa linha branca, de uma letra à outra
+    const tr = this.$(".c78-traco");
+    if (tr) {
+      tr.classList.remove("tubo"); tr.innerHTML = "";
+      const x1 = A.x + meiaL + F * .1, x2 = B.x - meiaL - F * .1, hh = Math.max(2, F * .07);
+      tr.getAnimations().forEach(x => { if (x.playState === "finished") x.cancel(); });
+      Palco.animar(tr, [{ left: tr.style.left, width: tr.style.width, top: tr.style.top, height: tr.style.height, filter: "saturate(1) brightness(1)" },
+        { left: `${x1}px`, width: `${x2 - x1}px`, top: `${(A.y + B.y) / 2 - hh / 2}px`, height: `${hh}px`, filter: "saturate(0) brightness(1.6)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }], { duracao: dur, easing });
+    }
+    // (o par que virou o traço continua escondido)
+    Palco.el.querySelectorAll(".c75-ligacao").forEach(el => { el.style.opacity = "0"; });
+  }
+};
+
 const Cena8 = {
   $(sel) { return Palco.el.querySelector(sel); },
   // 3s: zoom out — o mundo quântico se fecha num clarão e o cilindro de cloro volta, encolhendo até o tamanho normal
@@ -6399,7 +6454,7 @@ const Cena8 = {
     const flash = Palco.el.lastElementChild;
     Palco.animar(q, [{ opacity: 1, transform: "scale(1)" }, { opacity: 0, transform: "scale(.55)" }], { duracao: .5 * k, easing: "ease-in" });
     // a molécula sai inteira: elétrons, ligação e traços acompanham os átomos (ver Cena74.atomo) e somem junto com eles
-    Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c76-octeto, .c78-traco, .c86-traco")
+    Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c76-octeto, .c78-traco, .c86-traco, .c79-cl")
       .forEach(el => Palco.animar(el, [{ opacity: getComputedStyle(el).opacity }, { opacity: 0 }], { duracao: .5 * k, easing: "ease-in" }));
     Palco.animar(flash, [{ opacity: 0 }, { opacity: 1, offset: .35 }, { opacity: 0 }], { duracao: .9 * k, easing: "ease-in-out" })
       .finished.then(() => flash.remove(), () => {});
@@ -6407,7 +6462,7 @@ const Cena8 = {
     if (t) Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => t.classList.add("escondido"), () => {});
     // no pico do clarão: some o mundo quântico (e tudo o que estava em volta da molécula); volta o cilindro
     Palco.animar(cil, [{ opacity: 0 }, { opacity: 0 }], { duracao: .32 * k, fill: "none" }).finished.then(() => {
-      Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c75-status, .c75-arrasto, .c76-octeto, .c77-texto, .c78-traco, .c73-octeto, .c74-hund, .c86-formula, .c72-quiz, .c84-aviso, .c84-toques, .c83-mao")
+      Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c75-status, .c75-arrasto, .c76-octeto, .c77-texto, .c78-traco, .c73-octeto, .c74-hund, .c86-formula, .c72-quiz, .c84-aviso, .c84-toques, .c83-mao, .c79-cl")
         .forEach(el => el.remove());
       q.remove();
       Cena71.quantum = null; Cena71.m = null;
@@ -10801,17 +10856,19 @@ const Lupa = {
     Object.assign(lupa.style, { width: `${d}px`, height: `${d}px` }); colocar();
     Palco.animar(lupa, [{ opacity: 0, transform: "scale(.6) rotate(-12deg)" }, { opacity: 1, transform: "scale(1) rotate(0deg)" }], { duracao: .7, easing: "cubic-bezier(.3,1.4,.5,1)" });
     // arrastar a lupa (o centro da lente não sai da área)
-    let arrasto = null;
-    lupa.addEventListener("pointerdown", e => { arrasto = { dx: e.clientX - pos.x, dy: e.clientY - pos.y }; lupa.setPointerCapture(e.pointerId); lupa.classList.add("arrastando"); });
+    let arrasto = null, andou = 0;
+    lupa.addEventListener("pointerdown", e => { arrasto = { dx: e.clientX - pos.x, dy: e.clientY - pos.y, x: e.clientX, y: e.clientY }; andou = 0; lupa.setPointerCapture(e.pointerId); lupa.classList.add("arrastando"); });
     lupa.addEventListener("pointermove", e => {
       if (!arrasto) return;
+      andou = Math.max(andou, Math.hypot(e.clientX - arrasto.x, e.clientY - arrasto.y));
       pos.x = Math.min(Math.max(e.clientX - arrasto.dx, area.x0), area.x1);
       pos.y = Math.min(Math.max(e.clientY - arrasto.dy, area.y0), area.y1);
       colocar();
     });
     const soltar = () => { arrasto = null; lupa.classList.remove("arrastando"); };
     lupa.addEventListener("pointerup", soltar); lupa.addEventListener("pointercancel", soltar);
-    lupa.addEventListener("click", e => e.stopPropagation());   // (arrastar a lupa não conta como toque no recipiente)
+    // arrastar a lupa não conta como toque no recipiente; um toque nela (sem arrastar), conta — a molécula salta
+    lupa.addEventListener("click", e => { if (andou > 6) e.stopPropagation(); });
     // a lente mostra o pedaço do "campo" de moléculas (do tamanho da área) que está embaixo dela
     this.animar(lupa.querySelector("canvas"), d, { w: area.x1 - area.x0 + d, h: area.y1 - area.y0 + d },
       () => ({ x: pos.x - d / 2 - area.x0 + d / 2, y: pos.y - d / 2 - area.y0 + d / 2 }), tipo);
