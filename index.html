@@ -910,6 +910,12 @@
   /* narração 7.2 — a pergunta da fórmula do gás cloro, na parte de baixo (livre) da tela */
   .c72-quiz { position: absolute; left: 0; right: 0; bottom: calc(clamp(18px, 2.5vw, 28px) + 58px); z-index: 3;
     display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 1.8vh, 18px); }
+  .c72-quiz.c93q { bottom: auto; top: 58.5%; }   /* 9.3A: entre os N e a fileira de elétrons de baixo */
+  @media (orientation: landscape) {   /* deitada: menor, para caber entre os N e a fileira */
+    .c72-quiz.c93q { top: 62%; gap: 6px; }
+    .c72-quiz.c93q .c72-pergunta { font-size: calc(clamp(1.2rem, 2.8vmin + .55rem, 2.1rem) * .72); }
+    .c72-quiz.c93q .c4-opcoes { scale: .72; transform-origin: 50% 0; margin-bottom: -14px; }
+  }
   .c72-pergunta { margin: 0; text-align: center; font-family: var(--display); font-weight: 800; color: var(--celeste);
     font-size: clamp(1.2rem, 2.8vmin + .55rem, 2.1rem); letter-spacing: -.01em; text-shadow: 0 0 22px rgba(163,219,247,.55); }
   .c72-quiz .c4-opcoes { position: static; translate: none; }
@@ -1429,7 +1435,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v262 · 15/10/2026</span>
+    <span class="versao" id="versao">v263 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2963,21 +2969,27 @@ const NARRACOES = [
       { tempo: 9.9,  acao: () => { Cena74.mostrar(11.9, "A", { qtd: 5, isolado: false, doAtomo: true });   // 5 saem do N e sobem para a fileira de cima
                                    Cena74.mostrar(11.9, "B", { qtd: 5, isolado: false, embaixo: true, doAtomo: true }); } }   // e 5 saem do outro N e descem (até 11,9s)
     ],
-    // o aluno distribui os elétrons nos dois N: um em cada lado e depois o par, do lado de fora.
-    // Cada N completo: conquista e o som "right"; os dois prontos: a narração seguinte
-    aoFim: () => Cena84.liberar({ sets: ["A", "B"], qtd: 5, pares: ["fora"], solitarios: ["cima", "baixo", "frente"],
-      depois: () => { if (NARRACOES[Player.indice].id === "dialogo9_3") Player.seguirSozinho(); } }) },
-  { id: "dialogo9_4", titulo: "Nitrogênio: os elétrons no lugar", src: "audio/audio_moleculas_9.4.mp3",
-    // pela navegação rápida: os dois N separados, já com os 5 elétrons distribuídos (e os sozinhos brilhando)
-    inicio: () => Cena84.montarN(),
+    aoFim: () => Player.seguirSozinho() },                         // a 9.3A (a pergunta) entra sozinha
+  // a pergunta, com os elétrons ainda nas fileiras (entra sozinha depois da 9.3)
+  { id: "dialogo9_3A", titulo: "Quantos elétrons cada N compartilha?", src: "audio/audio_moleculas_9.3A.mp3", semNav: true, extra: true,
+    inicio: () => Cena84.montarFilas(),                            // pela navegação: os dois N separados, os elétrons nas fileiras
     eventos: [
-      { tempo: 11,   acao: () => Cena71.pergunta("nitrogenio", {               // quantos elétrons cada N compartilha
-          texto: "Quantos elétrons cada N compartilha?",
-          opcoes: [["1", 0], ["2", 0], ["3", 1]], de: "dialogo9_4", para: "dialogo9_5" }) }
+      { tempo: 0.6,  acao: () => Cena71.pergunta("nitrogenio", {               // a pergunta é digitada; depois, as opções
+          texto: "Quantos elétrons cada N compartilha?", digitar: 1.6, classe: "c93q",
+          opcoes: [["1", 0], ["2", 0], ["3", 1]], de: "dialogo9_3A", para: "dialogo9_4" }) }
     ],
-    aoFim: () => ui.semPlay(true) },                               // o play some: quem leva ao áudio 9.5 é a resposta certa
-  // resposta: toca só depois do acerto (não aparece na navegação rápida)
-  { id: "dialogo9_5", titulo: "Resposta: 3 elétrons", src: "audio/audio_moleculas_9.5.mp3", oculta: true,
+    aoFim: () => ui.semPlay(true) },                               // o play some: quem leva ao áudio 9.4 é a resposta certa
+  // a 9.4 começa e o aluno já pode distribuir os elétrons nos dois N: um em cada lado e depois o par, do lado de fora.
+  // Cada N completo: conquista e o som "right"; os dois prontos (e a 9.4 terminada): a 9.5
+  { id: "dialogo9_4", titulo: "Nitrogênio: distribua os elétrons", src: "audio/audio_moleculas_9.4.mp3",
+    inicio: () => Cena84.montarFilas(),                            // pela navegação: os elétrons ainda nas fileiras
+    eventos: [
+      { tempo: 0,    acao: () => { Cena71.tirarPergunta();          // a pergunta e as alternativas somem em fade
+          Cena84.liberar({ sets: ["A", "B"], qtd: 5, pares: ["fora"], solitarios: ["cima", "baixo", "frente"], depois: () => Cena84.para95() }); } }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena84.para95(); } },          // (os elétrons já completos durante o áudio: a 9.5 entra agora)
+  // toca só depois dos elétrons distribuídos (não aparece na navegação rápida)
+  { id: "dialogo9_5", titulo: "N: os elétrons no lugar", src: "audio/audio_moleculas_9.5.mp3", oculta: true,
     inicio: () => Cena84.montarN(),
     eventos: [
       { tempo: 1,    acao: () => Cena71.tirarPergunta() }          // a pergunta e as alternativas somem em fade
@@ -5491,17 +5503,19 @@ const Cena71 = {
     // antes(seguir): o que acontece depois da festa do acerto e antes da narração da resposta (ela entra no seguir())
     // junto: a narração da resposta começa junto com a festa (aplausos e fanfarra), sem esperar ela acabar
     this.perg = { tipo, de: outra ? outra.de : g.pergunta[0], para: outra ? outra.para : g.pergunta[1], antes: outra && outra.antes, junto: outra && outra.junto };
+    const dig = (outra && outra.digitar) || 0;   // digitar: em quantos segundos a pergunta é digitada
     Palco.adicionar(`
-      <div class="c72-quiz${opcoes.some(([h]) => h.replace(/<[^>]+>/g, "").length > 8) ? " longas" : ""}">
+      <div class="c72-quiz${outra && outra.classe ? " " + outra.classe : ""}${opcoes.some(([h]) => h.replace(/<[^>]+>/g, "").length > 8) ? " longas" : ""}">
         <p class="c72-pergunta">${texto}</p>
         <div class="c4-opcoes" role="group" aria-label="${texto.replace(/<[^>]+>/g, "")}">
           ${opcoes.map(([html, certa]) => `<button class="c4-op" data-certa="${certa}">${html}</button>`).join("")}
         </div>
       </div>`);
     const caixa = this.$(".c72-quiz .c4-opcoes");
-    Palco.animar(this.$(".c72-pergunta"), [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duracao: .5, easing: "ease-out" });
+    if (dig) Palco.digitar(this.$(".c72-pergunta"), texto, dig);
+    else Palco.animar(this.$(".c72-pergunta"), [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duracao: .5, easing: "ease-out" });
     [...caixa.children].forEach((b, i) => Palco.animar(b, [{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }],
-      { duracao: .45, atraso: .25 + i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
+      { duracao: .45, atraso: dig + .25 + i * .12, easing: "cubic-bezier(.3,1.4,.5,1)" }));
     caixa.addEventListener("click", e => {
       const b = e.target.closest(".c4-op"); if (!b || caixa.classList.contains("respondido")) return;
       Player.calar();   // respondeu com a narração ainda falando: ela para na hora
@@ -6765,7 +6779,22 @@ const Cena84 = {
         if (q.isConnected) cfg.depois();
       }, () => {});
     }, () => {});
-  },  // os dois N já com os seus 5 elétrons (para quem chega à 9.4 em diante pela navegação rápida)
+  },
+  // os dois N separados, com os 5 elétrons de cada um nas fileiras (para quem chega à 9.3A ou à 9.4 pela navegação rápida)
+  montarFilas() {
+    if (Cena74.$('.c74-eletrons[data-set="A"]')) return;   // vindo da narração anterior, os elétrons já estão no palco
+    Cena71.montarSeparados("nitrogenio");
+    Cena74.mostrar(0, "A", { qtd: 5, isolado: false, doAtomo: true });
+    Cena74.mostrar(0, "B", { qtd: 5, isolado: false, embaixo: true, doAtomo: true });
+  },
+  // 9.4: os dois N completos e a narração terminada — só então a 9.5 (quem acabar antes do áudio espera ele terminar)
+  para95() {
+    if (NARRACOES[Player.indice].id !== "dialogo9_4" || !Player.terminou) return;
+    if (!this.est || !["A", "B"].every(s => this.est[s] && this.est[s].pronto) || this.$(".c84-toques")) return;
+    const i = NARRACOES.findIndex(n => n.id === "dialogo9_5");
+    Player.terminou = false; Player.irPara(i, true);
+  },
+  // os dois N já com os seus 5 elétrons (para quem chega à 9.5 em diante pela navegação rápida)
   async montarN() {
     if (Cena74.$('.c74-eletrons[data-set="A"]')) return;   // vindo da narração anterior, os elétrons já estão no palco
     Cena71.montarSeparados("nitrogenio");
