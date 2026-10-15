@@ -1441,7 +1441,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v269 · 15/10/2026</span>
+    <span class="versao" id="versao">v270 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3006,7 +3006,8 @@ const NARRACOES = [
   { id: "dialogo9_5", titulo: "N: os elétrons no lugar", src: "audio/audio_moleculas_9.5.mp3", oculta: true,
     inicio: () => Cena84.montarN(),
     eventos: [
-      { tempo: 1,    acao: () => Cena71.tirarPergunta() }          // a pergunta e as alternativas somem em fade
+      { tempo: 1,    acao: () => Cena71.tirarPergunta() },         // (se ainda houver uma pergunta, some em fade)
+      { tempo: 2,    acao: () => Cena75.liberar(true, "nitrogenio") }   // já dá para mover os átomos (o encaixe corta a narração e traz a 9.6)
     ],
     // sem play: o aluno arrasta um N até o outro; os três elétrons sozinhos vão para a frente conforme eles se aproximam.
     // O encaixe (ligação tripla) traz a 9.6
