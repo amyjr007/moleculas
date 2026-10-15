@@ -1441,7 +1441,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v268 · 15/10/2026</span>
+    <span class="versao" id="versao">v269 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3643,18 +3643,19 @@ const NARRACOES = [
 
 ];
 
-/* ---------- Velocidade da narração (1× ou 1,3×) ----------
-   O aluno escolhe no botão do topo; fica guardada no aparelho. O áudio acelera sem mudar o tom da voz, e as animações
+/* ---------- Velocidade da narração (1×, 1,1× ou 1,2×) ----------
+   O aluno escolhe no botão do topo (cada toque passa para a seguinte, e da última volta a 1×); fica guardada no aparelho. O áudio acelera sem mudar o tom da voz, e as animações
    do palco e do mundo 3D aceleram junto — os eventos seguem o tempo do próprio áudio, então tudo continua no compasso. */
 const Velocidade = {
   CHAVE: "moleculas-velocidade",
-  v: (() => { try { return localStorage.getItem("moleculas-velocidade") === "1.3" ? 1.3 : 1; } catch (_) { return 1; } })(),
+  NIVEIS: [1, 1.1, 1.2],
+  v: (() => { try { const g = Number(localStorage.getItem("moleculas-velocidade")); return [1, 1.1, 1.2].includes(g) ? g : 1; } catch (_) { return 1; } })(),
   aplicar(fonte) {
     if (!fonte || !("playbackRate" in fonte)) return;
     fonte.preservesPitch = true; fonte.defaultPlaybackRate = this.v; fonte.playbackRate = this.v;
   },
   trocar() {
-    const antes = this.v; this.v = antes === 1 ? 1.3 : 1;
+    const antes = this.v, N = this.NIVEIS; this.v = N[(N.indexOf(antes) + 1) % N.length];
     try { localStorage.setItem(this.CHAVE, String(this.v)); } catch (_) {}
     this.aplicar(Player.fonte);
     // as animações do palco já em curso passam a correr na velocidade nova (as de CSS não foram aceleradas)
@@ -3666,10 +3667,10 @@ const Velocidade = {
   },
   botao() {
     const b = document.getElementById("btnVel"); if (!b) return;
-    const rapido = this.v !== 1;
-    document.getElementById("velRotulo").textContent = rapido ? "1,3×" : "1×";
+    const rapido = this.v !== 1, txt = String(this.v).replace(".", ","), ultima = this.v === this.NIVEIS[this.NIVEIS.length - 1];
+    document.getElementById("velRotulo").textContent = txt + "×";
     b.setAttribute("aria-pressed", String(rapido));
-    b.setAttribute("aria-label", rapido ? "Velocidade da narração: 1,3 vezes. Toque para voltar ao normal" : "Velocidade da narração: normal. Toque para acelerar");
+    b.setAttribute("aria-label", "Velocidade da narração: " + (rapido ? txt + " vezes" : "normal") + (ultima ? ". Toque para voltar ao normal" : ". Toque para acelerar"));
   }
 };
 
@@ -11154,7 +11155,7 @@ function criarFonte(narracao) {
   if (narracao.src) {
     const a = new Audio(narracao.src);
     a.preload = "auto";
-    Velocidade.aplicar(a);   // 1× ou 1,3×, como o aluno escolheu
+    Velocidade.aplicar(a);   // 1×, 1,1× ou 1,2×, como o aluno escolheu
     // pausa/retomada vinda de fora (fone, teclas de mídia, tela de bloqueio). Só vale o que contradiz o estado do
     // player: o "pause"/"play" que ele mesmo mandou chega aqui depois e não pode ser respondido (virava um pingue-pongue
     // de play/pause sem fim quando um play era interrompido)
