@@ -1447,7 +1447,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v276 · 15/10/2026</span>
+    <span class="versao" id="versao">v277 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2853,9 +2853,11 @@ const NARRACOES = [
     eventos: [
       { tempo: 2,    acao: () => Cena71.estourar(6) },             // as moléculas estouram em sequência até 6s; fica uma
       { tempo: 3,    acao: () => Cena71.tirarPergunta() },         // a pergunta e as alternativas somem em fade (como na 7.3)
-      { tempo: 6,    acao: () => Cena82.centralizar() }            // a que sobrou vai girando para o meio (até 7s), do tamanho dos cloros
+      { tempo: 6,    acao: () => Cena82.centralizar() },           // a que sobrou vai girando para o meio (até 7s), do tamanho dos cloros
+      // já no meio, um puxão num átomo rompe a ligação dupla — mesmo com o áudio no meio: aí ele se cala e a 8.3 entra
+      { tempo: 7,    acao: () => Cena82.liberar({ durante: true }) }
     ],
-    aoFim: () => Cena82.liberar() },                               // um puxão num átomo rompe a ligação dupla (e a 8.3 entra sozinha)
+    aoFim: () => { ui.semPlay(true); Cena82.liberar(); } },        // sem play: segue quem separar os átomos
   // os elétrons de valência do oxigênio (família 6A): 6 em cada um
   { id: "dialogo8_3", titulo: "Oxigênio: 6 elétrons de valência", src: "audio/audio_moleculas_8.3.mp3",
     inicio: () => Cena71.montarSeparados("oxigenio"),              // pela navegação rápida: os dois O separados no meio da tela
