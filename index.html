@@ -1429,7 +1429,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v261 · 15/10/2026</span>
+    <span class="versao" id="versao">v262 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2925,6 +2925,11 @@ const NARRACOES = [
       { tempo: 15,   acao: () => { Cena86.crescerTraco("0"); Cena86.crescerTraco("1"); } },   // os dois traços do O₂ crescem
       { tempo: 16,   acao: () => Cena86.crescerTexto() }                                // "Ligação covalente dupla" cresce
     ] },
+  // o O₂ como no caderno: no fim, as bolas viram os símbolos, os pares viram pontinhos e os dois traços afinam — numa transformação
+  { id: "dialogo8_8", titulo: "O O₂ no caderno", src: "audio/audio_moleculas_8.8.mp3",
+    inicio: () => Cena75.montarPronta("oxigenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); Cena86.tracos(); }),   // pela navegação: O=O em traços
+    eventos: [],
+    aoFim: () => Cena79.caderno("oxigenio") },                    // a transformação; o play volta (leva ao 9)
   // o gás nitrogênio (exemplo 03): de volta ao cilindro, e o cubo traz o cilindro de N₂ — como no áudio 8
   { id: "dialogo9", titulo: "O gás nitrogênio", src: "audio/audio_moleculas_9.mp3",
     // pela navegação rápida: parte do O₂ formado (em traços), no mundo quântico
@@ -3023,6 +3028,11 @@ const NARRACOES = [
       { tempo: 8.7,  acao: () => Cena86.tracos() },                // os três pares viram três traços
       { tempo: 12,   acao: () => Cena77.texto("tripla", "Ligação covalente tripla", 1.7) }   // digitado até 13,7s
     ] },
+  // o N₂ como no caderno: no fim, as bolas viram os símbolos, os pares não ligantes viram pontinhos e os três traços afinam
+  { id: "dialogo9_8", titulo: "O N₂ no caderno", src: "audio/audio_moleculas_9.8.mp3",
+    inicio: () => Cena75.montarPronta("nitrogenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); Cena86.tracos(); }),   // pela navegação: N≡N em traços
+    eventos: [],
+    aoFim: () => Cena79.caderno("nitrogenio") },                  // a transformação; o play volta (leva ao 10)
   // mais um exemplo antes do resumo: volta do mundo quântico do N₂ e o cubo traz o cilindro de cloreto de hidrogênio
   // (na navegação rápida é o 35: o exemplo 04 começa aqui; as narrações seguintes dele ficam fora dela, e o resumo entra pelas suas três partes — 36, 37 e 38)
   { id: "dialogo10", titulo: "Exemplo 04: cloreto de hidrogênio", num: 35, src: "audio/audio_moleculas_10.mp3",
@@ -6393,32 +6403,41 @@ const Cena78 = {
    Do mundo quântico do cloro, um zoom de volta para o cilindro (mais rápido que a ida: 1,5s); a tela
    vira um cubo e a face nova traz o cilindro de gás oxigênio. Tocar nele leva ao mundo quântico do O₂. */
 /* ---------- Narração 7.9: o Cl₂ como no caderno ----------
-   No fim do 7.9, a molécula de bolas se transforma na do caderno (a mesma escrita do fim do 11.3B): cada bola encolhe e some
+   No fim do 7.9 (Cl₂), do 8.8 (O₂) e do 9.8 (N₂), a molécula de bolas se transforma na do caderno (a mesma escrita do fim do 11.3B): cada bola encolhe e some
    enquanto o símbolo "Cl", branco, nasce do tamanho dela e encolhe até o tamanho da letra; os pares não ligantes escorregam
    para junto das letras e ficam pontinhos brancos; o traço da ligação afina numa linha branca, de uma letra à outra. */
 const Cena79 = {
   $(sel) { return Palco.el.querySelector(sel); },
   DUR: 1.4,
-  caderno() {
+  // cada molécula: o símbolo, a meia largura dele (em letras), os lados dos pares não ligantes e a descrição do desenho
+  // (as ligações: um traço no Cl₂, dois no O₂ — os traços que estão na tela)
+  CFG: {
+    cloro:    { sim: "Cl", meia: .62, lados: ["cima", "fora", "baixo"], aria: "Fórmula do Cl₂ como no caderno: Cl—Cl, com três pares de elétrons em cada cloro" },
+    oxigenio: { sim: "O", meia: .42, lados: ["cima", "fora"], gap: .14, aria: "Fórmula do O₂ como no caderno: O=O, com dois pares de elétrons em cada oxigênio" },
+    nitrogenio: { sim: "N", meia: .42, lados: ["fora"], gap: .12, aria: "Fórmula do N₂ como no caderno: N≡N, com um par de elétrons em cada nitrogênio" }
+  },
+  caderno(tipo = "cloro") {
     if (this.$(".c79-cl, .c79-caderno")) return;
     const A = Cena74.atomo("A"), B = Cena74.atomo("B"); if (!A || !B) return;
-    const dur = this.DUR, easing = "cubic-bezier(.45,0,.25,1)", F = Math.round(A.R * 1.05), P = Palco.el.getBoundingClientRect();
+    const cfg = this.CFG[tipo], dur = this.DUR, easing = "cubic-bezier(.45,0,.25,1)", F = Math.round(A.R * 1.05), P = Palco.el.getBoundingClientRect();
     // as bolas (e os rótulos 3D) encolhem e somem
     const q = Cena71.quantum, s = Cena71.m && Cena71.m.userData.est;
     if (q && s) { q.animar(s, "escalaO", .15, dur); q.animar(s, "escalaH", .15, dur); q.animar(s, "opac", 0, dur * .8); }
-    // o "Cl" do caderno nasce do tamanho da bola e encolhe até o tamanho da letra
+    // (no O₂: a comparação com o Cl₂, em cima, sai em fade)
+    Palco.el.querySelectorAll(".c86-formula").forEach(el => Palco.animar(el, [{ opacity: getComputedStyle(el).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => el.remove(), () => {}));
+    // o símbolo do caderno nasce do tamanho da bola e encolhe até o tamanho da letra
     [A, B].forEach(a => {
-      Palco.adicionar(`<span class="c79-cl" style="left:${a.x}px;top:${a.y}px;font-size:${F}px">Cl</span>`);
+      Palco.adicionar(`<span class="c79-cl" style="left:${a.x}px;top:${a.y}px;font-size:${F}px">${cfg.sim}</span>`);
       Palco.animar(Palco.el.lastElementChild, [{ opacity: 0, scale: "2" }, { opacity: 1, scale: "1" }], { duracao: dur, easing });
     });
-    // os pares não ligantes: para junto das letras, menores e brancos (em cima, embaixo e do lado de fora)
-    const meiaL = F * .62, alto = F * .82, sep = F * .17, pt = Math.max(3.5, F * .12);
+    // os pares não ligantes: para junto das letras, menores e brancos
+    const meiaL = F * cfg.meia, alto = F * .82, sep = F * .17, pt = Math.max(3.5, F * .12);
     const alvo = (a, set, lado, j) => { const fora = set === "A" ? -1 : 1, d = j ? sep : -sep;
       return lado === "cima" ? [a.x + d, a.y - alto] : lado === "baixo" ? [a.x + d, a.y + alto] : [a.x + fora * (meiaL + F * .22), a.y + d]; };
     const pontos = [];   // (onde cada pontinho termina: para o desenho final)
     ["A", "B"].forEach(set => {
       const a = set === "A" ? A : B;
-      ["cima", "fora", "baixo"].forEach(lado => Cena78.par(set, lado).forEach((el, j) => {
+      cfg.lados.forEach(lado => Cena78.par(set, lado).forEach((el, j) => {
         const r = el.getBoundingClientRect(), cx = r.left + r.width / 2 - P.left, cy = r.top + r.height / 2 - P.top, [tx, ty] = alvo(a, set, lado, j);
         pontos.push([tx, ty]);
         el.getAnimations().forEach(x => { if (x.playState === "finished") x.cancel(); });
@@ -6426,27 +6445,27 @@ const Cena79 = {
           { transform: `translate(${tx - cx}px, ${ty - cy}px) scale(${pt / r.width})`, filter: "saturate(0) brightness(1.6)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }], { duracao: dur, easing });
       }));
     });
-    // o traço afina numa linha branca, de uma letra à outra
-    const tr = this.$(".c78-traco");
-    if (tr) {
+    // os traços afinam em linhas brancas, de uma letra à outra (dois, lado a lado, na ligação dupla)
+    const trs = [...Palco.el.querySelectorAll(".c78-traco")], n = trs.length, gap = F * (cfg.gap || .14);
+    const x1 = A.x + meiaL + F * .1, x2 = B.x - meiaL - F * .1, hh = Math.max(2, F * .07), yl = (A.y + B.y) / 2;
+    const ys = trs.map((_, i) => yl + (i - (n - 1) / 2) * 2 * gap);
+    trs.forEach((tr, i) => {
       tr.classList.remove("tubo"); tr.innerHTML = "";
-      const x1 = A.x + meiaL + F * .1, x2 = B.x - meiaL - F * .1, hh = Math.max(2, F * .07);
       tr.getAnimations().forEach(x => { if (x.playState === "finished") x.cancel(); });
       Palco.animar(tr, [{ left: tr.style.left, width: tr.style.width, top: tr.style.top, height: tr.style.height, filter: "saturate(1) brightness(1)" },
-        { left: `${x1}px`, width: `${x2 - x1}px`, top: `${(A.y + B.y) / 2 - hh / 2}px`, height: `${hh}px`, filter: "saturate(0) brightness(1.6)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }], { duracao: dur, easing });
-    }
-    // (o par que virou o traço continua escondido)
+        { left: `${x1}px`, width: `${x2 - x1}px`, top: `${ys[i] - hh / 2}px`, height: `${hh}px`, filter: "saturate(0) brightness(1.6)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }], { duracao: dur, easing });
+    });
+    // (os pares que viraram os traços continuam escondidos)
     Palco.el.querySelectorAll(".c75-ligacao").forEach(el => { el.style.opacity = "0"; });
-    // terminada a transformação, as peças (letras, pontinhos e traço) viram um desenho só, igual e no mesmo lugar —
+    // terminada a transformação, as peças (letras, pontinhos e traços) viram um desenho só, igual e no mesmo lugar —
     // assim ele se move e muda de tamanho inteiro (na ferramenta de ajuste)
-    const x1 = A.x + meiaL + F * .1, x2 = B.x - meiaL - F * .1, hh = Math.max(2, F * .07), yl = (A.y + B.y) / 2;
     Palco.animar(Palco.el, [{}, {}], { duracao: dur + .05, fill: "none" }).finished.then(() => {
       if (!this.$(".c79-cl")) return;
-      const m = F * .9, xs = [A.x - meiaL, B.x + meiaL, ...pontos.map(p => p[0])], ys = [A.y - F / 2, A.y + F / 2, ...pontos.map(p => p[1])];
-      const x0 = Math.min(...xs) - m, y0 = Math.min(...ys) - m, w = Math.max(...xs) + m - x0, hgt = Math.max(...ys) + m - y0, cor = "#F4F7FB";
-      Palco.adicionar(`<svg class="c79-caderno" viewBox="${x0} ${y0} ${w} ${hgt}" style="left:${x0}px;top:${y0}px;width:${w}px;height:${hgt}px" role="img" aria-label="Fórmula do Cl₂ como no caderno: Cl—Cl, com três pares de elétrons em cada cloro">
-        <line x1="${x1}" y1="${yl}" x2="${x2}" y2="${yl}" stroke="${cor}" stroke-width="${hh}" stroke-linecap="round"/>
-        ${[A, B].map(a => `<text x="${a.x}" y="${a.y}" text-anchor="middle" dominant-baseline="central" font-size="${F}" font-weight="700" fill="${cor}" font-family="Bricolage Grotesque, sans-serif">Cl</text>`).join("")}
+      const m = F * .9, xs = [A.x - meiaL, B.x + meiaL, ...pontos.map(p => p[0])], yy = [A.y - F / 2, A.y + F / 2, ...pontos.map(p => p[1])];
+      const x0 = Math.min(...xs) - m, y0 = Math.min(...yy) - m, w = Math.max(...xs) + m - x0, hgt = Math.max(...yy) + m - y0, cor = "#F4F7FB";
+      Palco.adicionar(`<svg class="c79-caderno" viewBox="${x0} ${y0} ${w} ${hgt}" style="left:${x0}px;top:${y0}px;width:${w}px;height:${hgt}px" role="img" aria-label="${cfg.aria}">
+        ${ys.map(y => `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${cor}" stroke-width="${hh}" stroke-linecap="round"/>`).join("")}
+        ${[A, B].map(a => `<text x="${a.x}" y="${a.y}" text-anchor="middle" dominant-baseline="central" font-size="${F}" font-weight="700" fill="${cor}" font-family="Bricolage Grotesque, sans-serif">${cfg.sim}</text>`).join("")}
         ${pontos.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${pt / 2}" fill="${cor}"/>`).join("")}</svg>`);
       Palco.el.querySelectorAll(".c79-cl, .c78-traco, .c74-eletrons").forEach(el => el.remove());
       // (com um ajuste de tamanho ou lugar no CSS — o do celular —, o desenho vai até ele suavemente, sem pulo)
