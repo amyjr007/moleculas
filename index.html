@@ -714,6 +714,7 @@
     .c11-copo { translate: calc(var(--pw, 965px) * -.005) calc(var(--ph, 448px) * .251); scale: .823; transition: translate .9s cubic-bezier(.4,0,.2,1); }
     .c11-copo.solto { translate: calc(var(--pw, 965px) * .003) calc(var(--ph, 448px) * .155); }
     /* 11.1A: "Qual a fórmula da água?" e as três opções, mais baixas */
+    #conteudoPalco .c79-caderno.c79-nitrogenio { scale: 1.405; }   /* 9.8: o N₂ no caderno */
     .c72-quiz.formula-nitrogenio .c72-pergunta { translate: calc(var(--pw, 965px) * -.004) calc(var(--ph, 448px) * .058); }   /* 9.1: a fórmula do N₂ */
     .c72-quiz.formula-nitrogenio .c4-opcoes { translate: calc(var(--pw, 965px) * -.005) calc(var(--ph, 448px) * .094); }
     .c72-quiz.c11a .c72-pergunta { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * .08); }
@@ -1437,7 +1438,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v266 · 15/10/2026</span>
+    <span class="versao" id="versao">v267 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6436,12 +6437,15 @@ const Cena79 = {
   CFG: {
     cloro:    { sim: "Cl", meia: .62, lados: ["cima", "fora", "baixo"], aria: "Fórmula do Cl₂ como no caderno: Cl—Cl, com três pares de elétrons em cada cloro" },
     oxigenio: { sim: "O", meia: .42, lados: ["cima", "fora"], gap: .14, aria: "Fórmula do O₂ como no caderno: O=O, com dois pares de elétrons em cada oxigênio" },
-    nitrogenio: { sim: "N", meia: .42, lados: ["fora"], gap: .12, aria: "Fórmula do N₂ como no caderno: N≡N, com um par de elétrons em cada nitrogênio" }
+    nitrogenio: { sim: "N", meia: .42, lados: ["fora"], gap: .12, encurta: .4, aria: "Fórmula do N₂ como no caderno: N≡N, com um par de elétrons em cada nitrogênio" }
   },
   caderno(tipo = "cloro") {
     if (this.$(".c79-cl, .c79-caderno")) return;
-    const A = Cena74.atomo("A"), B = Cena74.atomo("B"); if (!A || !B) return;
-    const cfg = this.CFG[tipo], dur = this.DUR, easing = "cubic-bezier(.45,0,.25,1)", F = Math.round(A.R * 1.05), P = Palco.el.getBoundingClientRect();
+    const A0 = Cena74.atomo("A"), B0 = Cena74.atomo("B"); if (!A0 || !B0) return;
+    const cfg = this.CFG[tipo], dur = this.DUR, easing = "cubic-bezier(.45,0,.25,1)", F = Math.round(A0.R * 1.05), P = Palco.el.getBoundingClientRect();
+    // encurta: a ligação fica mais curta (a fração tirada do traço); as letras se aproximam, cada uma metade
+    const d = (cfg.encurta || 0) * ((B0.x - A0.x) - 2 * (F * cfg.meia + F * .1)) / 2;
+    const A = { ...A0, x: A0.x + d }, B = { ...B0, x: B0.x - d };
     // as bolas (e os rótulos 3D) encolhem e somem
     const q = Cena71.quantum, s = Cena71.m && Cena71.m.userData.est;
     if (q && s) { q.animar(s, "escalaO", .15, dur); q.animar(s, "escalaH", .15, dur); q.animar(s, "opac", 0, dur * .8); }
@@ -6485,7 +6489,7 @@ const Cena79 = {
       if (!this.$(".c79-cl")) return;
       const m = F * .9, xs = [A.x - meiaL, B.x + meiaL, ...pontos.map(p => p[0])], yy = [A.y - F / 2, A.y + F / 2, ...pontos.map(p => p[1])];
       const x0 = Math.min(...xs) - m, y0 = Math.min(...yy) - m, w = Math.max(...xs) + m - x0, hgt = Math.max(...yy) + m - y0, cor = "#F4F7FB";
-      Palco.adicionar(`<svg class="c79-caderno" viewBox="${x0} ${y0} ${w} ${hgt}" style="left:${x0}px;top:${y0}px;width:${w}px;height:${hgt}px" role="img" aria-label="${cfg.aria}">
+      Palco.adicionar(`<svg class="c79-caderno c79-${tipo}" viewBox="${x0} ${y0} ${w} ${hgt}" style="left:${x0}px;top:${y0}px;width:${w}px;height:${hgt}px" role="img" aria-label="${cfg.aria}">
         ${ys.map(y => `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${cor}" stroke-width="${hh}" stroke-linecap="round"/>`).join("")}
         ${[A, B].map(a => `<text x="${a.x}" y="${a.y}" text-anchor="middle" dominant-baseline="central" font-size="${F}" font-weight="700" fill="${cor}" font-family="Bricolage Grotesque, sans-serif">${cfg.sim}</text>`).join("")}
         ${pontos.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${pt / 2}" fill="${cor}"/>`).join("")}</svg>`);
