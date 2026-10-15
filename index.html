@@ -755,6 +755,8 @@
     #capa h1 { translate: -3vw -5.7vh; }
     #capa #btnIniciar { scale: .811; }
     #capa #btnDemo { translate: 23.8vw .3vh; }
+    /* 7.9: o Cl₂ como no caderno, 29% maior (ajuste da professora) */
+    #conteudoPalco .c79-caderno { scale: 1.29; translate: calc(var(--pw, 356px) * .002) 0; }
     /* o copo (11.1) e a molécula que sai dele (11.1A em diante): menores e mais baixos, no mesmo lugar o tempo todo */
     .c11-copo, .c11-copo.solto { translate: calc(var(--pw, 356px) * .001) calc(var(--ph, 655px) * .154); scale: .825; }
     /* 11.1A: a molécula que sai do copo para mais alta (o quadro 3D sobe junto com a saída) */
@@ -1427,7 +1429,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v260 · 15/10/2026</span>
+    <span class="versao" id="versao">v261 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -6447,6 +6449,9 @@ const Cena79 = {
         ${[A, B].map(a => `<text x="${a.x}" y="${a.y}" text-anchor="middle" dominant-baseline="central" font-size="${F}" font-weight="700" fill="${cor}" font-family="Bricolage Grotesque, sans-serif">Cl</text>`).join("")}
         ${pontos.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${pt / 2}" fill="${cor}"/>`).join("")}</svg>`);
       Palco.el.querySelectorAll(".c79-cl, .c78-traco, .c74-eletrons").forEach(el => el.remove());
+      // (com um ajuste de tamanho ou lugar no CSS — o do celular —, o desenho vai até ele suavemente, sem pulo)
+      const sv = this.$(".c79-caderno"), cs = getComputedStyle(sv);
+      if (cs.scale !== "none" || cs.translate !== "none") Palco.animar(sv, [{ scale: "1", translate: "0px 0px" }, { scale: cs.scale === "none" ? "1" : cs.scale, translate: cs.translate === "none" ? "0px 0px" : cs.translate }], { duracao: .6, easing: "ease-out", fill: "none" });
     }, () => {});
   }
 };
