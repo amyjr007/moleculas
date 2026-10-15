@@ -1437,7 +1437,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v265 · 15/10/2026</span>
+    <span class="versao" id="versao">v266 · 15/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3038,7 +3038,13 @@ const NARRACOES = [
     inicio: () => Cena75.montarPronta("nitrogenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); }),   // pela navegação: o N₂ formado
     eventos: [
       { tempo: 0,    acao: () => Cena96.normal() },                // os destaques e os textos da 9.6 saem
-      { tempo: 1.8,  acao: () => Cena83.piscarSolitarios() },      // os pares compartilhados piscam o brilho 3 vezes
+      // os pares ligantes acendem em âmbar, um de cada vez (de baixo para cima): quando um acende, o anterior apaga
+      { tempo: 1.7,  acao: () => Cena96.ambar(null, "p2") },           // o de baixo
+      { tempo: 2.45, acao: () => Cena96.ambar("p2", "p1") },       // o do meio
+      { tempo: 3.2,  acao: () => Cena96.ambar("p1", "p0") },       // o de cima
+      { tempo: 3.95, acao: () => Cena96.ambar("p0", null) },       // apaga (até 4s)
+      { tempo: 7,    acao: () => Cena96.ambar(null, "lig") },      // os três juntos, por meio segundo
+      { tempo: 7.5,  acao: () => Cena96.ambar("lig", null) },
       { tempo: 8.7,  acao: () => Cena86.tracos() },                // os três pares viram três traços
       { tempo: 12,   acao: () => Cena77.texto("tripla", "Ligação covalente tripla", 1.7) }   // digitado até 13,7s
     ] },
@@ -7013,6 +7019,18 @@ const Cena96 = {
   },
   // acende um e apaga o que estava aceso antes
   passar(de, para) { if (de) this.brilhar(de, false); this.brilhar(para); },
+  // 9.7: um brilho âmbar suave (apaga "de", acende "para"; qualquer um pode ser null)
+  AMBAR: "0 0 7px 2px rgba(255, 192, 110, .7), 0 0 18px 6px rgba(255, 168, 64, .3)",
+  TINTA: "sepia(.9) saturate(2.6) hue-rotate(-18deg) brightness(1.02)",   // o elétron fica âmbar claro
+  ambar(de, para) {
+    const anima = (alvo, ligar) => this.els(alvo).forEach(el => {
+      const atual = getComputedStyle(el), ini = { scale: atual.scale === "none" ? "1" : atual.scale, boxShadow: atual.boxShadow, filter: atual.filter === "none" ? "sepia(0) saturate(1) hue-rotate(0deg) brightness(1)" : atual.filter };
+      Palco.animar(el, [ini, ligar ? { scale: 1.25, boxShadow: this.AMBAR, filter: this.TINTA } : { scale: 1, boxShadow: Cena74.normal(el), filter: "sepia(0) saturate(1) hue-rotate(0deg) brightness(1)" }],
+        { duracao: ligar ? .3 : .25, easing: "ease-out" });
+    });
+    if (de) anima(de, false);
+    if (para) { Cena74.somBrilho(); anima(para, true); }
+  },
   // 23s: tudo volta ao normal (tamanho, brilho e cor) e os textos saem em fade
   normal() {
     Palco.el.querySelectorAll(".c74-e[data-preso]").forEach(el => {
