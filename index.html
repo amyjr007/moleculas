@@ -1463,7 +1463,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v303 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v304 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3324,11 +3324,12 @@ const NARRACOES = [
       // o O apaga em fade; os traços ficam transparentes, com os elétrons dentro deles (até 43,5s)
       { tempo: 39,   acao: () => { Cena113F.escurecer(["meio"]); Cena121.parDentro("esq", 4.5); Cena121.parDentro("dir", 4.5); } },   // (o par indo e vindo, como no 11.2)
       { tempo: 41,   acao: () => { Cena113P.estabilizar("esq"); Cena113P.estabilizar("dir"); } },   // "estável" em cima de cada H
-      // o O volta e pulsa; os "estável" somem e os H apagam em fade
-      { tempo: 43.5, acao: () => { Cena113F.escurecer(["meio"], false); Cena121.pulsarAtomo(["meio"], 1); Cena113F.tirarEstavel(); Cena113F.escurecer(["esq", "dir"]); } },
-      { tempo: 44.5, acao: () => Cena121.pulsarLigacao("esq", 1) },        // o traço da esquerda pulsa
-      { tempo: 45.5, acao: () => Cena121.pulsarLigacao("dir", 1) },        // o da direita
-      { tempo: 50,   acao: () => { Cena121.pulsarLigacao("esq", 2); Cena121.pulsarLigacao("dir", 2); } },   // os dois traços pulsam 2 vezes
+      // o O volta; os "estável" somem e os H apagam em fade
+      { tempo: 42.4, acao: () => { Cena113F.escurecer(["meio"], false); Cena113F.tirarEstavel(); Cena113F.escurecer(["esq", "dir"]); } },
+      { tempo: 43.5, acao: () => Cena121.pulsarAtomo(["meio"], 1) },       // o O pulsa
+      // os traços ficam transparentes, com o par indo e vindo: o da esquerda aos 44,5s, o da direita aos 45,5s; os dois voltam aos 51s
+      { tempo: 44.5, acao: () => Cena121.parDentro("esq", 6.5) },
+      { tempo: 45.5, acao: () => Cena121.parDentro("dir", 5.5) },
       { tempo: 51.7, acao: () => Cena12.brilho(Cena113P.livres()) }        // os 4 elétrons de baixo brilham
     ],
     // os H voltam; o brilho apaga. Sem play: quem leva adiante são os dois pares no lugar
