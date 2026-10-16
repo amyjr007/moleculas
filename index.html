@@ -1463,7 +1463,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v299 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v300 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3313,42 +3313,34 @@ const NARRACOES = [
     ],
     // no fim: o brilho e o retângulo saem e, no lugar do play, o botão "Passo 3" (leva ao 11.3)
     aoFim: () => { Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7], false); Cena121.retangulo(false); ui.semPlay(true); Cena11Copo.botaoPasso1(3); } },
-  // passo 3 (48s): os elétrons que sobram (os 4 da fileira) vão para a molécula até todos ficarem estáveis.
-  // Em 44,5s, "Quantos elétrons faltam?" (o certo: 4 e⁻); o acerto traz a festa do quiz e depois o 11.3B
+  // passo 3: os elétrons que sobram (os 4 da fileira) vão em pares para o O. Desde o começo, tocar em cima ou embaixo do O
+  // põe um par lá (o primeiro corta a narração); os dois pares no lugar: a festa e o 11.3A
   { id: "dialogo11_3", titulo: "O passo a passo: passo 3", src: "audio/audio_moleculas_11.3.mp3", semNav: true,
     inicio: () => { if (!Cena12.$(".c111-corpo")) { Cena11.tela(); Cena111.abrir(); } },   // (vindo do 11.2, a tela já está pronta)
     eventos: [
-      { tempo: 0,    acao: () => { Cena121.apagar(.6); Cena113P.liberar(); } },   // o "2: ..." se apaga até sobrar "Passo "; desde já, tocar em cima ou embaixo do O põe um par
-      { tempo: 0.7,  acao: () => Cena121.numero("3:") },                   // "3:"
-      { tempo: 1.2,  acao: () => Cena121.texto(" Os elétrons que sobram são distribuídos na molécula até que todos estejam estáveis.", 6.1) },   // até 7,3s
-      { tempo: 11.1, acao: () => Cena113P.brilhar("todos", 1) },           // os 4 elétrons da fileira brilham por 1s
-      { tempo: 35.5, acao: () => Cena121.pulsarAtomo(["esq"], 1) },        // o H da esquerda pulsa
-      { tempo: 36.4, acao: () => Cena121.pulsarAtomo(["dir"], 1) },        // o da direita
-      { tempo: 37,   acao: () => Cena121.pulsarAtomo(["meio"], 1) },       // o O
-      { tempo: 39,   acao: () => Cena121.pulsarAtomo(["dir"], 3) },        // o H da direita pulsa 3 vezes
-      { tempo: 42.4, acao: () => Cena113F.escurecer(["meio", "esq", "lig-esq"]) },   // escurece 90% o resto: só o H da direita e a ligação dele ficam normais
-      { tempo: 42.5, acao: () => Cena121.vaiVem("dir", 4.5, 3) },          // a ligação da direita fica transparente e o par vai e vem dentro dela (até 47s)
-      { tempo: 47,   acao: () => Cena113P.estabilizar("dir") },            // em cima do H da direita aparece "estável" (ele já se acalmou no 11.2)
-      { tempo: 49,   acao: () => { Cena113F.escurecer(["dir", "lig-dir"]); Cena113F.escurecer(["esq", "lig-esq"], false); Cena121.vaiVem("esq", 3, 2); } },   // inverte: só o H da esquerda e a ligação dele, com o par indo e vindo (até 52s)
-      { tempo: 52,   acao: () => { Cena113P.estabilizar("esq"); Cena121.pulsarAtomo(["meio"], 2); } },   // "estável" em cima do H da esquerda; o O pulsa 2 vezes
-      { tempo: 54.9, acao: () => { Cena113F.escurecer(["esq", "dir"]); Cena113F.escurecer(["meio", "lig-esq", "lig-dir"], false); } },   // os H apagam; o O e as ligações acendem
-      { tempo: 58.3, acao: () => Cena113P.engrossar("esq") },              // a ligação da esquerda brilha
-      { tempo: 59.2, acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir"); } },   // ela apaga; a da direita brilha
-      { tempo: 61.3, acao: () => Cena113P.engrossar("esq") },              // as duas brilham
-      { tempo: 65,   acao: () => { Cena113P.engrossar("esq", false); Cena113P.engrossar("dir", false); Cena113F.escurecer(["esq", "dir"], false); Cena113P.pergunta(); } }   // apagam; os H voltam; "Quantos elétrons faltam?"
+      { tempo: 0,    acao: () => { Cena121.apagar(.3); Cena113P.liberar(); } },   // o "2: ..." se apaga até sobrar "Passo "; desde já, tocar em cima ou embaixo do O põe um par
+      { tempo: 0.5,  acao: () => Cena121.numero("3:") },                   // "3:"
+      { tempo: 1.5,  acao: () => Cena121.texto(" Os elétrons que sobraram são distribuídos em pares até que todos atinjam a estabilidade.", 5.5) },   // até 7s
+      { tempo: 11,   acao: () => Cena113P.brilhar("todos", 1) },           // os 4 elétrons de baixo acendem e seguram 1s
+      { tempo: 29.7, acao: () => Cena121.pulsarAtomo(["esq", "dir"], 2) }, // os H das pontas pulsam 2 vezes
+      { tempo: 31,   acao: () => Cena121.pulsarAtomo(["meio"], 2) },       // o O pulsa 2 vezes
+      { tempo: 35.2, acao: () => Cena121.pulsarAtomo(["esq", "dir"], 1) }, // os dois H pulsam
+      // o O apaga em fade; os traços ficam transparentes, com os elétrons dentro deles (até 43,5s)
+      { tempo: 39,   acao: () => { Cena113F.escurecer(["meio"]); Cena121.parParado("esq", 4.5); Cena121.parParado("dir", 4.5); } },
+      { tempo: 41,   acao: () => { Cena113P.estabilizar("esq"); Cena113P.estabilizar("dir"); } },   // "estável" em cima de cada H
+      // o O volta e pulsa; os "estável" somem e os H apagam em fade
+      { tempo: 43.5, acao: () => { Cena113F.escurecer(["meio"], false); Cena121.pulsarAtomo(["meio"], 1); Cena113F.tirarEstavel(); Cena113F.escurecer(["esq", "dir"]); } },
+      { tempo: 44.5, acao: () => Cena121.pulsarLigacao("esq", 1) },        // o traço da esquerda pulsa
+      { tempo: 45.5, acao: () => Cena121.pulsarLigacao("dir", 1) },        // o da direita
+      { tempo: 50,   acao: () => { Cena121.pulsarLigacao("esq", 2); Cena121.pulsarLigacao("dir", 2); } },   // os dois traços pulsam 2 vezes
+      { tempo: 51.7, acao: () => Cena12.brilho(Cena113P.livres()) }        // os 4 elétrons de baixo brilham
     ],
-    aoFim: () => ui.semPlay(true) },   // quem leva adiante é a resposta certa (o 11.3A)
-  // depois do acerto (16s): no fim, o aluno toca em cima e embaixo do O (um par por toque, um par em cada lado);
-  // os dois pares no lugar: o O se acalma e entra o 11.3B
-  { id: "dialogo11_3A", titulo: "Os pares que faltam", src: "audio/audio_moleculas_11.3A.mp3", semNav: true, extra: true,
-    eventos: [
-      { tempo: 0,    acao: () => Cena113P.tirarQuiz() },                   // a pergunta e as opções saem em fade
-      { tempo: 5,    acao: () => Cena113P.fila(true) }                     // os 4 elétrons de baixo e o "4 e⁻" voltam em fade
-    ],
-    aoFim: () => { ui.semPlay(true); Cena113F.tirarEstavel(); Cena113P.liberar(); } },   // (o "estável" em cima dos H some em fade)
+    // os H voltam; o brilho apaga. Sem play: quem leva adiante são os dois pares no lugar
+    aoFim: () => { Cena113F.escurecer(["meio", "esq", "dir"], false); Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7], false); ui.semPlay(true); Cena113P.liberar(); } },
   // a molécula pronta (35s): festa, o foco nos H e nas ligações e depois no O, nos pares e nas ligações; no fim,
   // a molécula de bolas sai e entra a mesma, como feita no caderno (só símbolos, traços e os pontinhos dos pares)
-  { id: "dialogo11_3B", titulo: "A molécula de água", src: "audio/audio_moleculas_11.3B.mp3", semNav: true, extra: true,
+  // (era o 11.3B: o áudio virou o 11.3A)
+  { id: "dialogo11_3A", titulo: "A molécula de água", src: "audio/audio_moleculas_11.3A.mp3", semNav: true, extra: true,
     eventos: [
       { tempo: 3,    acao: () => Cena113F.festa(false) },                  // aplausos e confetes
       { tempo: 5,    acao: () => Cena121.respiro(1, true) },               // o áudio pausa 1s (e continua sozinho)
@@ -9941,6 +9933,7 @@ const Cena113P = {
     if (NARRACOES[Player.indice] && NARRACOES[Player.indice].id === "dialogo11_3" && Player.fonte) {
       Player.calar();
       Cena113F.escurecer(["meio", "esq", "dir", "lig-esq", "lig-dir"], false); ["esq", "dir"].forEach(l => this.engrossar(l, false));
+      Cena113F.tirarEstavel(); Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7], false);
     }
     if (Object.values(this.lados).every(Boolean)) this.pronto();
   },
@@ -9953,11 +9946,10 @@ const Cena113P = {
       const av = this.$(".c84-aviso"); if (av) { av.getAnimations().forEach(a => a.cancel()); av.remove(); }   // um aviso de erro ainda na tela sai
       this.estabilizar("meio");   // com o octeto completo, o O para de tremer (a bola verde)
       Vibra.tocar("toqueEletron");
-      // e entra o 11.3B (a festa é dele, aos 3s) — ou, na amônia, o 12.8
+      // e entra o 11.3A (a festa é dele, aos 3s) — ou, na amônia, o 12.8
       const id = NARRACOES[Player.indice] && NARRACOES[Player.indice].id;
-      if (["dialogo11_3A", "dialogo12_7"].includes(id)) Player.seguirSozinho(true);
-      // (os pares postos ainda no 11.3: direto para o 11.3B — a pergunta e o 11.3A ficam para trás)
-      else if (id === "dialogo11_3") { Player.calar(); Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo11_3B"), true); }
+      if (id === "dialogo12_7") Player.seguirSozinho(true);
+      else if (id === "dialogo11_3") { Player.calar(); Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo11_3A"), true); }
     }, () => {});
   }
 };
@@ -12330,7 +12322,7 @@ const Demo = {
   toqueAtomos(toques) {
     const id = NARRACOES[Player.indice] && NARRACOES[Player.indice].id;
     const emJanela = A => this.naJanela(A.x, A.y);
-    if (id === "dialogo11_2" || id === "dialogo12_5" || id === "dialogo13_4" || id === "dialogo14_3") {
+    if (id === "dialogo12_5" || id === "dialogo13_4" || id === "dialogo14_3") {   // (no 11.2 as ligações se formam sozinhas)
       const lado = !Cena112L.sel ? "meio" : Cena121.pontasLados().find(l => !Cena112L.lig[l]);
       if (!lado) return null;
       const A = Cena112L.naTela(lado); if (!A) return null;
@@ -12346,7 +12338,7 @@ const Demo = {
       const [dx, dy] = { cima: [0, -1], baixo: [0, 1], dir: [1, 0], esq: [-1, 0] }[lado];
       return () => this.tocar(toques, this.naJanela(O.x + dx * O.R * 2, O.y + dy * O.R * 2));
     }
-    if (id === "dialogo11_3A" || id === "dialogo12_7") {
+    if (id === "dialogo11_3" || id === "dialogo12_7") {
       const O = Cena112L.naTela("meio"); if (!O || !Cena113P.lados) return null;
       const cima = !Cena113P.lados.cima;
       return () => this.tocar(toques, this.naJanela(O.x, O.y + (cima ? -1 : 1) * O.R * 2));
