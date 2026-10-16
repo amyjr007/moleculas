@@ -96,10 +96,7 @@
   .btn-iniciar:hover { transform: translateY(-2px); background: var(--ambar-claro); }
   .btn-iniciar:active { transform: translateY(0); }
   .btn-iniciar:focus-visible { outline-color: var(--branco); outline-offset: 4px; }
-  /* a demonstração: o botão na capa, a mãozinha que faz os toques e o botão de parar */
-  .btn-demo { display: block; margin-top: 14px; padding: 9px 22px; border-radius: 999px; border: 2px solid rgba(163,219,247,.45); background: rgba(20,33,52,.6);
-    color: var(--celeste); font: 700 .95rem/1 var(--display); letter-spacing: .02em; cursor: pointer; transition: border-color .15s, background-color .15s; }
-  .btn-demo:hover { border-color: var(--celeste); background: rgba(163,219,247,.12); }
+  /* a demonstração (começa segurando o "Iniciar" por 2s): a mãozinha que faz os toques e o botão de parar */
   .demo-mao { position: fixed; left: 0; top: 0; width: 46px; height: 60px; z-index: 500; pointer-events: none; opacity: 0;
     filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); transition: opacity .3s; }
   .demo-mao.on { opacity: 1; }
@@ -709,8 +706,7 @@
      na ferramenta de desenvolvimento, numa tela de 965 × 448 — em proporção do palco (--pw, --ph, marcados pelo JS) */
   @media (orientation: landscape) and (min-height: 561px) {
     /* a capa (ajustes da professora no Chromebook, tela de 1024 × 576; a capa ocupa a tela toda, então vw/vh = % da capa):
-       o botão "Demonstração" à direita, a fábrica um pouquinho para a esquerda e o cubo de átomos embaixo, 80% maior */
-    #capa #btnDemo { translate: 59.3vw 15.1vh; }
+       a fábrica um pouquinho para a esquerda e o cubo de átomos embaixo, 80% maior */
     #capa .art { translate: -.6vw .4vh; }
     #capa #logoCubo { translate: 25.3vw 61.8vh; scale: 1.798; }
     /* "As moléculas poliatômicas" e "Moléculas" (no alto): o padrão_título, o mesmo do "Regra do Octeto" */
@@ -773,7 +769,6 @@
     #capa #logoCubo { translate: 60.4vw 4.9vh; scale: 1.701; }
     #capa h1 { translate: -3vw -5.7vh; }
     #capa #btnIniciar { scale: .811; }
-    #capa #btnDemo { translate: 23.8vw .3vh; }
     /* 7.9: o Cl₂ como no caderno, 29% maior (ajuste da professora) */
     #conteudoPalco .c79-caderno { scale: 1.29; translate: calc(var(--pw, 356px) * .002) 0; }
     /* o copo (11.1) e a molécula que sai dele (11.1A em diante): menores e mais baixos, no mesmo lugar o tempo todo */
@@ -1456,9 +1451,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
-    <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v284 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v285 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3193,7 +3186,7 @@ const NARRACOES = [
     ],
     aoFim: () => ui.semPlay(true) },                               // sem play: o aluno monta a estrutura e confirma
   // capítulo novo: as moléculas poliatômicas (os eventos virão depois)
-  { id: "dialogo11", titulo: "As moléculas poliatômicas", num: 49, src: "audio/audio_moleculas_11.mp3", esperaPlay: true,
+  { id: "dialogo11", titulo: "As moléculas poliatômicas", num: 39, src: "audio/audio_moleculas_11.mp3", esperaPlay: true,
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 3.8,  acao: () => { Cena11.ctl && Cena11.ctl.transformar("cloro"); Cena11.legenda("Molécula diatômica"); } },   // vira o Cl₂; a legenda surge
@@ -3207,7 +3200,7 @@ const NARRACOES = [
     ],
     aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "Bora"); } },   // no lugar do play, o botão "Bora" leva ao próximo áudio
   // a molécula de água (os eventos antigos do 11.1 estão guardados em guardado/v170 - audios 11 antigos)
-  { id: "dialogo11_1", titulo: "A molécula de água", num: 50, src: "audio/audio_moleculas_11.1.mp3", esperaPlay: true,
+  { id: "dialogo11_1", titulo: "A molécula de água", num: 40, src: "audio/audio_moleculas_11.1.mp3", esperaPlay: true,
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 0.5,  acao: () => Cena111.abrir() },                        // título numa linha só, no topo; molécula e legenda saem girando
@@ -3341,8 +3334,8 @@ const NARRACOES = [
     ] },
   // Exemplo 02, a amônia (11s): o copo volta e a molécula de água entra nele; aos 7s a área do copo vira (face de cubo)
   // e a nova face traz um frasco de vidro fechado com amônia, um gás. No fim, o frasco chama o toque
-  // na navegação rápida é o 51, e entra aos 7s (a virada para o frasco)
-  { id: "dialogo12", titulo: "A molécula de amônia", num: 51, entrada: 7, src: "audio/audio_moleculas_12.mp3",
+  // na navegação rápida é o 41, e entra aos 7s (a virada para o frasco)
+  { id: "dialogo12", titulo: "A molécula de amônia", num: 41, entrada: 7, src: "audio/audio_moleculas_12.mp3",
     inicio: () => Cena12A.inicio(),
     eventos: [
       { tempo: 0,    acao: () => Cena12A.voltarCopo() },                   // sai a água em 3D (e o resto do 11.3); o copo volta e a molécula entra nele
@@ -3458,8 +3451,8 @@ const NARRACOES = [
     aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1("e", "Entendi"); } },   // o "Entendi" leva ao 13 (o metano)
   // o metano (12s): o que ficou da amônia em volta sai; aos 3s a amônia em 3D vira (face de cubo) e entra o cilindro de gás
   // "Metano"; a partir dos 4s ele aceita o toque (mesmo no meio do áudio: corta e, quando a molécula sai, entra o 13.1)
-  // na navegação rápida é o 52, e entra aos 3s (a virada para o cilindro)
-  { id: "dialogo13", titulo: "A molécula de metano", num: 52, entrada: 3, src: "audio/audio_moleculas_13.mp3",
+  // na navegação rápida é o 42, e entra aos 3s (a virada para o cilindro)
+  { id: "dialogo13", titulo: "A molécula de metano", num: 42, entrada: 3, src: "audio/audio_moleculas_13.mp3",
     inicio: () => Cena13A.inicio(),
     eventos: [
       { tempo: 0,    acao: () => Cena13A.limpar() },                       // a fórmula, o passo e a fileira da amônia saem em fade
@@ -3537,7 +3530,7 @@ const NARRACOES = [
   // capítulo 14, o gás carbônico: 0s sai o que sobrou do metano (a fórmula, a molécula pequena); 3s o cilindro de metano
   // volta pela esquerda e o metano 3D entra nele girando até sumir; 18s a área vira como face de cubo e a nova face traz o
   // cilindro de gás carbônico; a partir dos 19s, tocar nele (corta o áudio) — sai o CO₂ girando até o meio e entra o 14.1
-  { id: "dialogo14", titulo: "A molécula de gás carbônico", num: 53, entrada: 17, src: "audio/audio_moleculas_14.mp3",
+  { id: "dialogo14", titulo: "A molécula de gás carbônico", num: 43, entrada: 17, src: "audio/audio_moleculas_14.mp3",
     inicio: () => Cena14A.inicio(),
     eventos: [
       { tempo: 0,    acao: () => Cena14A.limpar() },
@@ -12162,7 +12155,20 @@ const Demo = {
   const vibrarOrig = Vibra.tocar.bind(Vibra);
   Vibra.tocar = nome => { if (!Demo.ativo) vibrarOrig(nome); };
 })();
-document.getElementById("btnDemo").addEventListener("click", () => Demo.iniciar());
+// a demonstração começa segurando o "Iniciar" por 2s (o botão "Demonstração" saiu da capa)
+(() => {
+  const bt = document.getElementById("btnIniciar");
+  let timer = null, segurou = false;
+  bt.addEventListener("pointerdown", () => {
+    segurou = false; clearTimeout(timer);
+    timer = setTimeout(() => { timer = null; segurou = true; if (navigator.vibrate) try { navigator.vibrate(30); } catch (_) {} Demo.iniciar(); }, 2000);
+  });
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => bt.addEventListener(ev, () => { clearTimeout(timer); timer = null; }));
+  bt.addEventListener("contextmenu", e => e.preventDefault());
+  // soltar depois de segurar não vale como toque (não abre o pedido do nome)
+  // (só o toque de verdade: o da mãozinha da demonstração passa)
+  bt.addEventListener("click", e => { if (segurou && e.isTrusted) { segurou = false; e.stopImmediatePropagation(); } });
+})();
 addEventListener("keydown", e => { if (e.key === "Escape" && Demo.ativo) Demo.parar(); });
 
 /* ---------- O nome do aluno: pedido ao tocar em "Iniciar"; aparece nos cartões das notas ---------- */
