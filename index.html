@@ -1451,7 +1451,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v287 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v288 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3186,7 +3186,8 @@ const NARRACOES = [
     ],
     aoFim: () => ui.semPlay(true) },                               // sem play: o aluno monta a estrutura e confirma
   // capítulo novo: as moléculas poliatômicas (os eventos virão depois)
-  { id: "dialogo11", titulo: "As moléculas poliatômicas", src: "audio/audio_moleculas_11.mp3", esperaPlay: true,
+  // (pelo sumário, a tela é montada e o áudio já começa)
+  { id: "dialogo11", titulo: "As moléculas poliatômicas", src: "audio/audio_moleculas_11.mp3",
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 3.8,  acao: () => { Cena11.ctl && Cena11.ctl.transformar("cloro"); Cena11.legenda("Molécula diatômica"); } },   // vira o Cl₂; a legenda surge
@@ -7450,6 +7451,7 @@ const Cena11 = {
       }
     };
     construir("metano");
+    mol.visible = false;   // a tela começa sem molécula: a primeira a aparecer é o Cl₂, aos 3,8s do áudio 11
     mol.rotation.order = "XYZ";
     mol.position.y = -.2;
 
@@ -7481,8 +7483,12 @@ const Cena11 = {
     const pulsos = [];
     const suave = x => x * x * (3 - 2 * x);
     this.ctl = {
-      // a molécula dá um giro rápido, encolhe e, no meio do giro, vira a outra
-      transformar: tipo => { troca = { t0: t, dur: .35, tipo, feito: false }; },
+      // a molécula dá um giro rápido, encolhe e, no meio do giro, vira a outra.
+      // Sem molécula na tela ainda: ela já nasce a nova, crescendo do nada num giro
+      transformar: tipo => {
+        if (!mol.visible) { construir(tipo); mol.visible = true; troca = { t0: t, dur: .45, tipo, feito: true, entra: true }; return; }
+        troca = { t0: t, dur: .35, tipo, feito: false };
+      },
       // um átomo (pelo índice) pulsa com brilho
       pulsar: (k, dur = .55) => { if (atomos[k]) pulsos.push({ a: atomos[k], t0: t, dur }); },
       // todos os átomos pulsam um depois do outro até "ate" segundos daqui; repetir: recomeça até ser parado
@@ -7504,7 +7510,7 @@ const Cena11 = {
       if (troca) {
         const p = Math.min((t - troca.t0) / troca.dur, 1);
         extra = Math.PI * 2 * suave(p);
-        esc = p < .5 ? 1 - .75 * suave(p * 2) : .25 + .75 * suave((p - .5) * 2);
+        esc = troca.entra ? suave(p) : p < .5 ? 1 - .75 * suave(p * 2) : .25 + .75 * suave((p - .5) * 2);
         if (p >= .5 && !troca.feito) { troca.feito = true; construir(troca.tipo); }
         if (p >= 1) troca = null;
       }
