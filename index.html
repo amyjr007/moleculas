@@ -1451,7 +1451,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v289 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v290 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3333,6 +3333,8 @@ const NARRACOES = [
   // começa com a molécula do caderno na tela; aos 17,3s ela sai e entra a água em 3D (geometria certa, pares organizados, girando)
   { id: "dialogo11_3C", titulo: "A água em 3D", src: "audio/audio_moleculas_11.3C.mp3", semNav: true, extra: true,
     eventos: [
+      { tempo: 14,   acao: () => Cena113F.angular() },                     // a do caderno fica angular (os H descem girando em volta do O)
+      { tempo: 16.3, acao: () => Cena113F.pulsarPares(2) },                // os pares não ligantes do O pulsam 2 vezes
       { tempo: 17.3, acao: () => Cena113C.mostrar() }                      // a do caderno sai em fade; a 3D entra (dá para girar com o dedo)
     ] },
   // Exemplo 02, a amônia (11s): o copo volta e a molécula de água entra nele; aos 7s a área do copo vira (face de cubo)
@@ -10592,15 +10594,44 @@ const Cena113F = {
         ${ponto(cx - dx, cy - dy)}${ponto(cx + dx, cy - dy)}`;
       s.setAttribute("aria-label", "Estrutura de Lewis da amônia: o N ligado a três H, com um par de elétrons no nitrogênio");
     } else {
-    s.innerHTML = `<g class="caderno" stroke="${cor}" stroke-width="${2.2 * 1.2}" stroke-linecap="round">
-        <line x1="${xe - traco}" y1="25" x2="${xe}" y2="25"/><line x1="${xd}" y1="25" x2="${xd + traco}" y2="25"/></g>
-      ${simbolo(hEsq, "H")}${simbolo(100, "O")}${simbolo(hDir, "H")}
-      ${ponto(100 - dx, 25 - dy)}${ponto(100 + dx, 25 - dy)}${ponto(100 - dx, 25 + dy)}${ponto(100 + dx, 25 + dy)}`;
+    // (cada lado — o traço e o H — num grupo: no 11.3C eles giram em volta do O e a molécula fica angular)
+    const pt = (x, y) => ponto(x, y).replace("<circle", '<circle class="c113-par"');
+    s.innerHTML = `<g class="c113-lado" data-l="esq"><g class="caderno" stroke="${cor}" stroke-width="${2.2 * 1.2}" stroke-linecap="round">
+        <line x1="${xe - traco}" y1="25" x2="${xe}" y2="25"/></g>${simbolo(hEsq, "H")}</g>
+      <g class="c113-lado" data-l="dir"><g class="caderno" stroke="${cor}" stroke-width="${2.2 * 1.2}" stroke-linecap="round">
+        <line x1="${xd}" y1="25" x2="${xd + traco}" y2="25"/></g>${simbolo(hDir, "H")}</g>
+      ${simbolo(100, "O")}
+      ${pt(100 - dx, 25 - dy)}${pt(100 + dx, 25 - dy)}${pt(100 - dx, 25 + dy)}${pt(100 + dx, 25 + dy)}`;
     s.setAttribute("aria-label", "Estrutura de Lewis da água: H–O–H, com dois pares de elétrons no oxigênio");
     }
     delete s.dataset.apagado;
     Palco.animar(s, [{ opacity: 0 }, { opacity: 1 }], { duracao: 1, easing: "ease-out", fill: "none" });
     s.style.opacity = "";
+  },
+  // 11.3C, 14s: a água do caderno fica angular — cada H (com o seu traço) desce girando em volta do O até 104,5° entre eles.
+  // As letras H giram de volta junto, para continuarem de pé
+  angular(dur = .9) {
+    const s = this.$(".c121-esqueleto"); if (!s) return;
+    const th = (180 - 104.5) / 2, ease = "cubic-bezier(.4,0,.2,1)";
+    [["esq", -1], ["dir", 1]].forEach(([l, sg]) => {
+      const g = s.querySelector(`.c113-lado[data-l="${l}"]`); if (!g) return;
+      Object.assign(g.style, { transformBox: "view-box", transformOrigin: "100px 25px" });
+      Palco.animar(g, [{ transform: "rotate(0deg)" }, { transform: `rotate(${sg * th}deg)` }], { duracao: dur, easing: ease, fill: "forwards" });
+      const t = g.querySelector("text"); if (!t) return;
+      Object.assign(t.style, { transformBox: "fill-box", transformOrigin: "center" });
+      Palco.animar(t, [{ transform: "rotate(0deg)" }, { transform: `rotate(${-sg * th}deg)` }], { duracao: dur, easing: ease, fill: "forwards" });
+    });
+  },
+  // 11.3C, 16,3s: os pares não ligantes do O (pontinhos do caderno) dão duas pulsadas com brilho
+  pulsarPares(vezes = 2) {
+    const s = this.$(".c121-esqueleto"); if (!s) return;
+    const normal = { transform: "scale(1)", filter: "drop-shadow(0 0 0 rgba(255,194,75,0))" };
+    const grande = { transform: "scale(1.9)", filter: "drop-shadow(0 0 4px rgba(255,194,75,.95))" };
+    s.querySelectorAll(".c113-par").forEach(c => {
+      Object.assign(c.style, { transformBox: "fill-box", transformOrigin: "center" });
+      const q = Array.from({ length: vezes }, (_, i) => [{ ...normal, offset: i / vezes }, { ...grande, offset: (i + .45) / vezes }]).flat();
+      Palco.animar(c, [...q, normal], { duracao: .7 * vezes, easing: "ease-in-out", fill: "none" });
+    });
   }
 };
 
