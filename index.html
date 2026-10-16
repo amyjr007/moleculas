@@ -200,6 +200,7 @@
   .btn-home svg { width: 28px; height: 28px; }
   .btn-home:hover { background: var(--grafite); }
   .topo-acoes { display: flex; align-items: center; gap: 4px; }
+  .btn-vel { position: relative; z-index: 30; }   /* (por cima do palco, se for levado para baixo) */
   .btn-vel span { font-variant-numeric: tabular-nums; min-width: 3.2ch; text-align: center; }
   .btn-vel[aria-pressed="true"] { color: var(--ambar); }
 
@@ -1454,7 +1455,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v282 · 16/10/2026</span>
+    <span class="versao" id="versao">v283 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -1521,7 +1522,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
         <path d="M6 15l6-6 6 6"/>
       </svg>
-      Navegação rápida
+      Sumário
     </button>
   </nav>
 </section>
@@ -1531,8 +1532,8 @@
 <div class="gaveta" id="gaveta" role="dialog" aria-modal="true" aria-labelledby="tituloGaveta" aria-hidden="true">
   <div class="alca"></div>
   <div class="gaveta-topo">
-    <h2 id="tituloGaveta">Navegação rápida</h2>
-    <button class="btn-fechar" id="btnFechar" aria-label="Fechar navegação rápida">
+    <h2 id="tituloGaveta">Sumário</h2>
+    <button class="btn-fechar" id="btnFechar" aria-label="Fechar o sumário">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
     </button>
   </div>
@@ -11530,6 +11531,20 @@ const Dev = {
     vc.addEventListener("pointerdown", () => { tc = setTimeout(() => { tc = null; this.alternar(); }, 650); });
     ["pointerup", "pointerleave", "pointercancel"].forEach(ev => vc.addEventListener(ev, () => { clearTimeout(tc); tc = null; }));
     vc.addEventListener("contextmenu", e => e.preventDefault());
+    // o botão de velocidade (no topo, fora do palco): com o editor ligado, ele também pode ser arrastado e mudar de tamanho
+    const vel = document.getElementById("btnVel");
+    vel.addEventListener("pointerdown", e => {
+      if (!this.ligado || this.raiz().id === "capa") return;
+      e.preventDefault(); e.stopPropagation();
+      try { vel.setPointerCapture(e.pointerId); } catch (_) {}
+      if (this.sel !== vel) this.escolher(vel);
+      this.dados(vel);
+      this.toques.set(e.pointerId, { el: vel, x: e.clientX, y: e.clientY });
+    });
+    vel.addEventListener("pointermove", e => this.move(e));
+    ["pointerup", "pointercancel"].forEach(ev => vel.addEventListener(ev, e => this.sobe(e)));
+    vel.addEventListener("wheel", e => { if (this.ligado && this.sel === vel) { e.preventDefault(); this.redimensionar(vel, e.deltaY < 0 ? 1.05 : 1 / 1.05); } }, { passive: false });
+    vel.addEventListener("click", e => { if (this.ligado) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);   // editando, o toque não troca a velocidade
     document.getElementById("devBarra").addEventListener("click", e => {
       const b = e.target.closest("[data-dev]"); if (!b) return;
       const acao = b.dataset.dev;
