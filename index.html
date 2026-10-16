@@ -718,6 +718,7 @@
     #conteudoPalco .c79-caderno.c79-nitrogenio { scale: 1.405; }   /* 9.8: o N₂ no caderno */
     /* o botão de velocidade: sai do topo e fica embaixo do play, do lado direito da barra do sumário */
     .btn-vel { translate: calc(var(--pw, 965px) * .039) calc(var(--ph, 448px) * 1.132); }
+    #conteudoPalco .c11-legenda.poli { translate: calc(var(--pw, 965px) * .003) calc(var(--ph, 448px) * .073); }   /* 11: "Moléculas poliatômicas" */
     #conteudoPalco .c79-caderno.c79-oxigenio { scale: 1.408; translate: calc(var(--pw, 965px) * -.002) calc(var(--ph, 448px) * -.049); }   /* 8.8: o O₂ no caderno */
     .c72-quiz.c10aq .c72-pergunta { translate: calc(var(--pw, 965px) * .002) calc(var(--ph, 448px) * .047); }   /* 10A: a fórmula do HCl */
     .c72-quiz.c10aq .c4-opcoes { translate: calc(var(--pw, 965px) * .003) calc(var(--ph, 448px) * .121); }
@@ -1451,7 +1452,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v290 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v291 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3075,7 +3076,7 @@ const NARRACOES = [
     aoFim: () => Cena79.caderno("nitrogenio") },                  // a transformação; o play volta (leva ao 10)
   // mais um exemplo antes do resumo: volta do mundo quântico do N₂ e o cubo traz o cilindro de cloreto de hidrogênio
   // (no sumário, o exemplo 04 começa aqui; as narrações seguintes dele ficam fora dele, e o resumo entra pelas suas três partes)
-  { id: "dialogo10", titulo: "Exemplo 04: cloreto de hidrogênio", src: "audio/audio_moleculas_10.mp3",
+  { id: "dialogo10", titulo: "A molécula de HCl", src: "audio/audio_moleculas_10.mp3",
     // pela navegação rápida: parte do N₂ formado (em traços), no mundo quântico
     inicio: () => Cena75.montarPronta("nitrogenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); Cena86.tracos(); }),
     eventos: [
