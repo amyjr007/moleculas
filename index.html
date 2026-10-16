@@ -294,6 +294,10 @@
   .c3-f2 { background: #0a1322; border-color: rgba(163,219,247,.2); }
   /* áudio 12: o cubo do copo para o frasco de amônia — faces sem fundo e sem corte (no tablet e no celular o copo fica deslocado) */
   .c12-cubo .c3-face { overflow: visible; background: none; border-color: transparent; }
+  /* 11.1: só o recorte em volta do copo vira (a "tela" de dentro de cada face é do tamanho do palco, deslocada) */
+  .c11v-cubo { z-index: 2; }
+  .c11v-cubo .c3-face { overflow: hidden; background: none; border-color: transparent; border-radius: 16px; }
+  .c11v-tela { position: absolute; }
   .c3-f2 canvas { display: block; width: 100%; height: 100%; }
   /* dash e clarão ao "entrar na substância"; depois, o mundo quântico ocupa o palco (título e frase por cima) */
   .c0-titulo, .c3-frase { z-index: 3; pointer-events: none; }
@@ -718,7 +722,7 @@
     #conteudoPalco .c79-caderno.c79-nitrogenio { scale: 1.405; }   /* 9.8: o N₂ no caderno */
     /* o botão de velocidade: sai do topo e fica embaixo do play, do lado direito da barra do sumário */
     .btn-vel { translate: calc(var(--pw, 965px) * .039) calc(var(--ph, 448px) * 1.132); }
-    #conteudoPalco .c11-legenda.poli { translate: calc(var(--pw, 965px) * .003) calc(var(--ph, 448px) * .073); }   /* 11: "Moléculas poliatômicas" */
+    #conteudoPalco .c11-legenda.poli { translate: calc(var(--pw, 965px) * -.004) calc(var(--ph, 448px) * .127); }   /* 11: "Moléculas poliatômicas" */
     #conteudoPalco .c79-caderno.c79-oxigenio { scale: 1.408; translate: calc(var(--pw, 965px) * -.002) calc(var(--ph, 448px) * -.049); }   /* 8.8: o O₂ no caderno */
     .c72-quiz.c10aq .c72-pergunta { translate: calc(var(--pw, 965px) * .002) calc(var(--ph, 448px) * .047); }   /* 10A: a fórmula do HCl */
     .c72-quiz.c10aq .c4-opcoes { translate: calc(var(--pw, 965px) * .003) calc(var(--ph, 448px) * .121); }
@@ -1457,7 +1461,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v296 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v297 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3213,7 +3217,8 @@ const NARRACOES = [
   { id: "dialogo11_1", titulo: "O copo de água", src: "audio/audio_moleculas_11.1.mp3", semNav: true,
     inicio: () => Cena11.tela(),
     eventos: [
-      { tempo: 0.5,  acao: () => Cena111.abrir() },                        // título numa linha só, no topo; molécula e legenda saem girando
+      // título numa linha só, no topo; o recorte da molécula vira como face de cubo e traz o copo com a lupa (o toque vale)
+      { tempo: 0.5,  acao: () => { Cena111.abrir(false); Cena11Copo.virarDaMolecula(); } },
       { tempo: 5,    acao: () => { Cena11Copo.mostrar(); Cena11Copo.lupa(); Cena11Copo.liberar(); } }   // o copo de água, no centro, com a lupa mostrando as moléculas; o toque já vale (corta o áudio)
     ],
     // no fim, o copo pode ser tocado: a molécula sai de dentro dele e vem o 11.1A
@@ -3281,9 +3286,10 @@ const NARRACOES = [
       { tempo: 1,    acao: () => Cena12N.realcarLado("dir") },
       ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 1 + k * .35, acao: () => Cena12.eletron("O", k) })),   // os 6 do O descem para a fileira (até 2,75s)
       { tempo: 3,    acao: () => { Cena12N.realcarLado("dir", false); Cena12N.realcarLado("esq"); Cena12.eletron("H", 6); } },
-      { tempo: 3.35, acao: () => Cena12.eletron("H", 7) }                  // os 2 dos H
+      { tempo: 3.35, acao: () => Cena12.eletron("H", 7) },                 // os 2 dos H
+      { tempo: 7.3,  acao: () => Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7]) }   // os 8 da fileira brilham em âmbar escuro até o fim do áudio
     ],
-    aoFim: () => { Cena12N.realcarLado("esq", false); ui.semPlay(true); Cena11Copo.botaoPasso1(2); } },
+    aoFim: () => { Cena12N.realcarLado("esq", false); Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7], false); ui.semPlay(true); Cena11Copo.botaoPasso1(2); } },
   // passo 2 com a água (29s): o esqueleto — o O no centro e um H de cada lado, instáveis; a partir dos 24s
   // o aluno liga o centro às pontas (toca no O e depois num H). As duas ligações: a explosão, o "right" e o botão "Passo 3"
   { id: "dialogo11_2", titulo: "O passo a passo: passo 2", src: "audio/audio_moleculas_11.2.mp3", semNav: true,
@@ -7612,7 +7618,8 @@ const Cena11 = {
 const Cena111 = {
   $(sel) { return Palco.el.querySelector(sel); },
   // 0,5s: o título numa linha só (encolhe até caber) e a molécula + a legenda saem girando para a esquerda
-  abrir() {
+  // (girarMol = false: elas ficam — no 11.1 saem na virada da face de cubo que traz o copo)
+  abrir(girarMol = true) {
     const h = this.$(".c11-titulo");
     if (h && !h.classList.contains("uma-linha")) {
       const de = parseFloat(getComputedStyle(h).fontSize);
@@ -7622,7 +7629,7 @@ const Cena111 = {
       h.style.fontSize = `${para}px`;
       Palco.animar(h, [{ fontSize: `${de}px` }, { fontSize: `${para}px` }], { duracao: .6, easing: "cubic-bezier(.4,0,.2,1)" });
     }
-    Palco.el.querySelectorAll(".c11-mol, .c11-legenda").forEach(el =>
+    if (girarMol) Palco.el.querySelectorAll(".c11-mol, .c11-legenda").forEach(el =>
       Palco.animar(el, [{ transform: "translateX(0) rotate(0deg) scale(1)", opacity: 1 }, { transform: "translateX(-55%) rotate(-200deg) scale(0)", opacity: 0 }],
         { duracao: .7, easing: "cubic-bezier(.5,0,.75,0)" }).finished.then(() => el.remove(), () => {}));
     if (!this.$(".c111-corpo")) Palco.adicionar(`<div class="c111-corpo"></div>`);
@@ -7696,6 +7703,38 @@ const Cena11Copo = {
     this.ctx = Copo.montar(caixa, this.roteiro());
     Palco.animar(caixa, [{ opacity: 0, transform: "translateY(18px)" }, { opacity: 1, transform: "none" }], { duracao: .8, easing: "ease-out" });
     caixa.addEventListener("click", () => this.tocar());
+  },
+  // 0,5s do 11.1: só o recorte em volta do copo vira como face de cubo (para a esquerda): na face que sai, a molécula
+  // e a legenda do áudio 11; na que entra, o copo com a lupa e as moléculas. O resto da tela (o título) fica parado
+  virarDaMolecula() {
+    if (this.$(".c11-copo")) return;
+    const P = Palco.el, W = P.clientWidth, Hp = P.clientHeight, pr = P.getBoundingClientRect();
+    const origem = [...P.querySelectorAll(".c11-mol, .c11-legenda")];
+    Palco.adicionar(`<div class="c11-copo" aria-label="Um copo com água" style="visibility:hidden"></div>`);
+    const caixa = this.$(".c11-copo");
+    // o recorte: o lugar do copo na tela (já com o ajuste do tablet), da largura do copo e um pouco mais
+    const r = caixa.getBoundingClientRect(), x = r.left - pr.left, y = r.top - pr.top;
+    const cw = Math.min(r.width, r.height * .82), cl = x + (r.width - cw) / 2;
+    Palco.adicionar(`<div class="c3-cubo c11v-cubo"><div class="c3-giro"><div class="c3-face c3-f1"><div class="c11v-tela"></div></div><div class="c3-face c3-f2"><div class="c11v-tela"></div></div></div></div>`);
+    const cubo = this.$(".c11v-cubo"), giro = cubo.querySelector(".c3-giro"), f1 = cubo.querySelector(".c3-f1"), f2 = cubo.querySelector(".c3-f2");
+    Object.assign(cubo.style, { left: `${cl}px`, top: `${y}px`, width: `${cw}px`, height: `${r.height}px` });
+    // dentro de cada face, uma "tela" do tamanho do palco, deslocada: o que vai nela fica no mesmo lugar em que estava
+    cubo.querySelectorAll(".c11v-tela").forEach(t => Object.assign(t.style, { left: `${-cl}px`, top: `${-y}px`, width: `${W}px`, height: `${Hp}px` }));
+    f1.style.transform = `translateZ(${cw / 2}px)`; f2.style.transform = `rotateY(90deg) translateZ(${cw / 2}px)`;
+    const z = `translateZ(${-cw / 2}px)`; giro.style.transform = z;
+    origem.forEach(el => f1.firstElementChild.append(el));
+    f2.firstElementChild.append(caixa); caixa.style.visibility = "";
+    this.saiu = false; this.liberado = false;
+    this.ctx = Copo.montar(caixa, this.roteiro());
+    // a lupa, já na face nova (a cena 3D precisa de um quadro para se ajustar ao tamanho antes de medir)
+    requestAnimationFrame(() => requestAnimationFrame(() => this.lupa()));
+    caixa.addEventListener("click", () => this.tocar());
+    const easing = "cubic-bezier(.65,0,.35,1)";
+    somCubo(.1);
+    Palco.animar(f1, [{ filter: "brightness(1)" }, { filter: "brightness(.35)" }], { duracao: 1.2, atraso: .1, easing });
+    Palco.animar(f2, [{ filter: "brightness(.35)" }, { filter: "brightness(1)" }], { duracao: 1.2, atraso: .1, easing });
+    Palco.animar(giro, [{ transform: `${z} rotateY(0deg)` }, { transform: `${z} rotateY(-90deg)` }], { duracao: 1.2, atraso: .1, easing })
+      .finished.then(() => { P.insertBefore(caixa, cubo); cubo.remove(); this.liberar(); }, () => {});
   },
   // áudio 12: um copo novo, com a molécula de água no centro, que volta para dentro dele (e o copo entra pela esquerda)
   voltar() {
