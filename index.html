@@ -743,6 +743,11 @@
     /* a água pequena (do 11.1B em diante): à direita da fórmula (os "e⁻" do H ficam à esquerda) */
     .c11-copo.solto.peq:not(.c12-amonia):not(.c13-metano):not(.c14-co2) canvas { transition: translate 1s cubic-bezier(.4,0,.2,1);
       translate: calc(var(--pw, 965px) * .375) calc(var(--ph, 448px) * -.045); }
+    /* a amônia: a que sai do frasco (12.1) mais alta; a pequena, ao lado do NH₃ (12.2 em diante), mais à esquerda e mais alta.
+       (a pequena é posta no lugar já contando com o deslocamento da que saiu: a diferença entre os dois é o ajuste medido no 12.3) */
+    .c11-copo.c12-amonia canvas { transition: translate 1s cubic-bezier(.4,0,.2,1); }
+    .c11-copo.c12-amonia.solto canvas { translate: 0 calc(var(--ph, 448px) * -.138); }
+    .c11-copo.c12-amonia.solto.peq canvas { translate: calc(var(--pw, 965px) * -.074) calc(var(--ph, 448px) * -.261); }
     .c11-copo.c13-metano canvas { transition: translate 2.2s cubic-bezier(.4,0,.2,1); }
     .c11-copo.c13-metano.solto canvas { translate: calc(var(--pw, 965px) * -.02) calc(var(--ph, 448px) * -.133); }
     .c72-quiz.c11a.c13f .c72-pergunta { translate: calc(var(--pw, 965px) * .009) calc(var(--ph, 448px) * .103); }
@@ -1463,7 +1468,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v304 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v305 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11326,12 +11331,14 @@ const Lupa = {
     const em = (x, y, a, L) => [x + Math.cos(a) * L, y + Math.sin(a) * L];
     const GAS = {
       // a amônia em pirâmide: o N no alto e os três H num tripé embaixo dele (107°), girando em volta do eixo do N e inclinada
-      // (r) no plano; os H de trás são desenhados antes do N e os da frente, depois
+      // (r) no plano. As ligações vêm primeiro (o N, opaco, cobre o pedaço delas que fica atrás dele); depois os H de trás,
+      // o N e os H da frente
       amonia: (x, y, e, r) => {
         const c = Math.cos(r), s = Math.sin(r), L = e * 1.6;
         const hs = [0, 1, 2].map(k => { const a = r * 1.3 + k * 2.094, px = .94 * Math.cos(a), py = .36, pz = .94 * Math.sin(a);
           return { p: [x + (px * c - py * s) * L, y + (px * s + py * c) * L], z: pz }; }).sort((a, b) => a.z - b.z);
-        const h = o => { traco(x, y, o.p, e * .3); esfera(o.p[0], o.p[1], e * .55 * (1 + o.z * .12), "#ffffff", "#b9c7d6"); };
+        const h = o => esfera(o.p[0], o.p[1], e * .55 * (1 + o.z * .12), "#ffffff", "#b9c7d6");
+        hs.forEach(o => traco(x, y, o.p, e * .3));
         hs.filter(o => o.z < 0).forEach(h);
         esfera(x, y, e, "#8FA8FF", "#2340B8");
         hs.filter(o => o.z >= 0).forEach(h);
