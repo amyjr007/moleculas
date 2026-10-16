@@ -1447,7 +1447,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v278 · 15/10/2026</span>
+    <span class="versao" id="versao">v279 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2862,6 +2862,9 @@ const NARRACOES = [
   { id: "dialogo8_3", titulo: "Quantos elétrons faltam?", src: "audio/audio_moleculas_8.3.mp3",
     inicio: () => Cena71.montarSeparados("oxigenio"),              // pela navegação rápida: os dois O separados no meio da tela
     eventos: [
+      { tempo: 5.5,  acao: () => Cena71.pulsarTitulo(".c71-nome", 2) },                          // "Oxigênio" pulsa 2 vezes
+      { tempo: 6.7,  acao: () => Cena71.pulsarTitulo(".fam", 2) },                                // "Família 6A" pulsa 2 vezes
+      { tempo: 8.7,  acao: () => Cena71.octeto("Cada oxigênio tem 6 elétrons de valência", 3) },  // digitada acima dos átomos (até 11,7s)
       { tempo: 14,   acao: () => Cena71.pergunta("oxigenio", {     // a pergunta é digitada; depois, as opções
           texto: "Quantos elétrons faltam pra cada oxigênio completar seus octetos?", digitar: 2,
           opcoes: [["1", 0], ["2", 1], ["3", 0]], de: "dialogo8_3", para: "dialogo8_4", classe: "c84q" }) }
@@ -2871,7 +2874,7 @@ const NARRACOES = [
   { id: "dialogo8_4", titulo: "Oxigênio: 6 elétrons de valência", src: "audio/audio_moleculas_8.4.mp3",
     inicio: () => Cena71.montarSeparados("oxigenio"),              // pela navegação rápida: os dois O separados no meio da tela
     eventos: [
-      { tempo: 0.5,  acao: () => Cena71.tirarPergunta() },                                        // a pergunta e as alternativas somem em fade
+      { tempo: 0.5,  acao: () => { Cena71.tirarPergunta(); Cena71.tirarOcteto(); } },             // a pergunta, as alternativas e a frase da 8.3 somem em fade
       { tempo: 18.7, acao: () => Cena71.pulsarTitulo(".fam") },                                   // "Família 6A" pulsa
       { tempo: 20.7, acao: () => Cena74.mostrar(22.2, "A", { qtd: 6, isolado: false, doAtomo: true }) },   // 6 saem do O e sobem para a fileira de cima,
       { tempo: 22.2, acao: () => Cena74.mostrar(23.7, "B", { qtd: 6, isolado: false, embaixo: true, doAtomo: true }) },   // 6 saem do outro O e descem para a de baixo (até 23,7s)
@@ -5716,8 +5719,8 @@ const Cena71 = {
     requestAnimationFrame(passo);
   },
 
-  // áudio 7.3, 29s: a frase do octeto, digitada logo acima dos dois átomos
-  octeto() {
+  // áudio 7.3, 29s: a frase do octeto, digitada logo acima dos dois átomos (áudio 8.3: outra frase, no mesmo lugar)
+  octeto(texto = "Cada átomo tem que ter 8 elétrons de valência", dur = 2.5) {
     const q = this.quantum, m = this.m;
     if (!q || !m || this.$(".c73-octeto")) return;
     // o alto das bolas, na tela: centro do átomo + o raio dele (já com o crescimento da separação)
@@ -5728,7 +5731,7 @@ const Cena71 = {
     // mais longe das bolas: 60px acima numa tela de 655px de altura (ajuste da professora)
     const y = caixa.top - P.top + q.naTela(topo).y - 18 - Palco.el.clientHeight * .092;
     Palco.adicionar(`<p class="c73-octeto" style="top:${y}px"></p>`);
-    Palco.digitar(this.$(".c73-octeto"), "Cada átomo tem que ter 8 elétrons de valência", 2.5);
+    Palco.digitar(this.$(".c73-octeto"), texto, dur);
   },
   // áudio 7.4, 0s: a frase sai em fade
   tirarOcteto() {
