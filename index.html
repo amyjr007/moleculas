@@ -1468,7 +1468,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v307 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v308 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3419,10 +3419,19 @@ const NARRACOES = [
       { tempo: 7,    acao: () => Cena121.apagar(.5) },                     // o "Passo 1: ..." se apaga até sobrar "Passo "
       { tempo: 7.6,  acao: () => Cena121.numero("2:") },                   // "2:"
       { tempo: 7.9,  acao: () => Cena121.texto(" Monte o esqueleto da molécula e ligue o centro aos átomos das extremidades.", 4.9) },   // até 12,8s
-      { tempo: 14,   acao: () => { Cena12N.pergunta("Qual dos elementos fica no centro?", [["H", 0], ["N", 1], ["Nenhum", 0]], "dialogo12_4", "dialogo12_5", true);
-                                   Cena12N.$(".c12nq").classList.add("centro"); } }   // (a marca "centro": a posição própria no celular)
+      // (a pergunta "Qual dos elementos fica no centro?" saiu: o esqueleto agora se monta sozinho)
+      { tempo: 17,   acao: () => Cena12A.pulsarPeq(2) },                   // a amônia pequena (a referência) pulsa 2 vezes
+      { tempo: 19,   acao: () => { Cena121.svg("amonia"); Cena112L.atomo("N"); } },   // o N no meio, instável
+      // cada H entra e logo sobe um par da fileira para fazer a ligação com o N
+      { tempo: 23,   acao: () => Cena112L.atomo("H", "esq") },
+      { tempo: 23.4, acao: () => Cena112L.ligarUm("esq") },
+      { tempo: 24,   acao: () => Cena112L.atomo("H", "baixo") },
+      { tempo: 24.4, acao: () => Cena112L.ligarUm("baixo") },
+      { tempo: 26,   acao: () => Cena112L.atomo("H", "dir") },
+      { tempo: 26.4, acao: () => Cena112L.ligarUm("dir") },
+      { tempo: 27,   acao: () => Cena112L.explodir() }                     // a molécula brilha toda, com fanfarra e confetes
     ],
-    aoFim: () => ui.semPlay(true) },   // sem play: quem leva adiante é a resposta
+    aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1(3); } },   // no lugar do play, o botão "Passo 3" (leva ao 12.5)
   // depois do acerto (N), 18s: o esqueleto da amônia — o N no meio (1s) e os três H em volta (3s, 4,5s e 6s), instáveis, com o
   // estouro e o som de cada um (como a água no 11.2). No fim, o aluno faz as ligações do centro para as pontas (as regras da água)
   { id: "dialogo12_5", titulo: "Amônia: o esqueleto", src: "audio/audio_moleculas_12.5.mp3", semNav: true, extra: true,
@@ -3433,7 +3442,8 @@ const NARRACOES = [
       { tempo: 4.5,  acao: () => Cena112L.atomo("H", "dir") },
       { tempo: 6,    acao: () => Cena112L.atomo("H", "baixo") }
     ],
-    aoFim: () => { ui.semPlay(true); Cena112L.liberar(); } },   // as ligações pelo toque: do N para cada H (a festa das três leva ao 12.6)
+    // as ligações pelo toque: do N para cada H (a festa das três leva ao 12.6). (Já feitas no 12.4: segue direto para o 12.6)
+    aoFim: () => { ui.semPlay(true); if (Cena121.pontasLados().every(l => Cena12.$(`.c121-esqueleto .lig [data-l="${l}"]`))) Player.seguirSozinho(); else Cena112L.liberar(); } },
   // amônia, passo 3 (41s): o foco nos H e nas ligações (o N apagado), o par indo e vindo; depois no N e nas ligações (os H apagados),
   // o par de cada ligação, uma de cada vez; aos 40s, "Quantos elétrons faltam pro octeto?" (as opções no fim; o certo: 2 e⁻)
   { id: "dialogo12_6", titulo: "Amônia: passo 3", src: "audio/audio_moleculas_12.6.mp3", semNav: true, extra: true,
@@ -8416,6 +8426,12 @@ const Cena12A = {
         mol.scale.setScalar(ctx.escMol + (ctx.escPeq - ctx.escMol) * q);
         if (q0 < 1) mol.quaternion.multiply(qGiro.setFromEuler(eGiro.set(2 * Math.PI * q, 2 * Math.PI * q, 0)));   // viaja girando em 3D
       }
+      // a molécula pequena pulsa (cresce e volta, n vezes) — 12.4, 17s
+      if (ctx.pulsoPeq) {
+        const w = (t - ctx.pulsoPeq.t0) / .5;
+        if (w < ctx.pulsoPeq.n) mol.scale.multiplyScalar(1 + .35 * Math.abs(Math.sin(Math.PI * w)));
+        else ctx.pulsoPeq = null;
+      }
       // "Gire a molécula": discreto, em amarelo, embaixo da molécula, enquanto dá para girá-la (até a fórmula subir)
       const dica = podeGirar();
       let dicaEl = caixa.querySelector(".c12-dica");
@@ -8435,6 +8451,8 @@ const Cena12A = {
     requestAnimationFrame(quadro);
     caixa.addEventListener("click", () => this.tocar());
   },
+  // a molécula pequena (ao lado da fórmula) pulsa n vezes
+  pulsarPeq(n = 2) { if (this.ctx) this.ctx.pulsoPeq = { t0: this.ctx.tAcao, n }; },
   // a lupa sobre o recipiente, mostrando as moléculas do gás lá dentro (arrastável; o toque no recipiente continua valendo)
   // (LUPA: a área do recipiente, em unidades da cena, por onde a lente pode passear; GAS: as moléculas)
   LUPA: { x: [-.55, .55], y: [.62, 1.5] }, GAS: "amonia", NOME_GAS: "amônia dentro do frasco",
@@ -9698,14 +9716,16 @@ const Cena112L = {
   // 21,8s do 11.2: as ligações se formam sozinhas — de cada lado sobe um par da fileira e vira o traço, e o H se acalma
   // (sem o "right" e sem a explosão: a narração segue)
   ligarSozinho() {
-    Cena121.pontasLados().forEach(lado => {
-      if (this.$(`.c121-esqueleto .lig [data-l="${lado}"]`)) return;
-      const livres = Cena113P.livres();
-      Cena121.ligacao(lado, livres.slice(-2).reverse(), .7, .35);
-      const s = Cena121.svg();
-      Palco.animar(s, [{}, {}], { duracao: 1.1, fill: "none" }).finished.then(() => { if (s.isConnected) this.acalmar(lado, false); }, () => {});
-    });
+    Cena121.pontasLados().forEach(lado => this.ligarUm(lado, false));
     Vibra.tocar("toqueEletron");
+  },
+  // uma ligação sozinha: sobe um par da fileira até o traço daquele lado; pronta, o átomo da ponta se acalma (sem som)
+  ligarUm(lado, vibrar = true) {
+    if (this.$(`.c121-esqueleto .lig [data-l="${lado}"]`)) return;
+    Cena121.ligacao(lado, Cena113P.livres().slice(-2).reverse(), .7, .35);
+    const s = Cena121.svg();
+    Palco.animar(s, [{}, {}], { duracao: 1.1, fill: "none" }).finished.then(() => { if (s.isConnected) this.acalmar(lado, false); }, () => {});
+    if (vibrar) Vibra.tocar("toqueEletron");
   },
   // 24s: os toques valem
   liberar() {
