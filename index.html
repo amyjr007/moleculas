@@ -718,6 +718,9 @@
     .c11-copo.solto { translate: calc(var(--pw, 965px) * .003) calc(var(--ph, 448px) * .155); }
     /* 11.1A: "Qual a fórmula da água?" e as três opções, mais baixas */
     #conteudoPalco .c79-caderno.c79-nitrogenio { scale: 1.405; }   /* 9.8: o N₂ no caderno */
+    #conteudoPalco .c79-caderno.c79-oxigenio { scale: 1.408; translate: calc(var(--pw, 965px) * -.002) calc(var(--ph, 448px) * -.049); }   /* 8.8: o O₂ no caderno */
+    .c72-quiz.c10aq .c72-pergunta { translate: calc(var(--pw, 965px) * .002) calc(var(--ph, 448px) * .047); }   /* 10A: a fórmula do HCl */
+    .c72-quiz.c10aq .c4-opcoes { translate: calc(var(--pw, 965px) * .003) calc(var(--ph, 448px) * .121); }
     .c72-quiz.formula-oxigenio .c72-pergunta { translate: calc(var(--pw, 965px) * .004) calc(var(--ph, 448px) * .111); }   /* 8.1: a fórmula do O₂ */
     .c72-quiz.formula-oxigenio .c4-opcoes { translate: calc(var(--pw, 965px) * -.001) calc(var(--ph, 448px) * .142); }
     .c72-quiz.c84q .c72-pergunta { translate: calc(var(--pw, 965px) * -.004) calc(var(--ph, 448px) * .059); }   /* 8.4: quantos elétrons faltam */
@@ -1447,7 +1450,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v280 · 16/10/2026</span>
+    <span class="versao" id="versao">v281 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2901,6 +2904,7 @@ const NARRACOES = [
     inicio: () => Cena84.montar(),
     eventos: [
       { tempo: 1,    acao: () => Cena71.tirarPergunta() },         // a pergunta e as alternativas somem em fade
+      { tempo: 0,    acao: () => Cena75.liberar(true, "oxigenio") },   // já dá para aproximar os átomos (o encaixe corta a narração e traz a 8.6)
       { tempo: 5.5,  acao: () => Cena83.piscarSolitarios() }       // o brilho dos elétrons sozinhos pisca 3 vezes
     ],
     // sem play: o aluno arrasta um O até o outro; o elétron sozinho de baixo vai para a frente conforme eles se aproximam
@@ -2911,19 +2915,19 @@ const NARRACOES = [
     eventos: [
       { tempo: 0,    acao: () => Cena75.travar() },                                     // a molécula não se desfaz mais com o dedo
       { tempo: 4,    acao: () => Cena75.tirarStatus() },                                // "Molécula estável" sai em fade
-      // os pares do O da esquerda, um de cada vez: em cima, à esquerda e os dois compartilhados
+      // os pares do O da esquerda, um de cada vez: em cima, à esquerda e os compartilhados — na vertical: os dele e os do outro O
       { tempo: 11.9, acao: () => Cena86.brilhar("cima", "A") },
       { tempo: 12.5, acao: () => { Cena86.brilhar("cima", "A", false); Cena86.brilhar("fora", "A"); } },
-      { tempo: 13,   acao: () => { Cena86.brilhar("fora", "A", false); Cena86.brilhar("par0"); } },
-      { tempo: 14,   acao: () => { Cena86.brilhar("par0", null, false); Cena86.brilhar("par1"); } },
-      { tempo: 15,   acao: () => { Cena86.brilhar("par1", null, false); Cena76.circulo("A"); } },   // "8 elétrons" no O da esquerda
+      { tempo: 13,   acao: () => { Cena86.brilhar("fora", "A", false); Cena86.brilhar("vert", "A"); } },
+      { tempo: 14,   acao: () => { Cena86.brilhar("vert", "A", false); Cena86.brilhar("vert", "B"); } },
+      { tempo: 15,   acao: () => { Cena86.brilhar("vert", "B", false); Cena76.circulo("A"); } },   // "8 elétrons" no O da esquerda
       { tempo: 18,   acao: () => Cena76.tirar("A") },
-      // agora os do O da direita: em cima, à direita e os dois compartilhados
+      // agora os do O da direita: em cima, à direita e os compartilhados (os dele e os do outro O, na vertical)
       { tempo: 19.2, acao: () => Cena86.brilhar("cima", "B") },
       { tempo: 20,   acao: () => { Cena86.brilhar("cima", "B", false); Cena86.brilhar("fora", "B"); } },
-      { tempo: 20.7, acao: () => { Cena86.brilhar("fora", "B", false); Cena86.brilhar("par0"); } },
-      { tempo: 21.3, acao: () => { Cena86.brilhar("par0", null, false); Cena86.brilhar("par1"); } },
-      { tempo: 23,   acao: () => { Cena86.brilhar("par1", null, false); Cena76.circulo("B"); } },   // "8 elétrons" no O da direita
+      { tempo: 20.7, acao: () => { Cena86.brilhar("fora", "B", false); Cena86.brilhar("vert", "B"); } },
+      { tempo: 21.3, acao: () => { Cena86.brilhar("vert", "B", false); Cena86.brilhar("vert", "A"); } },
+      { tempo: 23,   acao: () => { Cena86.brilhar("vert", "A", false); Cena76.circulo("B"); } },   // "8 elétrons" no O da direita
       { tempo: 26,   acao: () => Cena76.tirar("B") },
       { tempo: 30,   acao: () => { Cena77.realcar(["cima", "fora"], "isolado");                     // os 4 pares não ligantes em roxo
                                    Cena77.texto("isolado", "Pares de elétrons não ligantes", 2); } },   // digitado até 32s
@@ -6213,7 +6217,9 @@ const Cena75 = {
           return espera(1.3).then(() => { if (q.isConnected) { Player.terminou = false; Player.irPara(prox, true); } });
         }).catch(() => {});
       } else if (prox >= 0 && this.tipo !== "cloro") {   // (O₂ e N₂)
-        // no O₂ a narração (8.6) espera a molécula chegar ao meio da tela (a ida leva 1,25s)
+        // no O₂ a narração (8.6) espera a molécula chegar ao meio da tela (a ida leva 1,25s).
+        // Encaixou com a narração anterior (8.5 / 9.5) ainda falando: ela se cala já
+        Player.calar();
         const q = Cena71.$(".c71-quantico");
         Palco.animar(q, [{ opacity: 1 }, { opacity: 1 }], { duracao: 1.35, fill: "none" }).finished.then(() => {
           if (q.isConnected && this.ligado) { Player.terminou = false; Player.irPara(prox, true); }
@@ -6478,8 +6484,9 @@ const Cena79 = {
   // (as ligações: um traço no Cl₂, dois no O₂ — os traços que estão na tela)
   CFG: {
     cloro:    { sim: "Cl", meia: .62, lados: ["cima", "fora", "baixo"], aria: "Fórmula do Cl₂ como no caderno: Cl—Cl, com três pares de elétrons em cada cloro" },
-    oxigenio: { sim: "O", meia: .42, lados: ["cima", "fora"], gap: .14, aria: "Fórmula do O₂ como no caderno: O=O, com dois pares de elétrons em cada oxigênio" },
-    nitrogenio: { sim: "N", meia: .42, lados: ["fora"], gap: .12, encurta: .4, aria: "Fórmula do N₂ como no caderno: N≡N, com um par de elétrons em cada nitrogênio" }
+    // (O₂ e N₂: a ligação 60% mais curta — o mesmo comprimento nos dois)
+    oxigenio: { sim: "O", meia: .42, lados: ["cima", "fora"], gap: .14, encurta: .6, aria: "Fórmula do O₂ como no caderno: O=O, com dois pares de elétrons em cada oxigênio" },
+    nitrogenio: { sim: "N", meia: .42, lados: ["fora"], gap: .12, encurta: .6, aria: "Fórmula do N₂ como no caderno: N≡N, com um par de elétrons em cada nitrogênio" }
   },
   caderno(tipo = "cloro") {
     if (this.$(".c79-cl, .c79-caderno")) return;
@@ -6891,7 +6898,8 @@ const Cena86 = {
   },
   // cada par se recolhe no seu meio e vira um traço (as elipses em volta somem) — o efeito do Cl₂, duas vezes (O₂) ou três (N₂)
   tracos() {
-    if (!Cena75.ligado || this.$(".c86-traco")) return;
+    // (já no caderno — o começo do 9 e do 10, vindo do 8.8 / 9.8 —, os traços não voltam)
+    if (!Cena75.ligado || this.$(".c86-traco, .c79-caderno, .c79-cl")) return;
     const A = Cena74.atomo("A"), B = Cena74.atomo("B"), cx = (A.x + B.x) / 2, cy = (A.y + B.y) / 2;
     const tripla = Cena75.tipo === "nitrogenio", lados = Cena75.MOVEIS[Cena75.tipo] || ["frente", "baixo"];
     Palco.el.querySelectorAll(lados.map(l => `.c74-e[data-lado="${l}"]`).join(", ")).forEach(el => {
@@ -6909,8 +6917,10 @@ const Cena86 = {
     });
   },
   // os elétrons de um lado de um O ("A" / "B"; cima, fora) ou de um par compartilhado ("par0" = o de cima, "par1" = o de baixo)
+  // ou "vert": os dois elétrons compartilhados de um O só (o par na vertical, na frente dele)
   // crescem e brilham (ligar = false: voltam ao normal)
   els(alvo, set) {
+    if (alvo === "vert") return Cena74.els(set).filter(el => el.dataset.lado === "frente" || el.dataset.lado === "baixo");
     if (alvo === "par0") return [...Palco.el.querySelectorAll('.c74-e[data-lado="frente"]')];
     if (alvo === "par1") return [...Palco.el.querySelectorAll('.c74-e[data-lado="baixo"]')];
     return Cena74.els(set).filter(el => el.dataset.lado === alvo);
@@ -7116,7 +7126,7 @@ const CenaHCl = {
   // fim da 10A: a pergunta. Acertou: a festa; depois as moléculas estouram, a que sobra vem para a frente e toca a 10B
   pergunta() {
     Cena71.pergunta("hcl", {
-      texto: "Qual a fórmula molecular?",
+      texto: "Qual a fórmula molecular?", classe: "c10aq",   // (a classe: no tablet, a pergunta e as opções num lugar próprio)
       opcoes: [["H<sub>2</sub>Cl", 0], ["HCl", 1], ["HCl<sub>2</sub>", 0]], de: "dialogo10A", para: "dialogo10B",
       antes: seguir => {
         Cena71.tirarPergunta();
