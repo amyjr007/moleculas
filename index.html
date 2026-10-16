@@ -1468,7 +1468,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v305 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v306 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3392,17 +3392,17 @@ const NARRACOES = [
     eventos: [
       { tempo: 0,    acao: () => ModoLivre.sair() },                       // (o modo livre sai de cena)
       { tempo: 1.8,  acao: () => Cena12N.passo1(1.2) },                    // "Passo 1: Soma os elétrons de valência." (até 3s)
-      { tempo: 5,    acao: () => Cena121.pulsar(".c12-l[data-l='N']", 2) },   // o N da fórmula pulsa 2 vezes
-      { tempo: 7.4,  acao: () => Cena12N.familia("N", "5A") },              // "5A" em cima do N
-      { tempo: 10.7, acao: () => Cena12N.lado("esq", 5, "N") },             // "5 e⁻" à esquerda da fórmula, na cor do 5A
-      { tempo: 12.9, acao: () => Cena121.pulsar(".c12-l[data-l='H']", 2) },   // o H pulsa 2 vezes
-      { tempo: 14.2, acao: () => Cena12N.familia("H", "1A") },              // "1A" em cima do H
-      { tempo: 18,   acao: () => Cena12N.lado("dir", 1, "H") },             // "1 e⁻" à direita, na cor do 1A
-      { tempo: 20.7, acao: () => Cena12.letra("3") },                       // o 3 cresce
-      { tempo: 23,   acao: () => Cena12.letra("3", false) },
-      { tempo: 25,   acao: () => Cena12.letra("N") },                       // o N cresce
-      { tempo: 26,   acao: () => { Cena12.letra("N", false); Cena12.letra("H"); Cena12.letra("3"); } },   // volta; o "H₃" cresce
-      { tempo: 27,   acao: () => Cena12N.pergunta("Quantos elétrons de valência no total?", [["5 e<sup>−</sup>", 0], ["6 e<sup>−</sup>", 0], ["8 e<sup>−</sup>", 1]], "dialogo12_3", "dialogo12_4") }
+      { tempo: 5.2,  acao: () => Cena121.pulsar(".c12-l[data-l='N']", 2) },   // o N da fórmula pulsa 2 vezes
+      { tempo: 7,    acao: () => Cena12N.familia("N", "5A") },              // "5A" em cima do N
+      { tempo: 9,    acao: () => Cena12N.lado("esq", 5, "N") },             // "5 e⁻" à esquerda da fórmula, na cor do 5A
+      { tempo: 11.2, acao: () => Cena121.pulsar(".c12-l[data-l='H']", 2) },   // o H pulsa 2 vezes
+      { tempo: 12.6, acao: () => Cena12N.familia("H", "1A") },              // "1A" em cima do H
+      { tempo: 14.7, acao: () => Cena12N.lado("dir", 1, "H") },             // "1 e⁻" à direita, na cor do 1A
+      { tempo: 18,   acao: () => Cena12.letra("3") },                       // o 3 cresce
+      { tempo: 22.8, acao: () => { Cena12N.mais("dir", 1, 2); Cena12.letra("3", false); } },   // "+ 1 e⁻ + 1 e⁻" junto do "1 e⁻" (os outros dois H); o 3 volta
+      { tempo: 27.9, acao: () => { Cena12.letra("N"); Cena12N.realcarLado("esq"); } },   // o N e o "5 e⁻" crescem
+      { tempo: 29.8, acao: () => { Cena12.letra("N", false); Cena12N.realcarLado("esq", false); Cena12.letra("H"); Cena12.letra("3"); } },   // voltam; o "H₃" cresce
+      { tempo: 32.5, acao: () => Cena12N.pergunta("Quantos elétrons de valência no total?", [["5 e<sup>−</sup>", 0], ["6 e<sup>−</sup>", 0], ["8 e<sup>−</sup>", 1]], "dialogo12_3", "dialogo12_4") }
     ],
     aoFim: () => { ui.semPlay(true); Cena12.letra("H", false); Cena12.letra("3", false); Cena12N.opcoes(); } },   // o "H₃" volta; as opções entram
   // a resposta (17s): os 8 elétrons descem para a fileira (5 do N, 3 dos H); o passo 1 se apaga e vira o passo 2;
@@ -9028,9 +9028,10 @@ const Cena12N = {
     });
   },
   // "+ 6 e⁻" logo depois do "6 e⁻" de um lado (14.2: o segundo O), na mesma cor
-  mais(lado, n) {
+  // (vezes: quantos "+ n e⁻" — na amônia, dois: "1 e⁻ + 1 e⁻ + 1 e⁻")
+  mais(lado, n, vezes = 1) {
     const f = this.formulaLados(), e = f && f.querySelector(`.c12n-e.${lado}`); if (!e || e.querySelector(".c12n-mais")) return;
-    e.insertAdjacentHTML("beforeend", `<span class="c12n-mais">&nbsp;+&nbsp;${n}&nbsp;e<sup>−</sup></span>`);
+    e.insertAdjacentHTML("beforeend", `<span class="c12n-mais">${`&nbsp;+&nbsp;${n}&nbsp;e<sup>−</sup>`.repeat(vezes)}</span>`);
     Palco.animar(e.lastElementChild, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1.15)", offset: .6 }, { opacity: 1, transform: "scale(1)" }],
       { duracao: .5, easing: "ease-out" });
   },
