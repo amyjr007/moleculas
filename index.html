@@ -1463,7 +1463,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v302 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v303 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3282,9 +3282,9 @@ const NARRACOES = [
     eventos: [
       { tempo: 0.5,  acao: () => Cena71.tirarPergunta() },                 // a pergunta e as alternativas somem em fade
       { tempo: 1,    acao: () => Cena12N.realcarLado("dir") },
-      ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 1 + k * .35, acao: () => Cena12.eletron("O", k) })),   // os 6 do O descem para a fileira (até 2,75s)
-      { tempo: 3,    acao: () => { Cena12N.realcarLado("dir", false); Cena12N.realcarLado("esq"); Cena12.eletron("H", 6); } },
-      { tempo: 3.35, acao: () => Cena12.eletron("H", 7) },                 // os 2 dos H
+      ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 1 + k * .35, acao: () => Cena12.eletron("O", k, ".c12n-e.dir") })),   // os 6 saltam do "6 e⁻" para a fileira (até 2,75s)
+      { tempo: 3,    acao: () => { Cena12N.realcarLado("dir", false); Cena12N.realcarLado("esq"); Cena12.eletron("H", 6, ".c12n-e.esq .c12n-um"); } },   // um sai do 1º "1 e⁻"
+      { tempo: 3.35, acao: () => Cena12.eletron("H", 7, ".c12n-e.esq .c12n-mais") },   // e outro do "+ 1 e⁻"
       { tempo: 7.3,  acao: () => Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7]) }   // os 8 da fileira brilham em âmbar escuro até o fim do áudio
     ],
     aoFim: () => { Cena12N.realcarLado("esq", false); Cena12.brilho([0, 1, 2, 3, 4, 5, 6, 7], false); ui.semPlay(true); Cena11Copo.botaoPasso1(2); } },
@@ -9300,8 +9300,9 @@ const Cena12 = {
     return f;
   },
   // o elétron k da fileira sai de dentro da letra e voa, num arco, até o seu lugar
-  eletron(l, k) {
-    const slot = this.fila().children[k], letra = this.$(`.c12-l[data-l="${l}"]`);
+  // (de: um seletor de onde ele sai no lugar da letra — no 11.1D, o "6 e⁻" e cada "1 e⁻")
+  eletron(l, k, de = null) {
+    const slot = this.fila().children[k], letra = (de && this.$(de)) || this.$(`.c12-l[data-l="${l}"]`);
     if (!slot || slot.dataset.ok) return; slot.dataset.ok = "1";
     if (!letra) { slot.style.opacity = ""; return; }
     const P = Palco.el.getBoundingClientRect(), a = letra.getBoundingClientRect(), b = slot.getBoundingClientRect(), w = b.width;
