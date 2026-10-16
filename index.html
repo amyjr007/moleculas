@@ -1463,7 +1463,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v301 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v302 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10740,6 +10740,20 @@ const Cena113F = {
       Object.assign(t.style, { transformBox: "fill-box", transformOrigin: "center" });
       Palco.animar(t, [{ transform: "rotate(0deg)" }, { transform: `rotate(${-sg * th}deg)` }], { duracao: dur, easing: ease, fill: "forwards" });
     });
+    // ao mesmo tempo, os dois pares do O sobem: o de cima vai para o alto à esquerda e o de baixo, para o alto à direita
+    // (cada par a 50° da vertical, à mesma distância do O; os dois pontos lado a lado, atravessando essa direção)
+    const pares = [...s.querySelectorAll(".c113-par")]; if (pares.length < 4) return;
+    const cy0 = 25, dist = Math.max(...pares.map(c => Math.abs(+c.getAttribute("cy") - cy0))), meio = Math.abs(+pares[0].getAttribute("cx") - 100);
+    [[pares.filter(c => +c.getAttribute("cy") < cy0), -1], [pares.filter(c => +c.getAttribute("cy") > cy0), 1]].forEach(([par, lado]) => {
+      const a = lado * 50 * Math.PI / 180, ux = Math.sin(a), uy = -Math.cos(a), px = -uy, py = ux;   // u: do O até o par; p: a direção dos dois pontos
+      par.sort((p, q) => +p.getAttribute("cx") - +q.getAttribute("cx")).forEach((c, j) => {
+        const k = j ? meio : -meio, x = 100 + ux * dist + px * k, y = cy0 + uy * dist + py * k;
+        const de = { cx: c.getAttribute("cx") + "px", cy: c.getAttribute("cy") + "px" };
+        Palco.animar(c, [de, { cx: `${x}px`, cy: `${y}px` }], { duracao: dur, easing: ease }).finished
+          .then(() => { c.setAttribute("cx", x); c.setAttribute("cy", y); }, () => {});
+        c.setAttribute("cx", x); c.setAttribute("cy", y);
+      });
+    });
   },
   // 11.3C, 16,3s: os pares não ligantes do O (pontinhos do caderno) dão duas pulsadas com brilho
   pulsarPares(vezes = 2) {
@@ -11309,7 +11323,17 @@ const Lupa = {
     };
     const em = (x, y, a, L) => [x + Math.cos(a) * L, y + Math.sin(a) * L];
     const GAS = {
-      amonia: (x, y, e, r) => { const hs = [0, 1, 2].map(k => em(x, y, r + k * 2.094, e * 1.5)); hs.forEach(p => traco(x, y, p, e * .3)); hs.forEach(p => esfera(p[0], p[1], e * .55, "#ffffff", "#b9c7d6")); esfera(x, y, e, "#8FA8FF", "#2340B8"); },
+      // a amônia em pirâmide: o N no alto e os três H num tripé embaixo dele (107°), girando em volta do eixo do N e inclinada
+      // (r) no plano; os H de trás são desenhados antes do N e os da frente, depois
+      amonia: (x, y, e, r) => {
+        const c = Math.cos(r), s = Math.sin(r), L = e * 1.6;
+        const hs = [0, 1, 2].map(k => { const a = r * 1.3 + k * 2.094, px = .94 * Math.cos(a), py = .36, pz = .94 * Math.sin(a);
+          return { p: [x + (px * c - py * s) * L, y + (px * s + py * c) * L], z: pz }; }).sort((a, b) => a.z - b.z);
+        const h = o => { traco(x, y, o.p, e * .3); esfera(o.p[0], o.p[1], e * .55 * (1 + o.z * .12), "#ffffff", "#b9c7d6"); };
+        hs.filter(o => o.z < 0).forEach(h);
+        esfera(x, y, e, "#8FA8FF", "#2340B8");
+        hs.filter(o => o.z >= 0).forEach(h);
+      },
       metano: (x, y, e, r) => { const hs = [0, 1, 2, 3].map(k => em(x, y, r + k * 1.571, e * 1.45)); hs.forEach(p => traco(x, y, p, e * .3)); hs.forEach(p => esfera(p[0], p[1], e * .52, "#ffffff", "#b9c7d6")); esfera(x, y, e * .92, "#7C8696", "#1C2026"); },
       co2: (x, y, e, r) => { const os = [0, 1].map(k => em(x, y, r + k * Math.PI, e * 1.6)); os.forEach(p => traco(x, y, p, e * .24, true)); os.forEach(p => esfera(p[0], p[1], e * .78, "#ff6b5e", "#b3000a")); esfera(x, y, e * .8, "#7C8696", "#1C2026"); }
     };
