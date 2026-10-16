@@ -529,7 +529,7 @@
   .c11l-checar { position: absolute; left: 0; right: 0; z-index: 6; display: flex; justify-content: center; translate: 0 -100%; }
   .c11l-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 4; pointer-events: none; }
   .c11l-sel { fill: none; stroke: #FFC24B; stroke-width: 2.5; stroke-dasharray: 6 4; filter: drop-shadow(0 0 6px rgba(255,194,75,.9)); }
-  .c12n-mais { display: inline-block; }
+  .c12n-mais, .c12n-um { display: inline-block; }
   /* 12.1 e 13.1: "Gire a molécula", discreto, embaixo da amônia e do metano */
   .c12-dica { position: absolute; z-index: 3; transform: translateX(-50%); margin-top: .4em; color: #FFC24B; font-family: var(--display); font-weight: 600;
     font-size: clamp(.8rem, 1.1vmin + .55rem, 1rem); letter-spacing: .03em; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .6s ease; }
@@ -734,6 +734,9 @@
     .c72-quiz.c11a .c4-opcoes { translate: calc(var(--pw, 965px) * .005) calc(var(--ph, 448px) * .127); }
     /* 14.1: o CO₂ (que sai do cilindro) mais alto; a pergunta e as opções um pouco mais baixas */
     /* 13.1: o metano (que sai do cilindro) mais alto e um pouco à esquerda; a pergunta um pouco mais baixa */
+    /* a água pequena (do 11.1B em diante): à direita da fórmula (os "e⁻" do H ficam à esquerda) */
+    .c11-copo.solto.peq:not(.c12-amonia):not(.c13-metano):not(.c14-co2) canvas { transition: translate 1s cubic-bezier(.4,0,.2,1);
+      translate: calc(var(--pw, 965px) * .375) calc(var(--ph, 448px) * -.045); }
     .c11-copo.c13-metano canvas { transition: translate 2.2s cubic-bezier(.4,0,.2,1); }
     .c11-copo.c13-metano.solto canvas { translate: calc(var(--pw, 965px) * -.02) calc(var(--ph, 448px) * -.133); }
     .c72-quiz.c11a.c13f .c72-pergunta { translate: calc(var(--pw, 965px) * .009) calc(var(--ph, 448px) * .103); }
@@ -777,6 +780,8 @@
     /* 11.1A: a molécula que sai do copo para mais alta (o quadro 3D sobe junto com a saída) */
     .c11-copo canvas { transition: translate 2.2s cubic-bezier(.4,0,.2,1); }
     .c11-copo.solto canvas { translate: calc(var(--pw, 356px) * .003) calc(var(--ph, 655px) * -.194); }
+    /* a água pequena (do 11.1B em diante): à direita da fórmula (os "e⁻" do H ficam à esquerda) */
+    .c11-copo.solto.peq:not(.c12-amonia):not(.c13-metano):not(.c14-co2) canvas { translate: calc(var(--pw, 356px) * .927) calc(var(--ph, 655px) * -.195); }
     /* o esqueleto das moléculas (água, amônia e metano): 26% maior e um pouco mais baixo — ajuste na amônia, no 12.6, que vale para as três */
     #conteudoPalco .c121-esqueleto { scale: 1.256; translate: 0 calc(var(--ph, 655px) * .014); }
     /* 11.1A: a pergunta e as opções sobem */
@@ -1452,7 +1457,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v294 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v295 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3188,7 +3193,7 @@ const NARRACOES = [
     aoFim: () => ui.semPlay(true) },                               // sem play: o aluno monta a estrutura e confirma
   // capítulo novo: as moléculas poliatômicas (os eventos virão depois)
   // (pelo sumário, a tela é montada e o áudio já começa)
-  { id: "dialogo11", titulo: "As moléculas poliatômicas", src: "audio/audio_moleculas_11.mp3",
+  { id: "dialogo11", titulo: "Introdução a moléculas poliatômicas", src: "audio/audio_moleculas_11.mp3",
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 3.8,  acao: () => { Cena11.ctl && Cena11.ctl.transformar("cloro"); Cena11.legenda("Molécula diatômica"); } },   // vira o Cl₂; a legenda surge
@@ -3204,8 +3209,8 @@ const NARRACOES = [
     ],
     aoFim: () => { ui.semPlay(true); ui.modoEntendi(true, "Bora"); } },   // no lugar do play, o botão "Bora" leva ao próximo áudio
   // a molécula de água (os eventos antigos do 11.1 estão guardados em guardado/v170 - audios 11 antigos)
-  // (pelo sumário, a tela é montada e o áudio já começa)
-  { id: "dialogo11_1", titulo: "Introdução às moléculas poliatômicas", src: "audio/audio_moleculas_11.1.mp3",
+  // (fora do sumário: o 35 é o 11.1A2, "A molécula de água")
+  { id: "dialogo11_1", titulo: "O copo de água", src: "audio/audio_moleculas_11.1.mp3", semNav: true,
     inicio: () => Cena11.tela(),
     eventos: [
       { tempo: 0.5,  acao: () => Cena111.abrir() },                        // título numa linha só, no topo; molécula e legenda saem girando
@@ -3225,10 +3230,12 @@ const NARRACOES = [
     ],
     aoFim: () => { ui.semPlay(true); Cena11Copo.botaoPasso1("s", "Saquei"); } },   // no lugar do play, o "Saquei" (leva ao 11.1A2)
   // o cubo volta a girar sozinho (1,5s em cada molécula), para na água aos 17s; aos 37s, a pergunta
-  { id: "dialogo11_1A2", titulo: "Qual é mesmo a fórmula da água?", src: "audio/audio_moleculas_11.1A2.mp3", semNav: true, extra: true,
+  // no sumário é "A molécula de água": entra aos 36,8s, com a água 3D já no meio (o cubo fica de fora)
+  { id: "dialogo11_1A2", titulo: "A molécula de água", src: "audio/audio_moleculas_11.1A2.mp3", entrada: 36.8,
+    inicio: () => Cena11Copo.montarSolta(),
     eventos: [
-      { tempo: 2,    acao: () => Cena11F.auto() },
-      { tempo: 17,   acao: () => Cena11F.paraAgua() },                     // gira até a água e para (a água volta a ser a molécula 3D)
+      { tempo: 2,    acao: () => { if (Player.desde < 2) Cena11F.auto(); } },
+      { tempo: 17,   acao: () => { if (Player.desde < 17) Cena11F.paraAgua(); } },   // gira até a água e para (a água volta a ser a molécula 3D)
       { tempo: 37,   acao: () => Cena11Copo.pergunta() }                   // "Qual é mesmo a fórmula da água?" — três opções iguais, todas certas
     ],
     aoFim: () => ui.semPlay(true) },                                       // quem leva adiante é a resposta: o 11.1B
@@ -3244,13 +3251,13 @@ const NARRACOES = [
     eventos: [
       { tempo: 0,    acao: () => { ModoLivre.sair(); Cena12.passo1(5); } },   // (o modo livre sai); "Passo 1: Somar os elétrons de valência" (até 5s)
       { tempo: 14,   acao: () => Cena12.letra("O") },                      // o O cresce
-      { tempo: 15.4, acao: () => Cena12.familia("O", "6A") },              // "6A" em cima do O
+      { tempo: 15.4, acao: () => Cena12N.familia("O", "6A") },             // "6A" em cima do O, na cor do "6 e⁻"
       // (a saída dos elétrons para a fileira foi tirada: vai ser refeita)
       { tempo: 18,   acao: () => Cena12N.lado("dir", 6, "O") },             // "6 e⁻" à direita da fórmula, ao lado do O
       { tempo: 20.5, acao: () => Cena12.letra("O", false) },               // o O volta (o 6A fica)
       { tempo: 20.8, acao: () => Cena12.letra("H") },                      // o H cresce
-      { tempo: 22.6, acao: () => Cena12.familia("H", "1A") },              // "1A" em cima do H
-      { tempo: 25,   acao: () => Cena12N.lado("esq", 1, "H") },             // "1 e⁻" à esquerda, ao lado do H
+      { tempo: 22.6, acao: () => { Cena12.familia("H", "1A"); const a = Cena12.$('.c12-l[data-l="H"] .c12-fam'); if (a) a.style.color = "var(--celeste)"; } },   // "1A" em cima do H, em celeste
+      { tempo: 25,   acao: () => Cena12N.lado("esq", 1, "H", "var(--celeste)") },   // "1 e⁻" à esquerda, ao lado do H, em celeste
       { tempo: 27.1, acao: () => Cena12N.mais("esq", 1) },                  // "+ 1 e⁻" junto do "1 e⁻" (o outro H)
       { tempo: 27.3, acao: () => Cena12.letra("2") },                      // o "2" cresce
       { tempo: 30.7, acao: () => { Cena12.letra("H", false); Cena12.letra("2", false); } },
@@ -3262,8 +3269,9 @@ const NARRACOES = [
       { tempo: 36.8, acao: () => Cena12.letra("O") },                       // o O
       { tempo: 38.2, acao: () => { Cena12.letra("O", false); Cena12.letra("H"); Cena12.letra("2"); } }   // os H
     ],
-    // tudo volta ao normal; sem play: as opções entram (quem leva adiante é a resposta certa)
-    aoFim: () => { Cena12.letra("O", false); Cena12.letra("H", false); Cena12.letra("2", false); ui.semPlay(true); Cena12N.opcoes(); } },
+    // tudo volta ao normal; sem play: as opções entram (quem leva adiante é a resposta certa) e, até o aluno escolher,
+    // os "e⁻" dos lados pulsam em ciclo
+    aoFim: () => { Cena12.letra("O", false); Cena12.letra("H", false); Cena12.letra("2", false); ui.semPlay(true); Cena12N.opcoes(); Cena12N.ciclo(); } },
   // a resposta (toca depois do acerto): 1s, os 6 elétrons descem do O para a fileira e o "6 e⁻" cresce; 3s, os 2 dos H descem,
   // o "6 e⁻" volta e o "1 e⁻ + 1 e⁻" cresce. No fim, tudo volta ao normal e entra o botão "Passo 2" (leva ao 11.2)
   { id: "dialogo11_1D", titulo: "Resposta: 8 elétrons", src: "audio/audio_moleculas_11.1D.mp3", oculta: true,
@@ -7951,8 +7959,18 @@ const Cena11Copo = {
     const ray = new T.Raycaster(); ray.setFromCamera(new T.Vector2(x / cv.width * 2 - 1, -(y / cv.height * 2 - 1)), ctx.camera);
     const p = new T.Vector3(); if (!ray.ray.intersectPlane(new T.Plane(new T.Vector3(0, 0, 1), 0), p)) return;
     ctx.pPeq = p;
+    if (box) box.classList.add("peq");   // (pequena, ao lado da fórmula: no CSS, a água vai para a direita dela)
     ctx.escPeq = meio * (2 * ctx.meiaLargura / cv.width);   // (a molécula tem cerca de 1 unidade de cada lado do centro)
     ctx.t1 = ctx.tAcao;
+  },
+  // pelo sumário (o 11.1A2 aos 36,8s): o título numa linha e a água 3D já fora do copo, parada no meio
+  montarSolta() {
+    if (this.$(".c11-copo")) return;
+    if (!this.$(".c11-titulo")) { Cena11.tela(); Cena111.abrir(); }
+    this.mostrar();
+    this.saiu = true; this.liberado = false;
+    this.$(".c11-copo").classList.add("solto");
+    if (this.ctx) this.ctx.t0 = -100;   // a saída do copo já terminou
   },
   // 37s do 11.1A2: "Qual é mesmo a fórmula da água?", digitada; as três opções (iguais, todas certas) entram quando ela termina
   pergunta() {
@@ -8925,9 +8943,10 @@ const Cena12N = {
   // "5 e⁻" à esquerda da fórmula (passando da moleculazinha) ou "1 e⁻" à direita, na cor da família
   // (vale também para o H₂O do 11.1C, a fórmula .c12-formula)
   formulaLados() { return this.$(".c12n") || this.$(".c12-formula"); },
-  lado(lado, n, l) {
+  // cor: outra cor no lugar da do elemento (ex.: o celeste do H no 11.1C)
+  lado(lado, n, l, cor = this.CORES[l]) {
     const f = this.formulaLados(); if (!f || f.querySelector(`.c12n-e.${lado}`)) return;
-    f.insertAdjacentHTML("beforeend", `<span class="c12n-e ${lado}" style="color:${this.CORES[l]}">${n}&nbsp;e<sup>−</sup></span>`);
+    f.insertAdjacentHTML("beforeend", `<span class="c12n-e ${lado}" style="color:${cor}"><span class="c12n-um">${n}&nbsp;e<sup>−</sup></span></span>`);
     Palco.animar(f.lastElementChild, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1.15)", offset: .6 }, { opacity: 1, transform: "scale(1)" }],
       { duracao: .5, easing: "ease-out" });
   },
@@ -8938,6 +8957,23 @@ const Cena12N = {
     if (ligar) e.dataset.grande = "1"; else delete e.dataset.grande;
     const normal = { scale: "1", textShadow: "0 0 0 rgba(255,255,255,0)" }, grande = { scale: "1.35", textShadow: "0 0 18px currentColor" };
     Palco.animar(e, ligar ? [normal, grande] : [grande, normal], { duracao: .45, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out" });
+  },
+  // fim do 11.1C, à espera da resposta: em ciclo, o "6 e⁻" cresce e volta; junto, cresce o 1º "1 e⁻"; depois o 2º
+  // ("+ 1 e⁻"), enquanto o anterior volta. Para quando o aluno escolhe uma opção (ou a pergunta sai)
+  ciclo() {
+    const f = this.formulaLados(), caixa = this.$(".c12nq .c4-opcoes"); if (!f || !caixa) return;
+    const els = [f.querySelector(".c12n-e.dir"), f.querySelector(".c12n-e.esq .c12n-um"), f.querySelector(".c12n-e.esq .c12n-mais")].filter(Boolean);
+    if (!els.length) return;
+    let ligado = true, k = 0;
+    caixa.addEventListener("click", () => { ligado = false; }, { once: true });
+    const pulso = el => Palco.animar(el, [{ scale: "1", textShadow: "0 0 0 rgba(255,255,255,0)" }, { scale: "1.35", textShadow: "0 0 18px currentColor", offset: .5 },
+      { scale: "1", textShadow: "0 0 0 rgba(255,255,255,0)" }], { duracao: 1.2, easing: "ease-in-out", fill: "none" });
+    const passo = () => {
+      if (!ligado || !caixa.isConnected || !f.isConnected) return;
+      pulso(els[k++ % els.length]);
+      Palco.animar(f, [{}, {}], { duracao: .6, fill: "none" }).finished.then(passo, () => {});
+    };
+    passo();
   },
   // os "e⁻" dos lados somem em fade (14.3, 8s)
   tirarLados() {
