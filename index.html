@@ -1451,7 +1451,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v286 · 16/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v287 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10878,12 +10878,20 @@ const Placar = {
     const c = Palco.el.lastElementChild;
     const nm = c.querySelector(".c10-cartao-nome"); if (nm) nm.textContent = Aluno.nome;   // (textContent: o nome entra como texto, nunca como HTML)
     // Refazer: o quiz recomeça da 1ª questão · Continuar: o próximo capítulo (as moléculas poliatômicas)
+    // com o cartão, a narração 10.13; ela corta na hora em "Refazer" ou "Continuar" (ou se o cartão sair da tela)
+    const fala = new Audio("audio/audio_moleculas_10.13.mp3");
+    try { Velocidade.aplicar(fala); } catch (_) {}
+    fala.play().catch(() => {});
+    const calar = () => { clearInterval(vigia); fala.pause(); };
+    const vigia = setInterval(() => { if (!c.isConnected || fala.ended) calar(); }, 250);
     c.querySelector(".c10-refaz").addEventListener("click", e => {
+      calar();
       c.querySelectorAll("button").forEach(b => b.disabled = true);
       // espoca primeiro (o recomeço limpa o palco, e o balão sumiria antes de estourar)
       Espoca.botao(e.currentTarget).then(() => { Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo10_1"), false); });
     });
     c.querySelector(".c10-continua").addEventListener("click", () => {
+      calar();
       c.querySelectorAll("button").forEach(b => b.disabled = true);
       Cena11.chegar();
     });
