@@ -876,6 +876,10 @@
   .c86-ocl2 figcaption { color: var(--celeste); font-size: clamp(.9rem, 1.5vmin + .5rem, 1.2rem); }
   .c86-ocl2 figcaption sub { font-size: .65em; vertical-align: -.2em; }
   /* o aviso do toque fora da regra: vermelho-coral, tremendo como o "Átomos Instáveis" */
+  /* fim do 8.2 / 9.2: "Separe os átomos"; fim do 9.4: "Toque pra distribuir os e⁻" (a instrução, embaixo dos átomos) */
+  .c82-dica { position: absolute; left: 0; right: 0; margin: 0; z-index: 5; text-align: center; pointer-events: none; padding: 0 16px;
+    font-family: var(--display); font-weight: 700; color: #fff; font-size: calc(clamp(1.15rem, 2.6vmin + .55rem, 1.9rem) * .9); }
+  .c82-sup { font-size: .6em; vertical-align: super; line-height: 0; }
   .c84-aviso { position: absolute; left: 0; right: 0; margin: 0; text-align: center; z-index: 5; pointer-events: none;
     font-family: var(--display); font-weight: 800; letter-spacing: -.01em; font-size: clamp(1.1rem, 2.5vmin + .5rem, 1.9rem);
     color: var(--coral); text-shadow: 0 0 20px rgba(255,122,102,.6); animation: c75Treme .26s linear infinite; }
@@ -1450,7 +1454,7 @@
     </div>
     <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>
     <button class="btn-demo" id="btnDemo" type="button" title="O app passa sozinho, sem som, com uma mãozinha fazendo os toques e respondendo os quizzes">Demonstração</button>
-    <span class="versao" id="versao">v281 · 16/10/2026</span>
+    <span class="versao" id="versao">v282 · 16/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2860,7 +2864,7 @@ const NARRACOES = [
       // já no meio, um puxão num átomo rompe a ligação dupla — mesmo com o áudio no meio: aí ele se cala e a 8.3 entra
       { tempo: 7,    acao: () => Cena82.liberar({ durante: true }) }
     ],
-    aoFim: () => { ui.semPlay(true); Cena82.liberar(); } },        // sem play: segue quem separar os átomos
+    aoFim: () => { ui.semPlay(true); Cena82.liberar(); Cena82.dica(); } },   // sem play: segue quem separar os átomos ("Separe os átomos")
   // a pergunta (o áudio novo, de 18s): os dois O separados, ainda sem os elétrons
   { id: "dialogo8_3", titulo: "Quantos elétrons faltam?", src: "audio/audio_moleculas_8.3.mp3",
     inicio: () => Cena71.montarSeparados("oxigenio"),              // pela navegação rápida: os dois O separados no meio da tela
@@ -2951,7 +2955,9 @@ const NARRACOES = [
   // o O₂ como no caderno: no fim, as bolas viram os símbolos, os pares viram pontinhos e os dois traços afinam — numa transformação
   { id: "dialogo8_8", titulo: "O O₂ no caderno", src: "audio/audio_moleculas_8.8.mp3",
     inicio: () => Cena75.montarPronta("oxigenio").then(() => { Cena75.travar(); Cena75.tirarStatus(); Cena86.tracos(); }),   // pela navegação: O=O em traços
-    eventos: [],
+    eventos: [
+      { tempo: 1,    acao: () => Cena86.tirarCloro() }             // o Cl₂ de cima ("Ligação covalente simples") sai em fade
+    ],
     aoFim: () => Cena79.caderno("oxigenio") },                    // a transformação; o play volta (leva ao 9)
   // o gás nitrogênio (exemplo 03): de volta ao cilindro, e o cubo traz o cilindro de N₂ — como no áudio 8
   { id: "dialogo9", titulo: "O gás nitrogênio", src: "audio/audio_moleculas_9.mp3",
@@ -2977,7 +2983,7 @@ const NARRACOES = [
       // um puxão num átomo rompe a ligação tripla — mesmo com o áudio no meio: aí ele se cala e a 9.3 entra
       { tempo: 3.4,  acao: () => Cena82.liberar({ proxima: "dialogo9_3", durante: true, faisca: 0x8AA8FF }) }
     ],
-    aoFim: () => ui.semPlay(true) },                               // sem play: segue quem separar os átomos
+    aoFim: () => { ui.semPlay(true); Cena82.dica(); } },           // sem play: segue quem separar os átomos ("Separe os átomos")
   // os 5 elétrons de valência de cada nitrogênio; no fim, o aluno os distribui (Regra de Hund)
   { id: "dialogo9_3", titulo: "Nitrogênio: 5 elétrons de valência", src: "audio/audio_moleculas_9.3.mp3",
     inicio: () => Cena71.montarSeparados("nitrogenio"),            // pela navegação rápida: os dois N separados no meio da tela
@@ -3004,7 +3010,8 @@ const NARRACOES = [
       { tempo: 0,    acao: () => { Cena71.tirarPergunta();          // a pergunta e as alternativas somem em fade
           Cena84.liberar({ sets: ["A", "B"], qtd: 5, pares: ["fora"], solitarios: ["cima", "baixo", "frente"], depois: () => Cena84.para95() }); } }
     ],
-    aoFim: () => { ui.semPlay(true); Cena84.para95(); } },          // (os elétrons já completos durante o áudio: a 9.5 entra agora)
+    // (os elétrons já completos durante o áudio: a 9.5 entra agora). Nenhum elétron colocado em 3s: a instrução e a mãozinha
+    aoFim: () => { ui.semPlay(true); Cena84.para95(); Cena84.lembrete(); } },
   // toca só depois dos elétrons distribuídos (não aparece na navegação rápida)
   { id: "dialogo9_5", titulo: "N: os elétrons no lugar", src: "audio/audio_moleculas_9.5.mp3", oculta: true,
     inicio: () => Cena84.montarN(),
@@ -6577,7 +6584,7 @@ const Cena8 = {
     if (t) Palco.animar(t, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => t.classList.add("escondido"), () => {});
     // no pico do clarão: some o mundo quântico (e tudo o que estava em volta da molécula); volta o cilindro
     Palco.animar(cil, [{ opacity: 0 }, { opacity: 0 }], { duracao: .32 * k, fill: "none" }).finished.then(() => {
-      Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c75-status, .c75-arrasto, .c76-octeto, .c77-texto, .c78-traco, .c73-octeto, .c74-hund, .c86-formula, .c72-quiz, .c84-aviso, .c84-toques, .c83-mao, .c79-cl, .c79-caderno")
+      Palco.el.querySelectorAll(".c74-eletrons, .c75-ligacao, .c75-status, .c75-arrasto, .c76-octeto, .c77-texto, .c78-traco, .c73-octeto, .c74-hund, .c86-formula, .c72-quiz, .c84-aviso, .c84-toques, .c83-mao, .c79-cl, .c79-caderno, .c82-dica")
         .forEach(el => el.remove());
       q.remove();
       Cena71.quantum = null; Cena71.m = null;
@@ -6642,9 +6649,22 @@ const Cena82 = {
     zona.addEventListener("pointerup", solta); zona.addEventListener("pointercancel", solta);
     Cena74.pulsarAtomo("A"); Cena74.pulsarAtomo("B");   // convite: os dois átomos dão uma pulsada
   },
+  // fim do 8.2 e do 9.2: "Separe os átomos", digitado embaixo da molécula (sai quando o aluno separa)
+  dica() {
+    if (!this.$(".c75-arrasto") || this.$(".c82-dica")) return;
+    const c = ["O", "H"].map(k => this.centro(k)), y = Math.max(...c.map(a => a.y + a.R)) + c[0].R * .9;
+    Palco.adicionar(`<p class="c82-dica" style="top:${y}px"></p>`);
+    Palco.digitar(Palco.el.lastElementChild, "Separe os átomos", .9);
+  },
+  tirarDica() {
+    const d = this.$(".c82-dica:not(.saindo)"); if (!d) return;
+    d.classList.add("saindo");
+    Palco.animar(d, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4, easing: "ease-in" }).finished.then(() => d.remove(), () => {});
+  },
   // o puxão rompe a ligação dupla: o mesmo estalo do cloro; os dois ficam separados como os cloros ficaram
   separar() {
     const z = this.$(".c75-arrasto"); if (z) z.remove();
+    this.tirarDica();
     Cena71.separar({ status: false, faisca: this.faisca });
     Player.calar();   // se a narração ainda estava falando, ela se cala no puxão
     // passado o estalo (1,2s), a narração seguinte entra sozinha (a espera é do palco: para na pausa)
@@ -6670,8 +6690,8 @@ const Cena83 = {
   // o ponto de cada lado do O da esquerda (onde ficam os elétrons)
   ponto(lado) { return Cena74.destino(lado + "1", 0, "A"); },
   // a mãozinha vai até o lado e toca nele: um círculo se abre onde tocou, e o aparelho vibra.
-  // depois(): o que acontece no toque (ex.: um elétron sai da fileira)
-  tocar(lado, depois) {
+  // depois(): o que acontece no toque (ex.: um elétron sai da fileira) · mudo: sem vibrar (só a demonstração do toque)
+  tocar(lado, depois, mudo = false) {
     const p = this.ponto(lado); if (!p) return;
     let mao = this.$(".c83-mao:not(.saindo)");
     if (!mao) {
@@ -6688,7 +6708,7 @@ const Cena83 = {
         Palco.adicionar(`<div class="c83-toque" style="left:${p[0]}px;top:${p[1]}px"></div>`);
         const t = Palco.el.lastElementChild;
         Palco.animar(t, [{ scale: .2, opacity: 1 }, { scale: 1.7, opacity: 0 }], { duracao: .6, easing: "ease-out" }).finished.then(() => t.remove(), () => {});
-        Vibra.tocar("toqueEletron");
+        if (!mudo) Vibra.tocar("toqueEletron");
         if (depois) depois();
       }, () => {});
   },
@@ -6752,7 +6772,7 @@ const Cena84 = {
     if (this.$(".c84-toques") || !Cena71.m) return;
     this.cfg = Object.assign({ sets: ["B"], qtd: 6, pares: ["cima", "fora"], solitarios: ["baixo", "frente"], som: null,
       depois: () => { if (NARRACOES[Player.indice].id === "dialogo8_3") Player.seguirSozinho(); } }, cfg);
-    this.est = {};
+    this.est = {}; this.demo = false;
     this.cfg.sets.forEach(s => { this.est[s] = { lados: { cima: 0, fora: 0, baixo: 0, frente: 0 }, n: 0, pronto: false }; });
     if (this.cfg.semPlay !== false) ui.semPlay(true);   // o play some: a próxima narração vem quando os átomos estiverem prontos
     Palco.adicionar(`<div class="c84-toques" aria-label="Toque nos lados dos átomos para colocar os elétrons"></div>`);
@@ -6767,6 +6787,36 @@ const Cena84 = {
       if (NARRACOES[Player.indice].id !== "dialogo8_4") return;
       Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo8_5"), true);
     } });
+  },
+  // fim do 9.4: passados 3s sem nenhum elétron colocado, "Toque pra distribuir os e⁻" embaixo dos átomos e a mãozinha
+  // tocando em volta do N da esquerda, lado a lado (só a demonstração: nada acontece). Sai no 1º elétron colocado
+  lembrete() {
+    const z = this.$(".c84-toques"); if (!z || !this.est) return;
+    const nenhum = () => Object.values(this.est).every(s => s.n === 0);
+    if (!nenhum()) return;
+    const espera = s => Palco.animar(z, [{}, {}], { duracao: s, fill: "none" }).finished;
+    espera(3).then(() => {
+      if (!z.isConnected || !nenhum() || this.$(".c82-dica")) return;
+      const B = Cena74.atomo("B"); if (!B) return;
+      const { g, e } = Cena74.medidas(B);
+      Palco.adicionar(`<p class="c82-dica" style="top:${B.y + g + e * 2.2}px"></p>`);
+      Palco.digitar(Palco.el.lastElementChild, [{ texto: "Toque pra distribuir os e" }, { classe: "c82-sup", texto: "−", junto: true }], 1);
+      this.demo = true;
+      const lados = ["cima", "fora", "baixo", "frente"];
+      let i = 0;
+      const passo = () => {
+        if (!this.demo || !z.isConnected) return;
+        Cena83.tocar(lados[i++ % lados.length], null, true);
+        espera(1.1).then(passo, () => {});
+      };
+      passo();
+    }, () => {});
+  },
+  tirarLembrete() {
+    if (!this.demo) return;
+    this.demo = false;
+    Cena83.tirarMao();
+    Cena82.tirarDica();
   },
   // qual átomo e qual lado dele foi tocado (ou nada, se o toque foi longe dos átomos que faltam)
   alvo(x, y) {
@@ -6794,6 +6844,7 @@ const Cena84 = {
     // já com um em cada lado, tentou parear um elétron que é da ligação (não é lado de par): outra mensagem
     if (!pode) return this.erro(a.set, n >= 4 && !this.cfg.pares.includes(a.lado) ? "Deixe esse elétron pra ligação" : undefined);
     Vibra.tocar("toqueEletron");
+    this.tirarLembrete();   // o 1º elétron colocado: a instrução e a mãozinha saem
     if (n < 4) Cena74.saltar([n], a.lado + "1", a.set);
     else Cena74.emparelhar(n, Cena74.els(a.set).findIndex(el => el.dataset.lado === a.lado), a.lado, a.set);
     L[a.lado]++; st.n++;
@@ -6995,6 +7046,12 @@ const Cena86 = {
     Palco.adicionar(`<figure class="c86-formula c86-cl2" style="top:${y}px"><figcaption>Ligação covalente simples</figcaption>${svg}</figure>`);
     this.descer();
     Palco.animar(this.$(".c86-cl2"), [{ opacity: 0 }, { opacity: 1 }], { duracao: .8, easing: "ease-out" });
+  },
+  // áudio 8.8, 1s: o Cl₂ de cima ("Ligação covalente simples") sai em fade
+  tirarCloro() {
+    const f = this.$(".c86-cl2"); if (!f || f.dataset.saindo) return;
+    f.dataset.saindo = "1";
+    Palco.animar(f, [{ opacity: getComputedStyle(f).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => f.remove(), () => {});
   },
   // 54s: o OCl₂ em fórmula de traços, embaixo do O₂, e a pergunta das ligações do oxigênio
   ocl2() {
