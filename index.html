@@ -1495,7 +1495,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v324 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v325 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8382,7 +8382,8 @@ const Cena12A = {
     sombra.rotation.x = -Math.PI / 2; sombra.position.y = .003; frasco.add(sombra);
     const cy = this.recipiente(ctx, T, frasco);
     const mat = cor => new T.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18 });
-    const mol = ctx.mol = this.molecula(T, mat, new T.SphereGeometry(1, 48, 32));
+    // (o metano com bastões só no áudio 14, quando ele volta para o cilindro; antes, só bolas)
+    const mol = ctx.mol = this.molecula(T, mat, new T.SphereGeometry(1, 48, 32), (NARRACOES[Player.indice] || {}).id === "dialogo14");
     mol.visible = false; cena.add(mol);
     // enquadramento: o mesmo do copo (o recipiente inteiro no meio, com folga)
     const ajustar = () => {
@@ -8581,8 +8582,8 @@ const Cena13A = Object.assign(Object.create(Cena12A), {
   },
   // a molécula de CH₄: o C (cinza-escuro) no meio e os quatro H em volta, num tetraedro (109,5°), ligados por bastões —
   // o mesmo modelo do metano em 3D do 13.7 (as mesmas proporções), no tamanho de antes (cerca de 1,1 do centro à ponta)
-  // (bastao = false: o modelo antigo, só bolas encostadas — o do cubo de moléculas do 11.1A, como as outras faces)
-  molecula(T, mat, esf, bastao = true) {
+  // (bastao = false: só bolas encostadas — o do capítulo 13 e do cubo de moléculas do 11.1A; true: com bastões, no áudio 14)
+  molecula(T, mat, esf, bastao = false) {
     if (!bastao) {
       const mol = new T.Group(), rC = .58, rH = .34, d = (rC + rH) * .86;
       const C = new T.Mesh(esf, mat(0x1E232B)); C.scale.setScalar(rC); mol.add(C);
