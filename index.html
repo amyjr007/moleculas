@@ -1513,7 +1513,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v358 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v359 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11455,11 +11455,15 @@ const ModoLivre = {
       : this.pontas().some(l => !this.lig[l]) ? ["Ligue o átomo do meio a cada ponta: toque num e depois no outro", "#FFC24B"]
       : this.livres().length ? ["Distribua os pares que sobraram pra estabilizar os átomos, começando pelas pontas", "#6EE7A0"]
       : ["Se precisar, faça ligações múltiplas, sempre da ponta pro centro", "#C9A7FF"];
-    this.legenda(msg, cor, 3.4);
+    // (provisório, para a professora ajustar posição e tamanho no Chromebook: a dica fica na tela até o "?" ser tocado de novo)
+    const fixa = this.$(".c84-aviso[data-fixo]");
+    if (fixa) { fixa.remove(); return; }
+    this.legenda(msg, cor, 3.4, true);
     Vibra.tocar("toqueEletron");
   },
   // um texto entre a fórmula e os contornos (ou os átomos já montados), parado, na cor dada, por dur segundos
-  legenda(msg, cor, dur) {
+  // (fixo: entra em fade e fica, sem sumir sozinho)
+  legenda(msg, cor, dur, fixo = false) {
     let av = this.$(".c84-aviso");
     const P = Palco.el.getBoundingClientRect(), f = this.$(".c111-formula"), fBase = f ? f.getBoundingClientRect().bottom - P.top : P.height * .2;
     const slots = [...Palco.el.querySelectorAll(".c133-slot")].map(s => s.getBoundingClientRect().top - P.top);
@@ -11469,6 +11473,7 @@ const ModoLivre = {
     Palco.adicionar(`<p class="c84-aviso verde" style="top:${meio}px;translate:0 -50%;animation:none"></p>`); av = this.$(".c84-aviso");   // (não treme)
     av.textContent = msg;
     Object.assign(av.style, { color: cor, textShadow: `0 0 18px ${cor}99` });
+    if (fixo) { av.dataset.fixo = "1"; Palco.animar(av, [{ opacity: 0 }, { opacity: 1 }], { duracao: .3, fill: "none" }); return; }
     Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: Math.min(.3 / dur, .2) }, { opacity: 1, offset: 1 - Math.min(.4 / dur, .2) }, { opacity: 0 }], { duracao: dur, easing: "linear" }).finished.then(() => av.remove(), () => {});
   },
   // ---- o martelo: a molécula se monta sozinha, passo a passo, cada passo escrito antes (1s) de acontecer ----
