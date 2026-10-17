@@ -1509,7 +1509,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v351 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v352 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11127,10 +11127,22 @@ const ModoLivre = {
     if (this.$(".c11l-checar")) return;
     const P = Palco.el.getBoundingClientRect(), f = this.$(".c12-fila"), base = f ? f.getBoundingClientRect().top - P.top : P.height * .88;
     // ("Ajuda" no meio do caminho; "Confirmar" com a molécula montada — ver atualizarBotao)
-    Palco.adicionar(`<div class="c11l-checar" style="top:${base - 16}px"><button class="c10-bt">Ajuda</button></div>`);
-    const b = this.$(".c11l-checar .c10-bt");
-    Palco.animar(b, [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duracao: .4, easing: "ease-out" });
+    // (e, ao lado, "Refazer": a montagem recomeça do zero, com os mesmos elétrons)
+    Palco.adicionar(`<div class="c11l-checar" style="top:${base - 16}px"><button class="c10-bt">Ajuda</button><button class="c10-bt c11l-refazer">Refazer</button></div>`);
+    const [b, r] = this.$(".c11l-checar").querySelectorAll(".c10-bt");
+    [b, r].forEach((x, i) => Palco.animar(x, [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duracao: .4, atraso: i * .1, easing: "ease-out" }));
     b.addEventListener("click", () => this.completo() ? this.checar() : this.ajuda());
+    r.addEventListener("click", () => this.refazer());
+  },
+  // "Refazer": tudo sai e a montagem recomeça (os elétrons descem de novo, os átomos e os contornos voltam)
+  refazer() {
+    if (this.remontando) return;
+    const mol = this.mol, n = this.n; if (!mol) return;
+    Vibra.tocar("toqueEletron");
+    this.limpar();
+    this.mol = mol; this.cfg = this.CFG[mol]; this.n = n; this.ativo = true;
+    const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "hidden";
+    this.descer();
   },
   pontas() { return Object.keys(this.at).filter(l => l !== "meio"); },
   // os átomos nos lugares (certo ou errado): viram o desenho das ligações, no mesmo lugar; os toques valem
@@ -11399,7 +11411,14 @@ const ModoLivre = {
   // "Ajuda": a dica do próximo passo, em verde, embaixo dos átomos (sem tremer nada)
   ajuda() {
     // (cada dica com a sua cor: celeste, âmbar, verde e lilás — uma para cada etapa)
+    // (antes das etapas, os erros: o central errado, o H com mais de um par, algum átomo com mais de 8 elétrons)
+    const c = this.cfg.certo, nomes = { C: "o C (carbono)", N: "o N (nitrogênio)", O: "o O (oxigênio)", H: "o H (hidrogênio)", S: "o S (enxofre)" };
+    const hErrado = this.at && Object.keys(this.at).some(l => this.at[l].sim === "H" && this.eletrons(l) > 2);
+    const mais8 = this.at && Object.keys(this.at).some(l => this.at[l].sim !== "H" && this.eletrons(l) > 8);
     const [msg, cor] = !this.at ? ["Leve os átomos até os contornos (o central fica no meio)", "#A3DBF7"]
+      : this.at.meio.sim !== c.meio ? [`O átomo central é ${nomes[c.meio] || c.meio}`, "#FF9A8A"]
+      : hErrado ? ["O H estabiliza com um par de elétrons apenas", "#FF9A8A"]
+      : mais8 ? ["Cada átomo estabiliza com 8 elétrons de valência", "#FF9A8A"]
       : this.pontas().some(l => !this.lig[l]) ? ["Ligue o átomo do meio a cada ponta: toque num e depois no outro", "#FFC24B"]
       : this.livres().length ? ["Distribua os pares que sobraram pra estabilizar os átomos, começando pelas pontas", "#6EE7A0"]
       : ["Se precisar, faça ligações múltiplas, sempre da ponta pro centro", "#C9A7FF"];
