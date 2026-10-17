@@ -547,6 +547,10 @@
   .c11l-checar .c11l-ic { width: 46px; height: 46px; min-width: 0; padding: 0; border-radius: 50%; display: grid; place-items: center; font-size: 1.5rem; font-weight: 800; line-height: 1; }
   .c11l-checar .c11l-ic svg { width: 24px; height: 24px; }
   .c11l-checar .c11l-ic.c11l-ok { background: #3DBE7A; color: #fff; box-shadow: 0 0 16px rgba(110,231,160,.6); }
+  .c11l-dica { translate: 0 -50%; }   /* as dicas da Ajuda e os passos do martelo: centradas no lugar delas */
+  /* o relógio da montagem automática (o martelo): os segundos desde o começo, parando na pausa */
+  .c11l-relogio { position: absolute; right: 18px; bottom: calc(18px + 74px); z-index: 7; margin: 0; padding: 4px 10px; border-radius: 10px; pointer-events: none;
+    background: rgba(10,19,34,.75); color: #FFC24B; font: 800 1rem/1 var(--display); font-variant-numeric: tabular-nums; }
   .c11l-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; z-index: 4; pointer-events: none; }
   .c11l-sel { fill: none; stroke: #FFC24B; stroke-width: 2.5; stroke-dasharray: 6 4; filter: drop-shadow(0 0 6px rgba(255,194,75,.9)); }
   .c12n-mais, .c12n-um { display: inline-block; }
@@ -763,6 +767,8 @@
       translate: calc(var(--pw, 965px) * .375) calc(var(--ph, 448px) * -.045); }
     /* a amônia: a que sai do frasco (12.1) mais alta; a pequena, ao lado do NH₃ (12.2 em diante), mais à esquerda e mais alta.
        (a pequena é posta no lugar já contando com o deslocamento da que saiu: a diferença entre os dois é o ajuste medido no 12.3) */
+    /* o modo livre (HCN): a dica da etapa 1 mais baixa */
+    #conteudoPalco .c11l-dica[data-etapa="1"] { translate: 0 calc(-50% + var(--ph, 448px) * .105); }
     /* 13.5 (fim): o desenho do metano um pouco mais alto; o "Entendi" à direita, mais baixo e menor (no 13.7, com o metano
        em 3D, o "Entendi" fica no lugar de sempre). (A montagem das bolas já conta com esse deslocamento do desenho.) */
     #conteudoPalco > .c121-esqueleto.metano { translate: calc(var(--pw, 965px) * -.001) calc(var(--ph, 448px) * -.032); }
@@ -1513,7 +1519,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v359 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v360 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11459,6 +11465,9 @@ const ModoLivre = {
     const fixa = this.$(".c84-aviso[data-fixo]");
     if (fixa) { fixa.remove(); return; }
     this.legenda(msg, cor, 3.4, true);
+    // (a etapa da dica, para o ajuste de posição de cada uma no tablet: 1 a 4 as etapas, "erro" os três avisos de erro)
+    const etapas = { "#A3DBF7": "1", "#FFC24B": "2", "#6EE7A0": "3", "#C9A7FF": "4", "#FF9A8A": "erro" }, av = this.$(".c84-aviso");
+    if (av) av.dataset.etapa = etapas[cor] || "";
     Vibra.tocar("toqueEletron");
   },
   // um texto entre a fórmula e os contornos (ou os átomos já montados), parado, na cor dada, por dur segundos
@@ -11470,7 +11479,7 @@ const ModoLivre = {
     const topo = this.at ? Math.min(...Object.values(this.at).map(a => a.y - a.R)) : slots.length ? Math.min(...slots) : P.height * .5;
     const meio = (fBase + topo) / 2;
     if (av) av.remove();
-    Palco.adicionar(`<p class="c84-aviso verde" style="top:${meio}px;translate:0 -50%;animation:none"></p>`); av = this.$(".c84-aviso");   // (não treme)
+    Palco.adicionar(`<p class="c84-aviso verde c11l-dica" style="top:${meio}px;animation:none"></p>`); av = this.$(".c84-aviso");   // (não treme; o translate vem do CSS)
     av.textContent = msg;
     Object.assign(av.style, { color: cor, textShadow: `0 0 18px ${cor}99` });
     if (fixo) { av.dataset.fixo = "1"; Palco.animar(av, [{ opacity: 0 }, { opacity: 1 }], { duracao: .3, fill: "none" }); return; }
@@ -11496,6 +11505,7 @@ const ModoLivre = {
   async martelo() {
     if (this.remontando || !this.cfg || !this.cfg.certo || !this.cfg.certo.porPonta) return;
     this.remontando = true; Cena133.bloqueado = true;
+    this.relogio(true);   // (o play/pause e o relógio, para mapear o tempo de cada passo)
     const espera = s => Palco.animar(Palco.el, [{}, {}], { duracao: s, fill: "none" }).finished.catch(() => {});
     const passo = async (msg, acao) => { this.legenda(msg, "#A3DBF7", 1.9); await espera(1); acao(); await espera(1); };
     try {
@@ -11539,7 +11549,38 @@ const ModoLivre = {
       this.legenda("Pronto! Agora é só confirmar", "#6EE7A0", 2.4);
     } finally {
       this.remontando = false; Cena133.bloqueado = false;
+      this.relogio(false);
       this.conferirBotao();
+    }
+  },
+  // o relógio da montagem automática: o play/pause aparece (pausa e retoma o palco — todos os passos esperam pelo relógio
+  // dele) e os segundos desde o começo, parando na pausa. ligar = false: o play some e o relógio sai 4s depois
+  relogio(ligar) {
+    if (!ligar) {
+      this.relogioLigado = false; if (Palco.pausado) Palco.retomar();
+      ui.semPlay(true); ui.atualizarBotao(false);
+      const r = this.$(".c11l-relogio"); if (r) setTimeout(() => r.remove(), 4000);
+      return;
+    }
+    this.relogioLigado = true;
+    ui.semPlay(false); ui.atualizarBotao(true);
+    Palco.el.querySelectorAll(".c11l-relogio").forEach(r => r.remove());
+    Palco.adicionar(`<p class="c11l-relogio" aria-live="off">0,0 s</p>`);
+    const r = this.$(".c11l-relogio"); let t = 0, antes = performance.now();
+    const passo = agora => {
+      if (!r.isConnected || !this.relogioLigado) return;
+      if (!Palco.pausado) t += (agora - antes) / 1000; antes = agora;
+      r.textContent = `${t.toFixed(1).replace(".", ",")} s`;
+      requestAnimationFrame(passo);
+    };
+    requestAnimationFrame(passo);
+    if (!this.playArmado) {   // (o toque no play, durante a montagem automática, pausa e retoma — sem mexer na narração)
+      this.playArmado = true;
+      document.getElementById("btnPlay").addEventListener("click", e => {
+        if (!this.relogioLigado) return;
+        e.stopImmediatePropagation(); e.preventDefault();
+        if (Palco.pausado) { Palco.retomar(); ui.atualizarBotao(true); } else { Palco.pausar(); ui.atualizarBotao(false); }
+      }, true);
     }
   },
   // desmonta tudo, ao contrário da montagem: os pares e os traços voltam para a fileira, e os átomos voltam para a fila
