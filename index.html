@@ -754,7 +754,7 @@
     /* 14.1: o CO₂ (que sai do cilindro) mais alto; a pergunta e as opções um pouco mais baixas */
     /* 13.1: o metano (que sai do cilindro) mais alto e um pouco à esquerda; a pergunta um pouco mais baixa */
     /* a água pequena (do 11.1B em diante): à direita da fórmula (os "e⁻" do H ficam à esquerda) */
-    .c11-copo.solto.peq:not(.c12-amonia):not(.c13-metano):not(.c14-co2) canvas { transition: translate 1s cubic-bezier(.4,0,.2,1);
+    .c11-copo.solto.peq:not(.c12-amonia):not(.c13-metano):not(.c14-co2):not(.c15-so3) canvas { transition: translate 1s cubic-bezier(.4,0,.2,1);
       translate: calc(var(--pw, 965px) * .375) calc(var(--ph, 448px) * -.045); }
     /* a amônia: a que sai do frasco (12.1) mais alta; a pequena, ao lado do NH₃ (12.2 em diante), mais à esquerda e mais alta.
        (a pequena é posta no lugar já contando com o deslocamento da que saiu: a diferença entre os dois é o ajuste medido no 12.3) */
@@ -813,7 +813,7 @@
     .c11-copo canvas { transition: translate 2.2s cubic-bezier(.4,0,.2,1); }
     .c11-copo.solto canvas { translate: calc(var(--pw, 356px) * .003) calc(var(--ph, 655px) * -.194); }
     /* a água pequena (do 11.1B em diante): à direita da fórmula (os "e⁻" do H ficam à esquerda) */
-    .c11-copo.solto.peq:not(.c12-amonia):not(.c13-metano):not(.c14-co2) canvas { translate: calc(var(--pw, 356px) * .927) calc(var(--ph, 655px) * -.195); }
+    .c11-copo.solto.peq:not(.c12-amonia):not(.c13-metano):not(.c14-co2):not(.c15-so3) canvas { translate: calc(var(--pw, 356px) * .927) calc(var(--ph, 655px) * -.195); }
     /* o esqueleto das moléculas (água, amônia e metano): 26% maior e um pouco mais baixo — ajuste na amônia, no 12.6, que vale para as três */
     #conteudoPalco .c121-esqueleto { scale: 1.256; translate: 0 calc(var(--ph, 655px) * .014); }
     /* 11.1A: a pergunta e as opções sobem */
@@ -1499,7 +1499,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v332 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v333 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3749,9 +3749,9 @@ const NARRACOES = [
   // volta. No fim: o S e os três O em fila embaixo da fórmula e os contornos no centro — o aluno monta o esqueleto
   { id: "dialogo15_3", titulo: "Trióxido de enxofre: os elétrons e o esqueleto", src: "audio/audio_moleculas_15.3.mp3", oculta: true,
     eventos: [
-      { tempo: 0,    acao: () => { Cena71.tirarPergunta(); Cena12.fila(24); } },   // a pergunta sai; a fileira, com 24 lugares (em duas linhas)
-      ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: .1 + k * .06, acao: () => Cena12.eletron("S", k, ".c12n-e.esq") })),   // 6 saem do "6 e⁻" do S
-      ...Array.from({ length: 18 }, (_, j) => ({ tempo: .45 + j * .025, acao: () => Cena12.eletron("O", 6 + j, `.c12n-e.dir > :nth-child(${Math.floor(j / 6) + 1})`) })),   // 6 de cada "6 e⁻" dos O
+      { tempo: 0,    acao: () => { Cena71.tirarPergunta(); Cena12.fila(24); } },   // a pergunta sai; a fileira, com 24 lugares (em duas linhas), ainda vazia
+      ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 4 + k * .06, acao: () => Cena12.eletron("S", k, ".c12n-e.esq") })),   // 4s: 6 saem do "6 e⁻" do S
+      ...Array.from({ length: 18 }, (_, j) => ({ tempo: 5.5 + j * .025, acao: () => Cena12.eletron("O", 6 + j, `.c12n-e.dir > :nth-child(${Math.floor(j / 6) + 1})`) })),   // 5,5s: 6 de cada "6 e⁻" dos O
       { tempo: 1,    acao: () => Cena14P.caixa(2.7) },                     // o retângulo em volta dos 24 (some aos 3,7s)
       { tempo: 4,    acao: () => { Cena12N.realcarLado("esq"); Cena12.brilhoCor([0, 1, 2, 3, 4, 5], Cena12N.CORES.S); } },
       { tempo: 5.5,  acao: () => { Cena12N.realcarLado("esq", false); Cena12.brilhoCor([0, 1, 2, 3, 4, 5], Cena12N.CORES.S, false);
@@ -8673,7 +8673,7 @@ const Cena133 = {
          livreN: { lados: ["meio", "esq", "dir", "baixo"], ponta: "H", primeiro: "N" },      // (livreN: a amônia do modo livre)
          livreC: { lados: ["meio", "cima", "dir", "baixo", "esq"], ponta: "H", primeiro: "C" },   // (livreC: o metano do modo livre)
          livreCO2: { lados: ["meio", "esq", "dir"], ponta: "O", primeiro: "C" },              // (livreCO2: o CO₂ do modo livre)
-         so3: { lados: ["meio", "cima", "esq", "dir"], ponta: "O", primeiro: "S" } },          // (so3: o S no meio, um O em cima e um de cada lado)
+         so3: { lados: ["meio", "esq", "baixo", "dir"], ponta: "O", primeiro: "S" } },         // (so3: o S no meio, um O à esquerda, um embaixo e um à direita)
   mol: "metano",
   // 6s: os 8 elétrons brilham por 1s, com o texto em cima da fileira (os dois somem juntos)
   total() {
@@ -9579,8 +9579,8 @@ const Cena121 = {
     metano: { box: "0 0 200 160", central: "C", aria: "Esqueleto da molécula de metano", pos: { meio: [100, 80], cima: [100, 14], dir: [166, 80], baixo: [100, 146], esq: [34, 80] } },
     // (ponta: o átomo das pontas, quando não é o H)
     co2:    { box: "0 0 220 56", central: "C", ponta: "O", aria: "Esqueleto da molécula de gás carbônico", pos: { meio: [110, 28], esq: [28, 28], dir: [192, 28] } },
-    // o SO₃: o S no meio, um O em cima e um de cada lado (as três pontas à mesma distância; o centro do quadro é o S)
-    so3:    { box: "0 0 220 184", central: "S", ponta: "O", aria: "Esqueleto da molécula de trióxido de enxofre", pos: { meio: [110, 92], cima: [110, 24], esq: [42, 92], dir: [178, 92] } }
+    // o SO₃: o S no meio, um O à esquerda, um embaixo e um à direita (as três pontas à mesma distância; o centro do quadro é o S)
+    so3:    { box: "0 0 220 184", central: "S", ponta: "O", aria: "Esqueleto da molécula de trióxido de enxofre", pos: { meio: [110, 92], esq: [42, 92], baixo: [110, 160], dir: [178, 92] } }
   },
   arranjo() { const s = this.$(".c121-esqueleto"); return this.ARRANJOS[(s && s.dataset.mol) || "agua"]; },
   xy(lado) { return this.arranjo().pos[lado]; },
