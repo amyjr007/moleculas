@@ -1495,7 +1495,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v323 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v324 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3625,8 +3625,9 @@ const NARRACOES = [
   { id: "dialogo14_3", titulo: "Gás carbônico: os elétrons e o esqueleto", src: "audio/audio_moleculas_14.3.mp3", semNav: true, extra: true,
     eventos: [
       { tempo: 0,    acao: () => { Cena71.tirarPergunta(); Cena12.fila(16); } },   // a pergunta sai; a fileira, agora com 16 lugares
-      ...[0, 1, 2, 3].map(k => ({ tempo: 3.8 + k * .25, acao: () => Cena12.eletron("C", k) })),   // 4 elétrons saem do C, em sequência
-      ...Array.from({ length: 12 }, (_, j) => ({ tempo: 5.2 + j * .127, acao: () => Cena12.eletron(j % 2 ? "2" : "O", 4 + j) })),   // 12 dos O (do O e do 2), até 7,6s
+      ...[0, 1, 2, 3].map(k => ({ tempo: 3.8 + k * .25, acao: () => Cena12.eletron("C", k, ".c12n-e.esq") })),   // 4 elétrons saem do "4 e⁻", em sequência
+      // os 12 dos O: 6 saem do "6 e⁻" e 6 do "+ 6 e⁻" (até 7,6s)
+      ...Array.from({ length: 12 }, (_, j) => ({ tempo: 5.2 + j * .127, acao: () => Cena12.eletron("O", 4 + j, `.c12n-e.dir > .${j < 6 ? "c12n-um" : "c12n-mais"}`) })),
       { tempo: 3.8,  acao: () => Cena12N.realcarLado("esq") },             // o "4 e⁻" cresce
       { tempo: 5.2,  acao: () => Cena12N.realcarLado("dir") },             // o "6 e⁻ + 6 e⁻" cresce
       { tempo: 8,    acao: () => Cena12N.tirarLados() },                   // os dois somem
