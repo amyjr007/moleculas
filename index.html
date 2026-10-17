@@ -1496,7 +1496,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v329 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v330 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3694,11 +3694,11 @@ const NARRACOES = [
       { tempo: 7.8,  acao: () => Cena14F.acender(Cena14F.pares(["esq-esq", "dir-dir"])) },
       { tempo: 8,    acao: () => Cena14F.acender(Cena14F.pares(["esq-baixo", "dir-baixo"])) },
       { tempo: 10.4, acao: () => Cena14F.soC() },
-      { tempo: 12.4, acao: () => Cena14D.brilhar(Cena14F.linhas(["esq2"]), .6) },
+      { tempo: 12.2, acao: () => Cena14D.brilhar(Cena14F.linhas(["esq2"]), .6) },
       { tempo: 13,   acao: () => Cena14D.brilhar(Cena14F.linhas(["esq"]), .6) },
-      { tempo: 14,   acao: () => Cena14D.brilhar(Cena14F.linhas(["dir2"]), .6) },
+      { tempo: 13.6, acao: () => Cena14D.brilhar(Cena14F.linhas(["dir2"]), .6) },
       { tempo: 14.7, acao: () => Cena14D.brilhar(Cena14F.linhas(["dir"]), .6) },
-      { tempo: 17,   acao: () => Cena14F.festa(1.5) },
+      { tempo: 17.8, acao: () => Cena14F.festa(1.5) },
       { tempo: 20.8, acao: () => Cena14D.brilhar(Cena14F.linhas(["esq", "esq2", "dir", "dir2"]), 1) }
     ],
     aoFim: () => { ui.semPlay(true); Cena12N.caderno(); } },
