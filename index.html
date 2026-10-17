@@ -1495,7 +1495,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v320 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v321 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8631,18 +8631,29 @@ const Cena133 = {
       : Math.max(rC + rH + 10, Math.min(Math.max(58, Math.min(108, m * .17)), (fundo - topo - 2 * rH - 12) / 2));
     // (tablet e Chromebook: o CO₂ montado — e o esqueleto, que nasce no mesmo lugar — mais alto; ajuste da professora no 14.4)
     const sobe = this.mol === "co2" && noTablet();
-    // o mesmo tamanho nas bolas soltas e no desenho das ligações (que vem depois, no mesmo lugar): vale o maior dos dois
-    let RC = rC, RH = rH, XS = xs;
+    // o mesmo tamanho nas bolas soltas (e nos contornos) e no desenho das ligações, que vem depois no mesmo lugar: a referência
+    // é o desenho como ele aparece na tela (no celular, o CSS ainda o aumenta: escalaDesenho) — átomos e distâncias
+    let RC = rC, RH = rH, XS = xs, D = d, desce = 0;
     const A = Cena121.ARRANJOS[this.mol];
     if (A) {
-      const k = d / (A.pos.dir[0] - A.pos.meio[0]);   // px por unidade do desenho
-      RC = Math.max(rC, Cena121.RAIO_BASE[A.central] * k); RH = Math.max(rH, Cena121.RAIO_BASE[A.ponta || "H"] * k);
-      // (celular em pé: as bolas do metano 10% maiores — pedido da professora)
-      if (this.mol === "metano" && matchMedia("(orientation: portrait) and (max-width: 600px)").matches) { RC *= 1.1; RH *= 1.1; }
-      if (RC !== rC || RH !== rH) { const lg = 2 * RC + n * (2 * RH + vao), z0 = W / 2 - lg / 2; XS = [z0 + RC, ...Array.from({ length: n }, (_, j) => z0 + 2 * RC + vao + RH + j * (2 * RH + vao))]; }
+      const u = d / (A.pos.dir[0] - A.pos.meio[0]) * this.escalaDesenho();   // px na tela por unidade do desenho
+      desce = this.desvioDesenho || 0;
+      D = (A.pos.dir[0] - A.pos.meio[0]) * u;
+      RC = Cena121.RAIO_BASE[A.central] * u; RH = Cena121.RAIO_BASE[A.ponta || "H"] * u;
+      const lg = 2 * RC + n * (2 * RH + vao), z0 = W / 2 - lg / 2; XS = [z0 + RC, ...Array.from({ length: n }, (_, j) => z0 + 2 * RC + vao + RH + j * (2 * RH + vao))];
     }
     // (a amônia não tem lugar em cima: o desenho todo sobe meio passo, para ficar no meio do espaço)
-    return { W, H, cx: W / 2 + (sobe ? W * -.002 : 0), cy: (topo + fundo) / 2 + (sobe ? H * -.124 : 0) - (this.mol === "livreN" ? d / 2 : 0), d, rC: RC, rH: RH, xs: XS, yFila };
+    return { W, H, cx: W / 2 + (sobe ? W * -.002 : 0), cy: (topo + fundo) / 2 + (sobe ? H * -.124 : 0) - (this.mol === "livreN" ? D / 2 : 0) + desce, desce, d: D, rC: RC, rH: RH, xs: XS, yFila };
+  },
+  // o quanto o CSS aumenta o desenho das ligações (no celular em pé, 1,256; no tablet, nada): medido num desenho de teste
+  escalaDesenho() {
+    const t = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    t.setAttribute("class", `c121-esqueleto ${this.mol}`); t.style.visibility = "hidden";
+    Palco.el.appendChild(t);
+    const cs = getComputedStyle(t), v = parseFloat(cs.scale), tr = cs.translate === "none" ? [0, 0] : cs.translate.split(" ").map(x => parseFloat(x) || 0);
+    t.remove();
+    this.desvioDesenho = tr[1] || 0;   // (e o quanto ele desce: os contornos e as bolas descem junto)
+    return v > 0 ? v : 1;
   },
   // 14s: os contornos no centro e o C, o primeiro da fileira embaixo da fórmula
   comecar(mol = "metano") {
@@ -8725,14 +8736,13 @@ const Cena133 = {
     const mol = this.mol, A = Cena121.ARRANJOS[mol];
     if (this.$(`.c121-esqueleto.${mol}`)) return;
     // k: px por unidade do desenho (a distância do centro a uma ponta no desenho vira a da montagem)
-    const M = this.M || this.medidas(), [mx, my] = A.pos.meio, k = M.d / (A.pos.dir[0] - mx), [, , bw] = A.box.split(" ").map(Number);
+    // (o CSS do celular aumenta o desenho em volta do centro: a largura dele é a de antes do aumento)
+    const M = this.M || this.medidas(), [mx, my] = A.pos.meio, k = M.d / (A.pos.dir[0] - mx) / this.escalaDesenho(), [, , bw] = A.box.split(" ").map(Number);
     Palco.el.querySelectorAll(".c121-esqueleto, .c121-central").forEach(e => e.remove());
     const s = Cena121.svg(mol);
-    // os átomos do desenho do mesmo tamanho das bolas soltas (os raios em unidades do desenho)
-    Cena121.RAIO = { ...Cena121.RAIO_BASE, [A.central]: M.rC / k, [A.ponta || "H"]: M.rH / k };
     const central = Palco.el.querySelector(".c121-central"); if (central) central.remove();   // (o aviso de erro fica embaixo do desenho)
     Palco.el.appendChild(s);
-    Object.assign(s.style, { position: "absolute", left: `${M.cx - mx * k}px`, top: `${M.cy - my * k}px`, width: `${bw * k}px`, margin: "0", zIndex: "4" });
+    Object.assign(s.style, { position: "absolute", left: `${M.cx - mx * k}px`, top: `${M.cy - (M.desce || 0) - my * k}px`, width: `${bw * k}px`, margin: "0", zIndex: "4" });   // (o CSS ainda o desce "desce")
     Object.keys(A.pos).forEach(l => {
       Cena121.atomo(l === "meio" ? A.central : (A.ponta || "H"), l);
       const g = Cena112L.g(l); g.getAnimations().forEach(a => a.finish());
