@@ -199,6 +199,16 @@
   .topo-acoes { display: flex; align-items: center; gap: 4px; }
   /* (por cima do palco, se for levado para baixo; touch-action: no celular, o arrasto do editor não vira rolagem da página) */
   .btn-vel { position: relative; z-index: 30; touch-action: none; }
+  /* celular deitado (tela de toque baixa: os tablets e Chromebooks deitados têm 561px ou mais de altura): só em pé */
+  .so-retrato { display: none; }
+  @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+    .so-retrato { display: flex; position: fixed; inset: 0; z-index: 99999; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+      padding: 16px; background: var(--noite, #0A1322); color: var(--celeste, #A3DBF7); text-align: center; font-family: var(--display); font-weight: 700; font-size: 1.15rem; }
+    .so-retrato svg { width: 72px; height: 72px; animation: soRetratoGira 2.2s ease-in-out infinite; }
+    .so-retrato p { margin: 0; }
+  }
+  @keyframes soRetratoGira { 0%, 20% { transform: rotate(-90deg); } 55%, 100% { transform: rotate(0deg); } }
+  @media (prefers-reduced-motion: reduce) { .so-retrato svg { animation: none; } }
   .btn-vel span { font-variant-numeric: tabular-nums; min-width: 3.2ch; text-align: center; }
   .btn-vel[aria-pressed="true"] { color: var(--ambar); }
 
@@ -1456,6 +1466,12 @@
 </style>
 </head>
 <body>
+<!-- celular deitado: o app não roda em paisagem — esta camada cobre tudo e pede para virar o aparelho -->
+<div class="so-retrato" role="alert" aria-live="assertive">
+  <svg viewBox="0 0 64 64" aria-hidden="true"><rect x="20" y="8" width="24" height="44" rx="5" fill="none" stroke="currentColor" stroke-width="3.5"/>
+    <circle cx="32" cy="45" r="2.4" fill="currentColor"/><path d="M50 30a18 18 0 0 0-10-14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M40 11l0 6 6 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <p>Gire o celular para a posição vertical</p>
+</div>
 
 <!-- Logo: rede molecular (mesma forma do ícone do app), nas cores do tema -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1479,7 +1495,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v318 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v319 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -12499,6 +12515,17 @@ const Aluno = {
 document.getElementById("popNomeCampo").addEventListener("input", e => { document.getElementById("popNomeOk").disabled = !e.target.value.trim(); });
 document.getElementById("popNomeForm").addEventListener("submit", e => { e.preventDefault(); Aluno.confirmar(); });
 document.getElementById("btnIniciar").addEventListener("click", () => Aluno.pedir(() => mostrarTela(pagina1)));
+// celular deitado: a camada "Gire o celular" cobre o app (CSS) e a narração pausa; onde dá (app instalado, tela cheia),
+// a tela já fica travada em pé
+(() => {
+  const deitado = matchMedia("(orientation: landscape) and (max-height: 500px) and (pointer: coarse)");
+  const ver = () => { if (deitado.matches && Player.tocando) Player.pausar(); };
+  if (deitado.addEventListener) deitado.addEventListener("change", ver); else deitado.addListener(ver);
+  ver();
+  const celular = matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) < 600;
+  const travar = () => { try { if (celular && screen.orientation && screen.orientation.lock) screen.orientation.lock("portrait").catch(() => {}); } catch (_) {} };
+  travar(); document.addEventListener("pointerdown", travar, { once: true });
+})();
 document.getElementById("btnVel").addEventListener("click", () => Velocidade.trocar());
 Velocidade.botao();
 document.getElementById("btnHome").addEventListener("click", () => {
