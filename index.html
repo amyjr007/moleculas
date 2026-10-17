@@ -1509,7 +1509,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v342 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v343 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3802,7 +3802,7 @@ const NARRACOES = [
     eventos: [
       { tempo: 5,    acao: () => Cena113F.escurecer(["meio"]) },
       { tempo: 6.7,  acao: () => Cena15F.vaiVem(2.3) },
-      { tempo: 10,   acao: () => Cena15F.escurecerO(true) },
+      { tempo: 10,   acao: () => { Cena15F.escurecerO(true); Cena113F.escurecer(["meio"], false); } },   // os O apagam; acende só o S (com as ligações)
       { tempo: 14,   acao: () => Cena15F.pausaPares(3) },                  // o áudio pausa 3s e, durante a pausa, os pares indo e vindo
       { tempo: 18,   acao: () => { Cena113F.escurecer(["meio"], false); Cena15F.escurecerO(false); } },   // todos os átomos voltam ao normal
       { tempo: 20.3, acao: () => Cena15F.caderno() }
@@ -10578,8 +10578,16 @@ const Cena15D = {
     this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
     Cena121.pulsarAtomo(this.OS, 1);
   },
-  // 15.5, 2,7s: os O crescem e os pares deles ficam dourados (ligar = false: voltam)
-  focoO(ligar) { Cena121.crescerAtomo(this.OS, ligar); this.paresO(ligar); },
+  // 15.5, 2,7s: os O dão uma pulsada e só os pares deles crescem e ficam dourados (ligar = false: os pares voltam)
+  focoO(ligar) {
+    if (ligar) Cena121.pulsarAtomo(this.OS, 1);
+    this.paresO(ligar);
+    Cena14D.pares().forEach(c => {
+      if (!!c.dataset.grande === ligar) return;
+      if (ligar) c.dataset.grande = "1"; else delete c.dataset.grande;
+      Palco.animar(c, ligar ? [{ r: "4px" }, { r: "5.8px" }] : [{ r: "5.8px" }, { r: "4px" }], { duracao: .35, easing: ligar ? "cubic-bezier(.3,1.4,.5,1)" : "ease-out", fill: ligar ? "forwards" : "none" });
+    });
+  },
   paresO(ligar) { Cena14D.pares().forEach(c => c.classList.toggle("brilha", ligar)); },
   // 15.5, 4,9s: o S cresce, as três ligações brilham e "6 elétrons" aparece em cima dele (ligar = false: voltam; o texto sai)
   focoS(ligar) {
@@ -10709,8 +10717,24 @@ const Cena15F = {
       anima(g, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => g.remove(), () => {});
     });
   },
-  // 14s: o áudio pausa 3s e, durante a pausa, os pares vão e vêm (o áudio continua sozinho depois)
-  pausaPares(dur = 3) { Cena121.respiro(dur, true); this.vaiVem(dur, true); },
+  // 14s: o áudio pausa e, durante a pausa, os pares vão e vêm (dur segundos); no lugar do play, o botão "Entendi" —
+  // o toque nele faz o áudio continuar exatamente de onde parou, e o play volta
+  pausaPares(dur = 3) {
+    const i = Player.indice; Player.pausar(); ui.semPlay(true);
+    this.vaiVem(dur, true);
+    if (this.$(".c11-passo-bt")) return;
+    Palco.adicionar(`<div class="c10-botoes c11-passo-bt ne"><button class="c10-bt">Entendi</button></div>`);
+    const caixa = this.$(".c11-passo-bt"), b = caixa.querySelector(".c10-bt");
+    b.animate([{ opacity: 0, transform: "translateY(16px)" }, { opacity: 1, transform: "none" }], { duration: 450, easing: "cubic-bezier(.3,1.4,.5,1)" });   // (na pausa, sem o relógio do palco)
+    b.addEventListener("click", () => {
+      if (caixa.classList.contains("usado")) return;
+      caixa.classList.add("usado");
+      Espoca.botao(b).then(() => caixa.remove());
+      if (Player.indice !== i || !Player.fonte) return;
+      ui.semPlay(false);
+      if (Player.fonte.paused) Player.tocar();
+    });
+  },
   // 20,3s: a molécula de bolas vira o desenho do caderno, no mesmo lugar e aos poucos (dur segundos)
   caderno(dur = 1.4) {
     const s = Cena121.svg(); if (!s || s.dataset.caderno) return;
