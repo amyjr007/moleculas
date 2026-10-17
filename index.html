@@ -769,6 +769,8 @@
        (a pequena é posta no lugar já contando com o deslocamento da que saiu: a diferença entre os dois é o ajuste medido no 12.3) */
     /* o modo livre (HCN): a dica da etapa 1 mais baixa */
     #conteudoPalco .c11l-dica[data-etapa="1"] { translate: 0 calc(-50% + var(--ph, 448px) * .105); }
+    /* o martelo, enquanto os átomos vão para os contornos ("Colocando o C no centro"...): mais baixo */
+    #conteudoPalco .c11l-dica[data-etapa="m1"] { translate: calc(var(--pw, 965px) * -.004) calc(-50% + var(--ph, 448px) * .082); }
     /* 13.5 (fim): o desenho do metano um pouco mais alto; o "Entendi" à direita, mais baixo e menor (no 13.7, com o metano
        em 3D, o "Entendi" fica no lugar de sempre). (A montagem das bolas já conta com esse deslocamento do desenho.) */
     #conteudoPalco > .c121-esqueleto.metano { translate: calc(var(--pw, 965px) * -.001) calc(var(--ph, 448px) * -.032); }
@@ -1519,7 +1521,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v360 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v361 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11507,7 +11509,12 @@ const ModoLivre = {
     this.remontando = true; Cena133.bloqueado = true;
     this.relogio(true);   // (o play/pause e o relógio, para mapear o tempo de cada passo)
     const espera = s => Palco.animar(Palco.el, [{}, {}], { duracao: s, fill: "none" }).finished.catch(() => {});
-    const passo = async (msg, acao) => { this.legenda(msg, "#A3DBF7", 1.9); await espera(1); acao(); await espera(1); };
+    // (cada passo com a marca da fase, para o ajuste de posição no tablet: "m1" com os átomos ainda soltos, "m2" já montados)
+    const passo = async (msg, acao) => {
+      this.legenda(msg, "#A3DBF7", 1.9);
+      const av = this.$(".c84-aviso"); if (av) av.dataset.etapa = this.at ? "m2" : "m1";
+      await espera(1); acao(); await espera(1);
+    };
     try {
       if (!this.noCaminho()) { this.legenda("Desmontando a molécula", "#FF9A8A", 1.6); await this.desmontar(); await espera(.4); }
       const c = this.cfg.certo, V = { cima: [0, -1], baixo: [0, 1], esq: [-1, 0], dir: [1, 0] };
