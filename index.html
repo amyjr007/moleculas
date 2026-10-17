@@ -1505,7 +1505,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v337 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v338 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10485,7 +10485,7 @@ const Cena15P = {
     if (Palco.pausado) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
     const S = Cena112L.naTela("meio");
-    if (S && Math.hypot(x - S.x, y - S.y) < S.R * 1.25) { Cena84.circulo(x, y, ""); return Cena112L.erro(["meio"], "Estabilize primeiro as pontas"); }
+    if (S && Math.hypot(x - S.x, y - S.y) < S.R * 1.25) { Cena84.circulo(x, y, ""); return Cena112L.erro(["meio"], "O átomo central é o último a estabilizar"); }
     let o = null, A = null, d0 = Infinity;
     Object.keys(this.LADOS).forEach(l => { const B = Cena112L.naTela(l); if (!B) return; const d = Math.hypot(x - B.x, y - B.y); if (d < B.R * 3.5 && d < d0) { d0 = d; o = l; A = B; } });
     if (!o) return;
