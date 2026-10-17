@@ -1509,7 +1509,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v346 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v347 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11393,9 +11393,14 @@ const ModoLivre = {
     const msg = !this.at ? "Leve os átomos até os contornos (o central fica no meio)"
       : this.pontas().some(l => !this.lig[l]) ? "Ligue o átomo do meio a cada ponta: toque num e depois no outro"
       : "Distribua os elétrons que sobraram em pares — ou use um par da ponta numa ligação dupla";
+    // (entre a fórmula e os contornos — ou os átomos já montados)
     let av = this.$(".c84-aviso");
-    const baixo = this.at ? Math.max(...Object.values(this.at).map(a => a.y + a.R * 2.4)) : Palco.el.clientHeight * .5;
-    if (!av) { Palco.adicionar(`<p class="c84-aviso verde" style="top:${baixo}px"></p>`); av = this.$(".c84-aviso"); }
+    const P = Palco.el.getBoundingClientRect(), f = this.$(".c111-formula"), fBase = f ? f.getBoundingClientRect().bottom - P.top : P.height * .2;
+    const slots = [...Palco.el.querySelectorAll(".c133-slot")].map(s => s.getBoundingClientRect().top - P.top);
+    const topo = this.at ? Math.min(...Object.values(this.at).map(a => a.y - a.R)) : slots.length ? Math.min(...slots) : P.height * .5;
+    const meio = (fBase + topo) / 2;
+    if (av) av.remove();
+    Palco.adicionar(`<p class="c84-aviso verde" style="top:${meio}px;translate:0 -50%"></p>`); av = this.$(".c84-aviso");
     av.classList.add("verde"); av.textContent = msg; av.getAnimations().forEach(x => x.cancel());
     Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: .08 }, { opacity: 1, offset: .85 }, { opacity: 0 }], { duracao: 3.4, easing: "linear" }).finished.then(() => av.remove(), () => {});
     Vibra.tocar("toqueEletron");
