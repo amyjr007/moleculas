@@ -770,6 +770,8 @@
     /* a amônia: a que sai do frasco (12.1) mais alta; a pequena, ao lado do NH₃ (12.2 em diante), mais à esquerda e mais alta.
        (a pequena é posta no lugar já contando com o deslocamento da que saiu: a diferença entre os dois é o ajuste medido no 12.3) */
     /* o modo livre (HCN): a dica da etapa 1 mais baixa */
+    /* os botões do modo livre (?, refazer, martelo): à direita e mais baixos (medido no HCN) */
+    #conteudoPalco .c11l-checar { translate: calc(var(--pw, 965px) * .245) calc(-100% + var(--ph, 448px) * .15); }
     #conteudoPalco .c11l-dica[data-etapa="1"] { translate: 0 calc(-50% + var(--ph, 448px) * .105); }
     /* o martelo, enquanto os átomos vão para os contornos ("Colocando o C no centro"...): mais baixo */
     #conteudoPalco .c11l-dica[data-etapa="m1"] { translate: calc(var(--pw, 965px) * -.004) calc(-50% + var(--ph, 448px) * .082); }
@@ -1523,7 +1525,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v364 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v365 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11082,13 +11084,26 @@ const ModoLivre = {
   },
   // a ordem dos exemplos livres; os elogios (revezando) e os sons de passagem
   SEQ: ["hcn", "nf3", "h2s", "cs2", "ch2o", "ccl4"],
+  TITULOS: { nf3: "A molécula de NF₃", h2s: "A molécula de H₂S", cs2: "A molécula de CS₂", ch2o: "A molécula de CH₂O", ccl4: "A molécula de CCl₄" },
+  // pelo sumário: a tela do exemplo, direto (sem áudio — o Player fica no fim do 16)
+  abrirExemplo(mol) {
+    const i = NARRACOES.findIndex(n => n.id === "dialogo16");
+    Player.calar(); Player.indice = i; Player.terminou = true; Player.disparados = new Set();
+    this.limpar(); this.ativo = false; this.mol = null;
+    Palco.mostrar(""); ui.semPlay(true); ui.modoEntendi(false);
+    this.proximoExemplo(mol, true);
+  },
   ELOGIOS: ["excelente", "perfeito", "muitobem"],
   // (a próxima molécula livre: a tela inteira vira de baixo para cima e traz a fórmula no topo, já com as famílias; a pergunta
   //  do total é digitada, com as opções; o acerto, depois da festa, abre a montagem)
-  proximoExemplo(mol) {
+  // (a molécula montada não some antes: ela vira junto com a face velha. direto: sem a virada — pelo sumário)
+  proximoExemplo(mol, direto = false) {
     const cfg = this.CFG[mol]; if (!cfg) return;
-    this.limpar(); this.ativo = false;
-    Cena16.virar(`<p class="c111-formula c12-formula c12n">${cfg.html}</p>`, true).then(() => {
+    this.ativo = false;
+    const formula = `<p class="c111-formula c12-formula c12n">${cfg.html}</p>`;
+    const pronto = direto ? (Palco.adicionar(`<div class="c111-corpo c16-tela" style="top:4%">${formula}</div>`), Promise.resolve()) : Cena16.virar(formula, true);
+    pronto.then(() => {
+      this.mol = null; this.at = null; Cena133.feito = false; Cena133.conferindo = false;   // (a montagem anterior saiu com a face velha)
       cfg.fams.forEach(([l, f]) => Cena12N.familia(l, f));
       const e = n => `${n} e<sup>−</sup>`, certo = cfg.certo.n;
       Cena12N.pergunta("Qual o total de elétrons de valência?", cfg.opcoes.map(n => [e(n), n === certo ? 1 : 0]), "dialogo16", "dialogo16_x", true);
@@ -13597,6 +13612,14 @@ function montarSumario() {
         <span class="num">${++k}</span>
         <span class="item-texto">${n.titulo}</span>
       </button>
+    </li>`).join("")
+    // (os exemplos livres depois do HCN: não são narrações — abrem a tela do exemplo direto)
+    + ModoLivre.SEQ.slice(1).map(mol => `
+    <li>
+      <button class="item-sumario" data-livre="${mol}">
+        <span class="num">${++k}</span>
+        <span class="item-texto">${ModoLivre.TITULOS[mol]}</span>
+      </button>
     </li>`).join("");
 }
 function atualizarSumario() {
@@ -13624,6 +13647,7 @@ sumario.addEventListener("click", e => {
   const b = e.target.closest(".item-sumario");
   if (!b) return;
   fecharGaveta();
+  if (b.dataset.livre) return ModoLivre.abrirExemplo(b.dataset.livre);
   Player.terminou = false;
   const i = Number(b.dataset.indice);
   // esperaPlay: a tela é montada e o áudio só começa quando o aluno apertar o play
