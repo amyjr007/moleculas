@@ -1512,7 +1512,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v355 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v356 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11056,6 +11056,9 @@ const ModoLivre = {
   COR: { O: ["#FF5A4E", "#8E1E16", "#fff"], N: ["#4F74F7", "#1B2F86", "#fff"], C: ["#3B414C", "#12161C", "#fff"], H: ["#F4F7FB", "#7C8BA0", "#0A1322"] },
   // fim do 11.1B (água) e do 12.2 (amônia): segurar a fórmula por 2s abre o modo livre (enquanto o dedo segura, ela vai acendendo)
   armar(mol = "agua") {
+    // (o modo livre só vale a partir do HCN — que abre sozinho, depois da pergunta: segurar a fórmula da água, da amônia,
+    //  do metano e do CO₂ não faz mais nada)
+    if (["agua", "amonia", "metano", "co2"].includes(mol)) return;
     const f = this.$(".c111-formula"); if (!f || f.dataset.livre) return;
     f.dataset.livre = mol; Object.assign(f.style, { pointerEvents: "auto", touchAction: "none", cursor: "pointer" });
     let timer = null;
