@@ -1499,7 +1499,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v333 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v334 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3752,14 +3752,28 @@ const NARRACOES = [
       { tempo: 0,    acao: () => { Cena71.tirarPergunta(); Cena12.fila(24); } },   // a pergunta sai; a fileira, com 24 lugares (em duas linhas), ainda vazia
       ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 4 + k * .06, acao: () => Cena12.eletron("S", k, ".c12n-e.esq") })),   // 4s: 6 saem do "6 e⁻" do S
       ...Array.from({ length: 18 }, (_, j) => ({ tempo: 5.5 + j * .025, acao: () => Cena12.eletron("O", 6 + j, `.c12n-e.dir > :nth-child(${Math.floor(j / 6) + 1})`) })),   // 5,5s: 6 de cada "6 e⁻" dos O
-      { tempo: 1,    acao: () => Cena14P.caixa(2.7) },                     // o retângulo em volta dos 24 (some aos 3,7s)
       { tempo: 4,    acao: () => { Cena12N.realcarLado("esq"); Cena12.brilhoCor([0, 1, 2, 3, 4, 5], Cena12N.CORES.S); } },
       { tempo: 5.5,  acao: () => { Cena12N.realcarLado("esq", false); Cena12.brilhoCor([0, 1, 2, 3, 4, 5], Cena12N.CORES.S, false);
                                    Cena12N.realcarLado("dir"); Cena12.brilhoCor(Array.from({ length: 18 }, (_, j) => 6 + j), Cena12N.CORES.O); } },
       { tempo: 7,    acao: () => { Cena12N.realcarLado("dir", false); Cena12.brilhoCor(Array.from({ length: 18 }, (_, j) => 6 + j), Cena12N.CORES.O, false); } }
     ],
-    // no fim: o S e os três O em fila e os contornos no centro (montado certo: "Agora toque no centro e depois numa ponta pra ligar")
+    // no fim: o S e os três O em fila e os contornos no centro (montado certo: "Agora toque no centro e depois numa ponta pra ligar";
+    // as três ligações: brilho verde, aplausos e confetes, e o 15.4)
     aoFim: () => { ui.semPlay(true); Cena133.comecar("so3"); setTimeout(() => Cena133.hidrogenios(), 350); } },
+  // os pares nos O: desde o começo, um toque em volta de um O põe um par lá (o S: "Estabilize primeiro as pontas");
+  // os nove pares: brilho verde, aplausos e confetes, e o 15.5
+  { id: "dialogo15_4", titulo: "Trióxido de enxofre: os pares", src: "audio/audio_moleculas_15.4.mp3", oculta: true,
+    eventos: [
+      { tempo: 0,    acao: () => Cena15P.liberar() }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena15P.liberar(); } },
+  // a ligação múltipla: desde o começo, tocar num O e depois no S faz a ligação dupla (cada O cede um par só); o S estável:
+  // fanfarra, aplausos, confetes e o 15.6 (quando existir)
+  { id: "dialogo15_5", titulo: "Trióxido de enxofre: a ligação dupla", src: "audio/audio_moleculas_15.5.mp3", oculta: true,
+    eventos: [
+      { tempo: 0,    acao: () => Cena15D.liberar() }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena15D.liberar(); } },
 
 ];
 
@@ -9949,7 +9963,11 @@ const Cena112L = {
       if ((Cena121.arranjo().ponta || "H") === "H") this.acalmar(lado);
       else try { const a = new Audio("audio/vfx/right.mp3"); a.play().catch(() => {}); } catch (_) {}
       // as duas prontas: a explosão da molécula vem 0,6s depois do "right" do H (para os dois sons não se atropelarem)
-      if (feitas) Palco.animar(s, [{}, {}], { duracao: .6, fill: "none" }).finished.then(() => { if (s.isConnected) this.explodir(); }, () => {});
+      // (no SO₃: só o brilho verde, aplausos e confetes — e o 15.4)
+      if (feitas) Palco.animar(s, [{}, {}], { duracao: .6, fill: "none" }).finished.then(() => {
+        if (!s.isConnected) return;
+        if (Cena121.arranjo().central === "S") this.festaVerde("dialogo15_4"); else this.explodir();
+      }, () => {});
     }, () => {});
   },
   // ordem errada: os átomos tocados tremem em vermelho e aparece o aviso, embaixo do "Átomo central"
@@ -9981,6 +9999,23 @@ const Cena112L = {
     Palco.animar(g, [{ filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }, { filter: "drop-shadow(0 0 7px rgba(110,231,160,1))", offset: .25 }, { filter: "drop-shadow(0 0 0 rgba(110,231,160,0))" }],
       { duracao: .6, easing: "ease-out", fill: "none" });
     if (som) try { const a = new Audio("audio/vfx/right.mp3"); a.play().catch(() => {}); } catch (_) {}
+  },
+  // a comemoração simples (SO₃): o brilho verde na tela, aplausos e confetes; quando os aplausos acabam, a narração "proxima"
+  // (a que estiver tocando é cortada). A instrução e um aviso de erro que estejam na tela saem
+  festaVerde(proxima) {
+    Palco.el.querySelectorAll(".c14-instr, .c84-aviso").forEach(el => Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => el.remove(), () => {}));
+    Palco.adicionar(`<div class="c4-verde"></div>`);
+    const v = Palco.el.lastElementChild;
+    v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
+    Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+    Vibra.tocar("cloroCerta");
+    let a = null; try { a = new Audio("audio/vfx/applause.mp3"); a.play().catch(() => {}); } catch (_) {}
+    const i = Player.indice, s = Cena121.svg();
+    new Promise(r => { if (!a) return r(); a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 6000); }).then(() => {
+      const prox = NARRACOES.findIndex(n => n.id === proxima);
+      if (prox < 0 || Player.indice !== i || !s.isConnected) return;
+      Player.calar(); Player.terminou = false; Player.irPara(prox, true);
+    });
   },
   // as duas ligações: a molécula inteira explode em brilho (clarão, onda e faíscas douradas), com a fanfarra e confetes; depois o 11.2A
   explodir() {
@@ -10384,6 +10419,143 @@ const Cena14D = {
       Promise.all(sons.map(fim)).then(() => {
         if (NARRACOES.findIndex(n => n.id === "dialogo14_7") < 0 || Player.indice !== i || !s.isConnected) return;
         Player.seguirSozinho();
+      });
+    }, () => {});
+  }
+};
+
+/* ---------- Narrações 15.4 e 15.5: o SO₃ — os pares nos O e a ligação múltipla ----------
+   15.4: desde o começo, um toque em volta de qualquer O (fora do lado da ligação) joga um par da fileira para lá; tocar no S:
+   treme em vermelho, "Estabilize primeiro as pontas". Os nove pares no lugar: brilho verde, aplausos e confetes, e o 15.5.
+   15.5: toca-se num O e depois no S — um par daquele O vai para dentro da ligação e ela vira dupla. Cada O cede um par só
+   ("Tente outro oxigênio"). O S com o octeto: fanfarra, aplausos, confetes e o 15.6 (quando existir). */
+const Cena15P = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  LADOS: { esq: ["cima", "baixo", "esq"], baixo: ["esq", "dir", "baixo"], dir: ["cima", "baixo", "dir"] },   // (os lados sem a ligação)
+  liberar() {
+    if (this.$(".c84-toques")) return;
+    this.feitos = {}; Cena15D.feito = false;   // (a ligação múltipla, do 15.5, ainda por fazer)
+    Object.keys(this.LADOS).forEach(o => { this.feitos[o] = {}; Cena14D.pares(o).forEach(c => { this.feitos[o][c.dataset.lado] = 1; }); });
+    if (this.completo()) return;
+    Palco.adicionar(`<div class="c84-toques" aria-label="Toque em volta de um oxigênio para colocar um par de elétrons"></div>`);
+    this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    Cena121.pulsarAtomo(Object.keys(this.LADOS), 1);   // convite: os O dão uma pulsada
+  },
+  completo() { return Object.keys(this.LADOS).every(o => this.LADOS[o].every(l => this.feitos[o][l])); },
+  toque(e) {
+    if (Palco.pausado) return;
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    const S = Cena112L.naTela("meio");
+    if (S && Math.hypot(x - S.x, y - S.y) < S.R * 1.25) { Cena84.circulo(x, y, ""); return Cena112L.erro(["meio"], "Estabilize primeiro as pontas"); }
+    let o = null, A = null, d0 = Infinity;
+    Object.keys(this.LADOS).forEach(l => { const B = Cena112L.naTela(l); if (!B) return; const d = Math.hypot(x - B.x, y - B.y); if (d < B.R * 3.5 && d < d0) { d0 = d; o = l; A = B; } });
+    if (!o) return;
+    Cena84.circulo(x, y, "");
+    const dx = x - A.x, dy = y - A.y, lado = Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "cima" : "baixo") : (dx > 0 ? "dir" : "esq");
+    if (!this.LADOS[o].includes(lado)) return Cena112L.erro([o], "Desse lado fica a ligação");
+    if (this.feitos[o][lado]) return Cena112L.erro([o], "Só cabe um par em cada lado");
+    const ks = Cena113P.livres().slice(-2); if (ks.length < 2) return;
+    this.feitos[o][lado] = 1;
+    Vibra.tocar("toqueEletron");
+    const fila = Cena12.fila(), s = Cena121.svg();
+    ks.forEach(k => { fila.children[k].style.visibility = "hidden"; });
+    ks.reverse().forEach((k, j) => {
+      const alvo = Cena14P.lugar(o, lado, j);
+      const pousar = () => s.querySelector(".at").insertAdjacentHTML("beforebegin",
+        `<circle class="c124-e" data-o="${o}" data-lado="${lado}" cx="${alvo[0]}" cy="${alvo[1]}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
+      Palco.animar(fila, [{}, {}], { duracao: .01, atraso: j * .08, fill: "none" }).finished.then(() => Cena124.voar(fila.children[k], alvo, .75, pousar), () => {});
+    });
+    // o O com os três pares: fica estável (a bola verde, sem som)
+    if (this.LADOS[o].every(l => this.feitos[o][l])) Palco.animar(s, [{}, {}], { duracao: .95, fill: "none" }).finished.then(() => Cena112L.acalmar(o, false), () => {});
+    if (this.completo()) this.pronto();
+  },
+  // os nove pares: brilho verde, aplausos e confetes; depois o 15.5 (a narração que estiver tocando é cortada)
+  pronto() {
+    const z = this.$(".c84-toques"); if (z) z.remove();
+    const s = Cena121.svg();
+    Palco.animar(s, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => {
+      if (!s.isConnected) return;
+      const av = this.$(".c84-aviso"); if (av) { av.getAnimations().forEach(a => a.cancel()); av.remove(); }
+      Cena112L.festaVerde("dialogo15_5");
+    }, () => {});
+  }
+};
+const Cena15D = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  OS: ["esq", "baixo", "dir"],
+  liberar() {
+    if (this.$(".c84-toques") || this.feito) return;
+    this.usados = {}; this.sel = null; this.feito = false;
+    Palco.adicionar(`<div class="c84-toques" aria-label="Toque num oxigênio e depois no enxofre para fazer a ligação múltipla"></div>`);
+    this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    Cena121.pulsarAtomo(this.OS, 1);
+  },
+  // o par que vai para a ligação: o do lado em que o traço novo fica (do lado de -n, a normal da ligação)
+  ladoPar(o) {
+    const { nx, ny } = Cena121.pontas(o), vx = -nx, vy = -ny;
+    return Math.abs(vy) > Math.abs(vx) ? (vy < 0 ? "cima" : "baixo") : (vx < 0 ? "esq" : "dir");
+  },
+  marcar(o) { Cena14D.pares().forEach(c => c.classList.toggle("pulsa", !!o && c.dataset.o === o && c.dataset.lado === this.ladoPar(o))); },
+  toque(e) {
+    if (Palco.pausado || this.feito) return;
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    let alvo = null, d0 = Infinity;
+    ["meio", ...this.OS].forEach(l => { const A = Cena112L.naTela(l); if (!A) return; const d = Math.hypot(x - A.x, y - A.y); if (d < Math.max(A.R * 1.9, 26) && d < d0) { d0 = d; alvo = l; } });
+    if (!alvo) return;
+    Cena84.circulo(x, y, "");
+    if (alvo !== "meio") {
+      if (this.usados[alvo]) { Cena112L.selecionar(null, false); this.sel = null; this.marcar(null); return Cena112L.erro([alvo], "Tente outro oxigênio"); }
+      if (this.sel === alvo) { Cena112L.selecionar(null, false); this.sel = null; this.marcar(null); return; }
+      this.sel = alvo; this.marcar(alvo); return Cena112L.selecionar(alvo);
+    }
+    if (!this.sel) return Cena112L.erro(["meio"], "Toque primeiro num oxigênio");
+    const o = this.sel; this.sel = null; Cena112L.selecionar(null, false); this.marcar(null);
+    this.dupla(o);
+  },
+  // a ligação vira dupla: o par vai, numa curva, para dentro dela; o traço de antes se afasta um pouco e o par vira o traço novo
+  dupla(o) {
+    this.usados[o] = true;
+    Vibra.tocar("toqueEletron");
+    const s = Cena121.svg(), lin = s.querySelector(`.lig [data-l="${o}"]`), { x1, y1, x2, y2, mx, my, nx, ny } = Cena121.pontas(o), off = 6.5;
+    const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+    const par = Cena14D.pares(o).filter(c => c.dataset.lado === this.ladoPar(o));
+    par.forEach((c, j) => {
+      const k = j ? 3.5 : -3.5, tx = mx - nx * off + ux * k - +c.getAttribute("cx"), ty = my - ny * off + uy * k - +c.getAttribute("cy");
+      const cx = tx * .5 - nx * 14, cy = ty * .5 - ny * 14;
+      const q = Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u;
+        return { transform: `translate(${(a * cx + b * tx).toFixed(2)}px, ${(a * cy + b * ty).toFixed(2)}px)`, offset: u }; });
+      Palco.animar(c, q, { duracao: .7, easing: "ease-in-out" });
+    });
+    Cena74.somSalto(s);
+    if (lin) Palco.animar(lin, [{ transform: "translate(0px, 0px)" }, { transform: `translate(${nx * off}px, ${ny * off}px)` }], { duracao: .7, easing: "cubic-bezier(.45,0,.55,1)" });
+    Palco.animar(s, [{}, {}], { duracao: .7, fill: "none" }).finished.then(() => {
+      if (!s.isConnected) return;
+      par.forEach(c => c.remove());
+      if (lin) { lin.getAnimations().forEach(a => a.cancel()); lin.setAttribute("x1", x1 + nx * off); lin.setAttribute("y1", y1 + ny * off); lin.setAttribute("x2", x2 + nx * off); lin.setAttribute("y2", y2 + ny * off); }
+      s.querySelector(".lig").insertAdjacentHTML("beforeend", `<line data-l="${o}2" x1="${x1 - nx * off}" y1="${y1 - ny * off}" x2="${x2 - nx * off}" y2="${y2 - ny * off}" stroke="#fff" stroke-width="5" stroke-linecap="round" style="transform-origin:${mx - nx * off}px ${my - ny * off}px"/>`);
+      Palco.animar(s.querySelector(".lig").lastElementChild, [{ transform: "scale(0)" }, { transform: "scale(1.12)", offset: .7 }, { transform: "scale(1)" }], { duracao: .35, easing: "ease-out" });
+      try { const a = new Audio("audio/vfx/right.mp3"); a.play().catch(() => {}); } catch (_) {}
+      this.pronto();   // (com uma dupla, o S fecha o octeto: 3 ligações simples + 1 dupla = 8 elétrons)
+    }, () => {});
+  },
+  // o S estável: a bola verde, confetes, aplausos e fanfarra; depois o 15.6 (quando existir)
+  pronto() {
+    this.feito = true;
+    const z = this.$(".c84-toques"); if (z) z.remove();
+    const s = Cena121.svg();
+    Palco.animar(s, [{}, {}], { duracao: .5, fill: "none" }).finished.then(() => {
+      if (!s.isConnected) return;
+      const av = this.$(".c84-aviso"); if (av) { av.getAnimations().forEach(a => a.cancel()); av.remove(); }
+      Cena112L.acalmar("meio", false);
+      Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
+      Vibra.tocar("cloroCerta");
+      const sons = ["audio/vfx/applause.mp3", "audio/funfare.mp3"].map(src => { const a = new Audio(src); a.play().catch(() => {}); return a; });
+      const fim = a => new Promise(r => { a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 8000); });
+      const i = Player.indice;
+      Promise.all(sons.map(fim)).then(() => {
+        const prox = NARRACOES.findIndex(n => n.id === "dialogo15_6");
+        if (prox < 0 || Player.indice !== i || !s.isConnected) return;
+        Player.calar(); Player.terminou = false; Player.irPara(prox, true);
       });
     }, () => {});
   }
