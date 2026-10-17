@@ -1509,7 +1509,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v340 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v341 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3762,6 +3762,8 @@ const NARRACOES = [
     eventos: [
       // a pergunta sai; a fileira, com 24 lugares (em duas linhas), ainda vazia (os "e⁻" dos lados ficam: os elétrons saem deles)
       { tempo: 0,    acao: () => { Cena71.tirarPergunta(); Cena12.fila(24); } },
+      { tempo: 1.5,  acao: () => { Cena12N.realcarLado("esq"); Cena12N.realcarLado("dir"); } },   // todos os "e⁻" dos lados crescem
+      { tempo: 4,    acao: () => Cena12N.realcarLado("dir", false) },      // voltam (o do S segue grande: aos 4s é a vez dele)
       { tempo: 8.5,  acao: () => Cena12N.tirarLados() },                   // os "6 e⁻" dos lados da fórmula somem
       ...[0, 1, 2, 3, 4, 5].map(k => ({ tempo: 4 + k * .06, acao: () => Cena12.eletron("S", k, ".c12n-e.esq") })),   // 4s: 6 saem do "6 e⁻" do S
       ...Array.from({ length: 18 }, (_, j) => ({ tempo: 5.5 + j * .025, acao: () => Cena12.eletron("O", 6 + j, `.c12n-e.dir > :nth-child(${Math.floor(j / 6) + 1})`) })),   // 5,5s: 6 de cada "6 e⁻" dos O
@@ -10585,8 +10587,10 @@ const Cena15D = {
     Palco.animar(s.lastElementChild, [{ opacity: 0 }, { opacity: 1 }], { duracao: .4, easing: "ease-out" });
   },
   // o par que vai para a ligação: o do lado em que o traço novo fica (do lado de -n, a normal da ligação)
+  // (o lado do traço novo: nos O das pontas, em cima — vai o par de cima; no O de baixo, à esquerda — vai o par de um dos lados)
+  lado(o) { return o === "baixo" ? [-1, 0] : [0, -1]; },
   ladoPar(o) {
-    const { nx, ny } = Cena121.pontas(o), vx = -nx, vy = -ny;
+    const [vx, vy] = this.lado(o);
     return Math.abs(vy) > Math.abs(vx) ? (vy < 0 ? "cima" : "baixo") : (vx < 0 ? "esq" : "dir");
   },
   marcar(o) { Cena14D.pares().forEach(c => c.classList.toggle("pulsa", !!o && c.dataset.o === o && c.dataset.lado === this.ladoPar(o))); },
@@ -10616,7 +10620,9 @@ const Cena15D = {
       this.focoO(false); this.focoS(false); this.paresO(false);
       const cx = this.$(".c14-caixa"); if (cx) { cx.getAnimations().forEach(a => a.cancel()); cx.remove(); }
     }
-    const s = Cena121.svg(), lin = s.querySelector(`.lig [data-l="${o}"]`), { x1, y1, x2, y2, mx, my, nx, ny } = Cena121.pontas(o), off = 6.5;
+    // (n: para onde o traço de antes se afasta; o traço novo, e o par, ficam do outro lado — o do par que salta)
+    const s = Cena121.svg(), lin = s.querySelector(`.lig [data-l="${o}"]`), { x1, y1, x2, y2, mx, my } = Cena121.pontas(o), off = 6.5;
+    const [vx, vy] = this.lado(o), nx = -vx, ny = -vy;
     const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L;
     const par = Cena14D.pares(o).filter(c => c.dataset.lado === this.ladoPar(o));
     par.forEach((c, j) => {
