@@ -1513,7 +1513,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v357 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v358 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11348,12 +11348,19 @@ const ModoLivre = {
     const v = Palco.el.lastElementChild;
     v.animate([{ opacity: 0 }, { opacity: 1, offset: .25 }, { opacity: 0 }], { duration: 1600, easing: "ease-out" }).finished.then(() => v.remove());
     Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
-    ["audio/vfx/applause.mp3", "audio/funfare.mp3"].forEach(src => { try { const a = new Audio(src); a.play().catch(() => {}); } catch (_) {} });
     Vibra.tocar("cloroCerta");
     this.ativo = false;
+    const toca = src => { try { const a = new Audio(src); a.play().catch(() => {}); return a; } catch (_) { return null; } };
+    // o HCN (sem pop-up): o "right", os aplausos e, quando eles acabam, o "excelente" — a molécula fica como está
+    if (this.cfg.semPop) {
+      toca("audio/vfx/right.mp3");
+      const ap = toca("audio/vfx/applause.mp3");
+      new Promise(r => { if (!ap) return r(); ap.addEventListener("ended", r, { once: true }); ap.addEventListener("error", r, { once: true }); setTimeout(r, 6000); })
+        .then(() => toca("audio/vfx/excelente.mp3"));
+      return;
+    }
+    ["audio/vfx/applause.mp3", "audio/funfare.mp3"].forEach(toca);
     if (this.cfg.proxima) { Palco.animar(Palco.el, [{}, {}], { duracao: 2.4, fill: "none" }).finished.then(() => this.cfg.proxima(), () => {}); return; }
-    // sem próxima molécula (o HCN, o CO₂): passada a festa, ela se desmonta e se monta de novo, passo a passo
-    if (!this.cfg.comPlay) { Palco.animar(Palco.el, [{}, {}], { duracao: 2.6, fill: "none" }).finished.then(() => this.remontar(), () => {}); return; }
     const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "";   // o "Passo 1" volta
     if (this.cfg.comPlay) ui.semPlay(false);                                // (ou o play volta: a narração segue dali)
   },
