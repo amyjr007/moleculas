@@ -1509,7 +1509,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v348 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v349 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11380,7 +11380,12 @@ const ModoLivre = {
   },
   // o botão de baixo: "Ajuda" enquanto a molécula está no meio do caminho; "Confirmar" quando ela está montada (os átomos
   // nos lugares, todas as pontas ligadas e nenhum elétron sobrando)
-  completo() { return !!this.at && this.pontas().every(l => this.lig[l] > 0) && this.livres().length === 0; },
+  // (montada: nenhum elétron sobrando, todas as pontas ligadas e cada átomo estável — o H com 2 elétrons, os outros com 8;
+  //  ou, se não for, sem mais nenhuma ligação múltipla possível — aí o "Confirmar" mostra o que está errado)
+  eletrons(l) { const lig = l === "meio" ? this.pontas().reduce((s, p) => s + this.lig[p], 0) : this.lig[l]; return 2 * lig + 2 * Object.keys(this.pares[l]).length; },
+  estaveis() { return Object.keys(this.at).every(l => this.eletrons(l) === (this.at[l].sim === "H" ? 2 : 8)); },
+  podeMultipla() { return this.pontas().some(p => this.lig[p] > 0 && this.lig[p] < 3 && Object.keys(this.pares[p]).length > 0); },
+  completo() { return !!this.at && this.pontas().every(l => this.lig[l] > 0) && this.livres().length === 0 && (this.estaveis() || !this.podeMultipla()); },
   atualizarBotao() {
     const b = this.$(".c11l-checar .c10-bt"); if (!b || b.disabled) return;
     const txt = this.completo() ? "Confirmar" : "Ajuda";
@@ -11392,7 +11397,8 @@ const ModoLivre = {
   ajuda() {
     const msg = !this.at ? "Leve os átomos até os contornos (o central fica no meio)"
       : this.pontas().some(l => !this.lig[l]) ? "Ligue o átomo do meio a cada ponta: toque num e depois no outro"
-      : "Distribua os elétrons que sobraram em pares — ou use um par da ponta numa ligação dupla";
+      : this.livres().length ? "Distribua os pares que sobraram pra estabilizar os átomos, começando pelas pontas"
+      : "Se precisar, faça ligações múltiplas, sempre da ponta pro centro";
     // (entre a fórmula e os contornos — ou os átomos já montados)
     let av = this.$(".c84-aviso");
     const P = Palco.el.getBoundingClientRect(), f = this.$(".c111-formula"), fBase = f ? f.getBoundingClientRect().bottom - P.top : P.height * .2;
