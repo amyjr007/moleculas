@@ -1496,7 +1496,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v328 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v329 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3670,10 +3670,10 @@ const NARRACOES = [
       { tempo: 13,   acao: () => Cena14D.tirarEstavel() },
       { tempo: 16.8, acao: () => Cena14D.brilhar(Cena113F.partes(["lig-esq"]), 1) },
       { tempo: 17.6, acao: () => Cena14D.brilhar(Cena113F.partes(["lig-dir"]), 1) },
-      { tempo: 24,   acao: () => Cena14D.acabaram(4) },
-      { tempo: 28,   acao: () => Cena14D.cortar() }
+      { tempo: 24,   acao: () => Cena14D.acabaram(4.3) },                // (até o corte)
+      { tempo: 28.3, acao: () => Cena14D.cortar() }
     ],
-    aoFim: () => Cena14D.cortar() },   // (se o áudio acabar antes dos 28s)
+    aoFim: () => Cena14D.cortar() },   // (se o áudio acabar antes dos 28,3s)
   // o aluno faz as ligações duplas: toca num O e depois no C — o par de cima do O vai, numa curva, para dentro da ligação
   // e vira o segundo traço. As duas duplas: o C estável, confetes, aplausos e fanfarra; depois, o 14.7 (quando existir)
   { id: "dialogo14_6A", titulo: "Gás carbônico: as ligações duplas", src: "audio/audio_moleculas_14.6A.mp3", semNav: true, extra: true,
