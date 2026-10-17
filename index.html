@@ -1505,7 +1505,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v338 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v339 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10605,9 +10605,9 @@ const Cena15D = {
       Confete.soltar({ de: "cantos" }); Confete.soltar({ de: "topo" });
       Vibra.tocar("cloroCerta");
       const sons = ["audio/vfx/applause.mp3", "audio/funfare.mp3"].map(src => { const a = new Audio(src); a.play().catch(() => {}); return a; });
-      const fim = a => new Promise(r => { a.addEventListener("ended", r, { once: true }); a.addEventListener("error", r, { once: true }); setTimeout(r, 8000); });
-      const i = Player.indice;
-      Promise.all(sons.map(fim)).then(() => {
+      // o 15.6 entra logo que a fanfarra acaba (no máximo 4s depois; os aplausos seguem por baixo), mesmo que o 15.5 ainda fale
+      const fanfarra = sons[1], i = Player.indice;
+      new Promise(r => { fanfarra.addEventListener("ended", r, { once: true }); fanfarra.addEventListener("error", r, { once: true }); setTimeout(r, 4000); }).then(() => {
         const prox = NARRACOES.findIndex(n => n.id === "dialogo15_6");
         if (prox < 0 || Player.indice !== i || !s.isConnected) return;
         Player.calar(); Player.terminou = false; Player.irPara(prox, true);
