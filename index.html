@@ -1505,7 +1505,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v336 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v337 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3788,6 +3788,18 @@ const NARRACOES = [
     ],
     // no fim, a instrução (os toques já valiam desde o começo)
     aoFim: () => { ui.semPlay(true); Cena15D.liberar(); if (!Cena15D.feito) Cena14P.instrucao('Toque num oxigênio e depois no enxofre pra "emprestar" um par de elétrons não ligante'); } },
+  // o SO₃ pronto (entra depois da festa da ligação dupla): 5s o S escurece; 6,7s → 9s os traços viram os pares indo e vindo;
+  // 10s os O (e os pares) escurecem; 14s o áudio pausa 3s com os pares de novo; 20,3s a molécula vira o desenho do caderno,
+  // aos poucos. No fim, sem play: o botão "Entendi"
+  { id: "dialogo15_6", titulo: "O trióxido de enxofre", src: "audio/audio_moleculas_15.6.mp3", oculta: true,
+    eventos: [
+      { tempo: 5,    acao: () => Cena113F.escurecer(["meio"]) },
+      { tempo: 6.7,  acao: () => Cena15F.vaiVem(2.3) },
+      { tempo: 10,   acao: () => Cena15F.escurecerO(true) },
+      { tempo: 14,   acao: () => Cena15F.pausaPares(3) },
+      { tempo: 20.3, acao: () => Cena15F.caderno() }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena15F.caderno(); Cena11Copo.botaoPasso1("e", "Entendi"); } },
 
 ];
 
@@ -10601,6 +10613,72 @@ const Cena15D = {
         Player.calar(); Player.terminou = false; Player.irPara(prox, true);
       });
     }, () => {});
+  }
+};
+
+/* ---------- Narração 15.6: o SO₃ pronto ----------
+   Os focos (o S escuro; os traços viram os pares indo e vindo; os O escuros; uma pausa com os pares de novo) e, aos 20,3s,
+   a molécula vira o desenho do caderno ali mesmo, aos poucos: as bolas somem enquanto as letras ficam brancas e do tamanho
+   da escrita, os traços afinam em linhas brancas e os pares encolhem em pontinhos brancos, mais perto das letras. */
+const Cena15F = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  OS: ["esq", "baixo", "dir"],
+  // os O (e os pares deles) escurecem ou voltam
+  escurecerO(ligar) {
+    Cena113F.escurecer(this.OS, ligar);
+    Cena14D.pares().forEach(c => c.classList.toggle("c113-escuro", ligar));
+  },
+  // cada traço (os das duplas também) fica transparente, com o par indo e vindo dentro dele (dur segundos)
+  vaiVem(dur) {
+    const s = Cena121.svg(), idas = Math.max(1, Math.round(dur / 1.4)), ent = Math.min(.25 / dur, .2);
+    s.querySelectorAll(".lig line").forEach(l => {
+      Palco.animar(l, [{ opacity: 1 }, { opacity: .22, offset: ent }, { opacity: .22, offset: 1 - ent }, { opacity: 1 }], { duracao: dur, fill: "none" });
+      const x1 = +l.getAttribute("x1"), y1 = +l.getAttribute("y1"), x2 = +l.getAttribute("x2"), y2 = +l.getAttribute("y2"), mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      s.insertAdjacentHTML("beforeend", `<g class="vai"></g>`);
+      const g = s.lastElementChild;
+      [[x1, y1], [x2, y2]].forEach(([xa, ya]) => {
+        g.insertAdjacentHTML("beforeend", `<g class="c121-e"><circle cx="${mx}" cy="${my}" r="10" fill="#A3DBF7" opacity=".38" style="filter:blur(2.5px)"/>`
+          + `<circle cx="${mx}" cy="${my}" r="4.6" fill="#E6F6FF" style="filter:drop-shadow(0 0 4px rgba(163,219,247,.95))"/></g>`);
+        const c = g.lastElementChild, ini = `translate(${xa - mx}px, ${ya - my}px)`, q = [{ transform: ini, opacity: 0, offset: 0 }, { opacity: 1, offset: .06 }];
+        for (let i = 0; i < idas; i++) q.push({ transform: "translate(0px, 0px)", offset: (i + .5) / idas }, { transform: ini, offset: (i + 1) / idas });
+        q.splice(q.length - 1, 0, { opacity: 1, offset: .94 });
+        q[q.length - 1].opacity = 0;
+        Palco.animar(c, q, { duracao: dur, easing: "ease-in-out" });
+      });
+      Palco.animar(g, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => g.remove(), () => {});
+    });
+  },
+  // 14s: o áudio pausa 3s com os pares indo e vindo, e continua sozinho
+  pausaPares(dur = 3) { this.vaiVem(dur); Cena121.respiro(dur, true); },
+  // 20,3s: a molécula de bolas vira o desenho do caderno, no mesmo lugar e aos poucos (dur segundos)
+  caderno(dur = 1.4) {
+    const s = Cena121.svg(); if (!s || s.dataset.caderno) return;
+    s.dataset.caderno = "1";
+    const cor = "#F4F7FB", easing = "cubic-bezier(.45,0,.25,1)", fonte = 24 * 1.41;
+    Cena113F.escurecer(["meio", ...this.OS], false); Cena14D.pares().forEach(c => c.classList.remove("c113-escuro", "brilha", "pulsa"));
+    s.querySelectorAll(".brilha").forEach(e => e.classList.remove("brilha"));
+    Cena113F.tirarEstavel();
+    s.querySelectorAll(".c112-halo, .c112-sel, .c15-6e").forEach(e => e.remove());
+    // os átomos: a bola encolhe e some; a letra fica branca, do tamanho da escrita, centrada no lugar da bola
+    s.querySelectorAll(".at > g").forEach(g => {
+      g.classList.remove("c112-inst");
+      const c = g.querySelector("circle"), t = g.querySelector("text"), cx = +c.getAttribute("cx"), cy = +c.getAttribute("cy"), r = +c.getAttribute("r");
+      c.style.transformOrigin = `${cx}px ${cy}px`;
+      Palco.animar(c, [{ transform: "scale(1)", opacity: 1 }, { transform: "scale(.35)", opacity: 0 }], { duracao: dur, easing, fill: "forwards" });
+      const dy = cy - (+t.getAttribute("y")) + fonte * .36;   // (a linha de base vai para onde a letra fica centrada na bola)
+      Palco.animar(t, [{ fill: t.getAttribute("fill"), fontSize: `${r}px`, transform: "translate(0px, 0px)" },
+        { fill: cor, fontSize: `${fonte}px`, transform: `translate(0px, ${dy}px)` }], { duracao: dur, easing, fill: "forwards" });
+    });
+    // os traços afinam e ficam brancos, sem brilho
+    s.querySelectorAll(".lig line").forEach(l => Palco.animar(l, [{ strokeWidth: 5, stroke: "#fff" }, { strokeWidth: 2.64, stroke: cor }], { duracao: dur, easing, fill: "forwards" }));
+    // os pares: encolhem em pontinhos brancos e chegam mais perto da letra do seu O
+    Cena14D.pares().forEach(c => {
+      const [ox, oy] = Cena121.xy(c.dataset.o), x = +c.getAttribute("cx"), y = +c.getAttribute("cy"), k = .72;   // (a distância até o O cai para 72%)
+      const tx = (ox + (x - ox) * k) - x, ty = (oy + (y - oy) * k) - y;
+      Palco.animar(c, [{ transform: "translate(0px, 0px)", r: "4px", fill: "#A3DBF7", filter: "drop-shadow(0 0 3px rgba(163,219,247,.9))" },
+        { transform: `translate(${tx}px, ${ty}px)`, r: "2.7px", fill: cor, filter: "drop-shadow(0 0 0 rgba(0,0,0,0))" }], { duracao: dur, easing, fill: "forwards" });
+    });
+    s.setAttribute("aria-label", "Estrutura de Lewis do trióxido de enxofre: o S no meio, ligado a três O (uma ligação dupla), com os pares de elétrons dos oxigênios");
   }
 };
 
