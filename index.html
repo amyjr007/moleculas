@@ -1476,7 +1476,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v316 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v317 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3411,7 +3411,7 @@ const NARRACOES = [
       { tempo: 27.9, acao: () => { Cena12.letra("N"); Cena12N.realcarLado("esq"); } },   // o N e o "5 e⁻" crescem
       // voltam; o "H₃" e o "1 e⁻ + 1 e⁻ + 1 e⁻" crescem (e voltam juntos no fim do áudio)
       { tempo: 29.8, acao: () => { Cena12.letra("N", false); Cena12N.realcarLado("esq", false); Cena12.letra("H"); Cena12.letra("3"); Cena12N.realcarLado("dir"); } },
-      { tempo: 32.5, acao: () => Cena12N.pergunta("Qual o total de elétrons de valência na molécula?", [["5 e<sup>−</sup>", 0], ["6 e<sup>−</sup>", 0], ["8 e<sup>−</sup>", 1]], "dialogo12_3", "dialogo12_4") }
+      { tempo: 32.5, acao: () => Cena12N.pergunta("Quantos elétrons de valência no total?", [["5 e<sup>−</sup>", 0], ["6 e<sup>−</sup>", 0], ["8 e<sup>−</sup>", 1]], "dialogo12_3", "dialogo12_4") }
     ],
     // o "H₃" e os "1 e⁻" voltam; as opções entram e, até o aluno escolher, os "e⁻" pulsam em ciclo (como na água)
     aoFim: () => { ui.semPlay(true); Cena12.letra("H", false); Cena12.letra("3", false); Cena12N.realcarLado("dir", false); Cena12N.opcoes(); Cena12N.ciclo(); } },
@@ -10383,8 +10383,8 @@ const ModoLivre = {
     if (this.cfg.comPlay) { if (Player.tocando) Player.pausar(); ui.semPlay(true); }
     const P = Palco.el.getBoundingClientRect(), f = this.$(".c111-formula"), b = this.$(".c11-passo-bt .c10-bt");
     const topo = f ? f.getBoundingClientRect().bottom - P.top : P.height * .25, base = b ? b.getBoundingClientRect().top - P.top : P.height * .85;
-    Palco.adicionar(`<div class="c11l-pop" role="dialog" aria-label="Modo livre: qual o total de elétrons de valência na molécula?" style="top:${(topo + base) / 2}px">
-        <p class="c11l-txt"><span class="c11l-fam">${this.cfg.fam}</span>Qual o total de elétrons de valência na molécula?</p>
+    Palco.adicionar(`<div class="c11l-pop" role="dialog" aria-label="Modo livre: quantos elétrons de valência no total?" style="top:${(topo + base) / 2}px">
+        <p class="c11l-txt"><span class="c11l-fam">${this.cfg.fam}</span>Quantos elétrons de valência no total?</p>
         <div class="c11l-linha"><span class="c11l-f">${this.cfg.formula}</span><span class="c11l-igual">=</span>
           <div class="c11l-roda" tabindex="0" role="spinbutton" aria-valuemin="1" aria-valuemax="${this.MAX}" aria-label="Número de elétrons">
             <button class="c11l-seta cima" aria-label="Menos">▲</button>
