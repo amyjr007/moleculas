@@ -1496,7 +1496,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v327 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v328 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3587,13 +3587,13 @@ const NARRACOES = [
   // capítulo 14, o gás carbônico: 0s sai o que sobrou do metano (a fórmula, a molécula pequena); 3s o cilindro de metano
   // volta pela esquerda e o metano 3D entra nele girando até sumir; 18s a área vira como face de cubo e a nova face traz o
   // cilindro de gás carbônico; a partir dos 19s, tocar nele (corta o áudio) — sai o CO₂ girando até o meio e entra o 14.1
-  { id: "dialogo14", titulo: "A molécula de gás carbônico", entrada: 17, src: "audio/audio_moleculas_14.mp3",
+  { id: "dialogo14", titulo: "A molécula de gás carbônico", entrada: 15, src: "audio/audio_moleculas_14.mp3",
     inicio: () => Cena14A.inicio(),
     eventos: [
       { tempo: 0,    acao: () => Cena14A.limpar() },
       { tempo: 3,    acao: () => Cena14A.metanoEntra() },
-      { tempo: 18,   acao: () => Cena14A.virar() },
-      { tempo: 19,   acao: () => { Cena14A.liberar(); Cena14A.lupa(); } }   // o cilindro chama o toque; a lupa mostra o CO₂ lá dentro
+      { tempo: 16,   acao: () => Cena14A.virar() },                       // o giro (face de cubo): o cilindro de gás carbônico
+      { tempo: 17,   acao: () => { Cena14A.liberar(); Cena14A.lupa(); } }   // o cilindro chama o toque; a lupa mostra o CO₂ lá dentro
     ],
     aoFim: () => ui.semPlay(true) },   // sem play: quem leva adiante é o toque no cilindro
   // o CO₂ no meio: aos 5s, "Qual a fórmula molecular?"; as opções no fim (o certo: CO₂)
