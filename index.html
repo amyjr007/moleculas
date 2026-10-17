@@ -773,7 +773,7 @@
        ele é posto no lugar já contando com a subida do que saiu); e o desenho das ligações (15.4) mais alto */
     .c11-copo.c15-so3 canvas { transition: translate 1s cubic-bezier(.4,0,.2,1); }
     .c11-copo.c15-so3.solto canvas { translate: calc(var(--pw, 965px) * -.002) calc(var(--ph, 448px) * -.101); }
-    .c11-copo.c15-so3.solto.peq canvas { translate: calc(var(--pw, 965px) * -.004) calc(var(--ph, 448px) * -.202); }
+    .c11-copo.c15-so3.solto.peq canvas { translate: calc(var(--pw, 965px) * -.003) calc(var(--ph, 448px) * -.082); }
     #conteudoPalco > .c121-esqueleto.so3 { translate: calc(var(--pw, 965px) * -.001) calc(var(--ph, 448px) * -.079); }
     .c11-copo.c13-metano canvas { transition: translate 2.2s cubic-bezier(.4,0,.2,1); }
     .c11-copo.c13-metano.solto canvas { translate: calc(var(--pw, 965px) * -.02) calc(var(--ph, 448px) * -.133); }
@@ -1505,7 +1505,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v335 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v336 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3779,9 +3779,15 @@ const NARRACOES = [
   // fanfarra, aplausos, confetes e o 15.6 (quando existir)
   { id: "dialogo15_5", titulo: "Trióxido de enxofre: a ligação dupla", src: "audio/audio_moleculas_15.5.mp3", oculta: true,
     eventos: [
-      { tempo: 0,    acao: () => Cena15D.liberar() }
+      { tempo: 0,    acao: () => Cena15D.liberar() },
+      { tempo: 2.7,  acao: () => Cena15D.focoO(true) },                    // os O crescem e os pares deles ficam dourados
+      { tempo: 4.9,  acao: () => { Cena15D.focoO(false); Cena15D.focoS(true); } },   // voltam; o S cresce, as ligações brilham e "6 elétrons" em cima dele
+      { tempo: 8,    acao: () => { Cena15D.focoS(false); Cena14D.acabaram(4.8, "Acabaram os elétrons totais"); } },   // o retângulo onde estavam os 24 (até 12,8s)
+      { tempo: 16.5, acao: () => Cena15D.paresO(true) },                   // os pares não ligantes dos O brilham
+      { tempo: 20,   acao: () => Cena15D.paresO(false) }
     ],
-    aoFim: () => { ui.semPlay(true); Cena15D.liberar(); } },
+    // no fim, a instrução (os toques já valiam desde o começo)
+    aoFim: () => { ui.semPlay(true); Cena15D.liberar(); if (!Cena15D.feito) Cena14P.instrucao('Toque num oxigênio e depois no enxofre pra "emprestar" um par de elétrons não ligante'); } },
 
 ];
 
@@ -10361,10 +10367,11 @@ const Cena14D = {
     }, () => {});
   },
   // 24s: o retângulo onde ficavam os elétrons, com "acabaram os elétrons" (entra e sai em fade)
-  acabaram(dur) {
+  // (texto: outro aviso no lugar de "acabaram os elétrons" — no 15.5, "Acabaram os elétrons totais")
+  acabaram(dur, texto = "acabaram os elétrons") {
     const f = this.$(".c12-fila"); if (!f || this.$(".c14-caixa")) return;
     const P = Palco.el.getBoundingClientRect(), r = f.getBoundingClientRect(), m = 10;
-    Palco.adicionar(`<div class="c14-caixa" style="left:${r.left - P.left - m}px;top:${r.top - P.top - m}px;width:${r.width + 2 * m}px;height:${r.height + 2 * m}px"><span class="c14-acabaram">acabaram os elétrons</span></div>`);
+    Palco.adicionar(`<div class="c14-caixa" style="left:${r.left - P.left - m}px;top:${r.top - P.top - m}px;width:${r.width + 2 * m}px;height:${r.height + 2 * m}px"><span class="c14-acabaram">${texto}</span></div>`);
     const c = Palco.el.lastElementChild;
     Palco.animar(c, [{ opacity: 0 }, { opacity: 1, offset: .1 }, { opacity: 1, offset: .88 }, { opacity: 0 }], { duracao: dur, easing: "ease-in-out" }).finished.then(() => c.remove(), () => {});
   },
@@ -10510,6 +10517,21 @@ const Cena15D = {
     this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
     Cena121.pulsarAtomo(this.OS, 1);
   },
+  // 15.5, 2,7s: os O crescem e os pares deles ficam dourados (ligar = false: voltam)
+  focoO(ligar) { Cena121.crescerAtomo(this.OS, ligar); this.paresO(ligar); },
+  paresO(ligar) { Cena14D.pares().forEach(c => c.classList.toggle("brilha", ligar)); },
+  // 15.5, 4,9s: o S cresce, as três ligações brilham e "6 elétrons" aparece em cima dele (ligar = false: voltam; o texto sai)
+  focoS(ligar) {
+    Cena121.crescerAtomo(["meio"], ligar);
+    Cena14D.linhas().forEach(l => l.classList.toggle("brilha", ligar));
+    const s = Cena121.svg(), velho = s.querySelector(".c15-6e");
+    if (!ligar) { if (velho) Palco.animar(velho, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => velho.remove(), () => {}); return; }
+    if (velho) return;
+    const [x, y] = Cena121.xy("meio");
+    s.insertAdjacentHTML("beforeend", `<text class="c15-6e" x="${x}" y="${y - Cena121.RAIO.S * 1.3 - 9}" text-anchor="middle" font-size="13" font-weight="800" fill="#FFC24B"
+      font-family="Bricolage Grotesque, sans-serif" style="filter:drop-shadow(0 0 4px rgba(255,194,75,.8))">6 elétrons</text>`);
+    Palco.animar(s.lastElementChild, [{ opacity: 0 }, { opacity: 1 }], { duracao: .4, easing: "ease-out" });
+  },
   // o par que vai para a ligação: o do lado em que o traço novo fica (do lado de -n, a normal da ligação)
   ladoPar(o) {
     const { nx, ny } = Cena121.pontas(o), vx = -nx, vy = -ny;
@@ -10562,6 +10584,7 @@ const Cena15D = {
   pronto() {
     this.feito = true;
     const z = this.$(".c84-toques"); if (z) z.remove();
+    const ins = this.$(".c14-instr"); if (ins) Palco.animar(ins, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => ins.remove(), () => {});   // (a instrução sai)
     const s = Cena121.svg();
     Palco.animar(s, [{}, {}], { duracao: .5, fill: "none" }).finished.then(() => {
       if (!s.isConnected) return;
