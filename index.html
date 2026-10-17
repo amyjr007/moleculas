@@ -1495,7 +1495,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v321 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v322 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8078,7 +8078,7 @@ const Cena11F = {
   // as moléculas (no estilo da água do copo: bolas encostadas, sem bastões)
   molecula(nome, T, mat, esf) {
     if (nome === "amonia") { const m = Cena12A.molecula(T, mat, esf); m.rotation.set(.35, 0, 0); return m; }
-    if (nome === "metano") { const m = Cena13A.molecula(T, mat, esf); m.rotation.set(.25, .5, 0); return m; }
+    if (nome === "metano") { const m = Cena13A.molecula(T, mat, esf, false); m.rotation.set(.25, .5, 0); return m; }
     const g = new T.Group(), COR = { O: Quantico.CORES.O, N: Quantico.CORES.N, Cl: Quantico.CORES.Cl, S: 0xFFFF30, C: 0x1E232B };
     const R = { O: .62, N: .6, Cl: .7, S: .68, C: .58 };
     const at = (sim, x, y, z = 0) => { const a = new T.Mesh(esf, mat(COR[sim])); a.scale.setScalar(R[sim]); a.position.set(x, y, z); g.add(a); };
@@ -8577,12 +8577,25 @@ const Cena13A = Object.assign(Object.create(Cena12A), {
     ctx.animarRecipiente = null;
     return base + alto * .55;
   },
-  // a molécula de CH₄: o C (cinza-escuro) no meio e os quatro H em volta, num tetraedro (109,5°), encostados nele
-  molecula(T, mat, esf) {
-    const mol = new T.Group(), rC = .58, rH = .34, d = (rC + rH) * .86;
+  // a molécula de CH₄: o C (cinza-escuro) no meio e os quatro H em volta, num tetraedro (109,5°), ligados por bastões —
+  // o mesmo modelo do metano em 3D do 13.7 (as mesmas proporções), no tamanho de antes (cerca de 1,1 do centro à ponta)
+  // (bastao = false: o modelo antigo, só bolas encostadas — o do cubo de moléculas do 11.1A, como as outras faces)
+  molecula(T, mat, esf, bastao = true) {
+    if (!bastao) {
+      const mol = new T.Group(), rC = .58, rH = .34, d = (rC + rH) * .86;
+      const C = new T.Mesh(esf, mat(0x1E232B)); C.scale.setScalar(rC); mol.add(C);
+      [[0, 1, 0], [.943, -.333, 0], [-.471, -.333, .816], [-.471, -.333, -.816]].forEach(([x, y, z]) => {
+        const h = new T.Mesh(esf, mat(Quantico.CORES.H)); h.scale.setScalar(rH); h.position.set(x * d, y * d, z * d); mol.add(h);
+      });
+      return mol;
+    }
+    const f = .6, mol = new T.Group(), rC = .62 * f, rH = .38 * f, L = 1.7 * f, Y = new T.Vector3(0, 1, 0);
+    const bas = new T.CylinderGeometry(.13 * f, .13 * f, 1, 24);
     const C = new T.Mesh(esf, mat(0x1E232B)); C.scale.setScalar(rC); mol.add(C);
-    [[0, 1, 0], [.943, -.333, 0], [-.471, -.333, .816], [-.471, -.333, -.816]].forEach(([x, y, z]) => {
-      const h = new T.Mesh(esf, mat(Quantico.CORES.H)); h.scale.setScalar(rH); h.position.set(x * d, y * d, z * d); mol.add(h);
+    [[0, 1, 0], [.943, -.333, 0], [-.471, -.333, .816], [-.471, -.333, -.816]].forEach(v => {
+      const dir = new T.Vector3(...v).normalize();
+      const b = new T.Mesh(bas, mat(0xC8C8C8)); b.scale.set(1, L, 1); b.position.copy(dir).multiplyScalar(L / 2); b.quaternion.setFromUnitVectors(Y, dir); mol.add(b);
+      const h = new T.Mesh(esf, mat(Quantico.CORES.H)); h.scale.setScalar(rH); h.position.copy(dir).multiplyScalar(L); mol.add(h);
     });
     return mol;
   }
