@@ -1509,7 +1509,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v345 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v346 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3818,7 +3818,7 @@ const NARRACOES = [
   // o HCN: 29s a tela vira (de baixo para cima) e traz a fórmula HCN no topo; 32s → 33s as famílias; 34s a pergunta do total
   // (o certo: 10 e⁻) — o acerto, depois da festa, abre a montagem livre (como o modo livre)
   { id: "dialogo16", titulo: "A molécula de HCN", src: "audio/audio_moleculas_16.mp3",
-    inicio: () => Cena12A.inicio(),
+    inicio: () => Cena16.inicio(),   // (pelo sumário: o SO₃ montado, como o 15.7 o deixa)
     eventos: [
       { tempo: 29,   acao: () => Cena16.virar() },
       { tempo: 32,   acao: () => Cena12N.familia("H", "1A") },
@@ -10857,6 +10857,37 @@ const Cena16 = {
       cubo.remove();
     }, () => {});
   },
+  // pelo sumário: a tela como o 15.7 a deixa — o título, a fórmula SO₃ no topo e o SO₃ montado, já na geometria trigonal
+  // plana (o S no meio, os três O a 120°, uma ligação dupla e os pares dos O); o áudio 16 continua dali
+  inicio() {
+    Cena12A.inicio();
+    if (this.$(".c121-esqueleto") || this.$(".c16-tela")) return;
+    if (!this.$(".c111-corpo")) Palco.adicionar(`<div class="c111-corpo"></div>`);
+    const corpo = this.$(".c111-corpo"); if (!corpo.querySelector(".c111-formula")) corpo.insertAdjacentHTML("afterbegin", Cena15A.FORMULA);
+    const s = Cena121.svg("so3");
+    Palco.el.appendChild(s);
+    Object.assign(s.style, { position: "absolute", left: "50%", top: "55%", translate: "-50% -50%", width: "min(66vw, 320px)", margin: "0", zIndex: "4" });
+    ["meio", "esq", "baixo", "dir"].forEach(l => Cena121.atomo(l === "meio" ? "S" : "O", l));
+    s.querySelectorAll(".at > g").forEach(g => g.getAnimations().forEach(a => a.finish()));
+    const lig = s.querySelector(".lig");
+    ["esq", "baixo", "dir"].forEach(o => {
+      const { x1, y1, x2, y2 } = Cena121.pontas(o), off = o === "esq" ? 6.5 : 0;   // (a dupla: no O da esquerda, dois traços — o novo em cima)
+      lig.insertAdjacentHTML("beforeend", `<line data-l="${o}" x1="${x1}" y1="${y1 + off}" x2="${x2}" y2="${y2 + off}" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`);
+      if (off) lig.insertAdjacentHTML("beforeend", `<line data-l="${o}2" x1="${x1}" y1="${y1 - off}" x2="${x2}" y2="${y2 - off}" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`);
+      // os pares: dois em cada O (o da esquerda cedeu o de cima para a dupla), três nos outros
+      Cena15P.LADOS[o].filter(lado => !(o === "esq" && lado === "cima")).forEach(lado => [0, 1].forEach(j => {
+        const [x, y] = Cena14P.lugar(o, lado, j);
+        s.querySelector(".at").insertAdjacentHTML("beforebegin", `<circle class="c124-e" data-o="${o}" data-lado="${lado}" cx="${x}" cy="${y}" r="4" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`);
+      }));
+    });
+    // a geometria trigonal plana: o O da esquerda e o da direita sobem 30°, girando em volta do S (as letras de pé)
+    const [sx, sy] = Cena121.xy("meio");
+    [["esq", 30], ["dir", -30]].forEach(([o, ang]) => {
+      const els = [s.querySelector(`.at [data-l="${o}"]`), ...s.querySelectorAll(`.lig [data-l="${o}"], .lig [data-l="${o}2"]`), ...Cena14D.pares(o)].filter(Boolean);
+      els.forEach(el => Object.assign(el.style, { transformBox: "view-box", transformOrigin: `${sx}px ${sy}px`, rotate: `${ang}deg` }));
+      const t = s.querySelector(`.at [data-l="${o}"] text`); if (t) Object.assign(t.style, { transformBox: "fill-box", transformOrigin: "center", rotate: `${-ang}deg` });
+    });
+  },
   // 34s: a pergunta do total, com as opções (o certo: 10 e⁻); o acerto, depois da festa, abre a montagem livre
   pergunta() {
     Cena12N.pergunta("Qual o total de elétrons de valência?", [["8 e<sup>−</sup>", 0], ["10 e<sup>−</sup>", 1], ["12 e<sup>−</sup>", 0]], "dialogo16", "dialogo16_x", true);
@@ -11093,10 +11124,11 @@ const ModoLivre = {
   botaoChecar() {
     if (this.$(".c11l-checar")) return;
     const P = Palco.el.getBoundingClientRect(), f = this.$(".c12-fila"), base = f ? f.getBoundingClientRect().top - P.top : P.height * .88;
-    Palco.adicionar(`<div class="c11l-checar" style="top:${base - 16}px"><button class="c10-bt">Checar</button></div>`);
+    // ("Ajuda" no meio do caminho; "Confirmar" com a molécula montada — ver atualizarBotao)
+    Palco.adicionar(`<div class="c11l-checar" style="top:${base - 16}px"><button class="c10-bt">Ajuda</button></div>`);
     const b = this.$(".c11l-checar .c10-bt");
     Palco.animar(b, [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duracao: .4, easing: "ease-out" });
-    b.addEventListener("click", () => this.checar());
+    b.addEventListener("click", () => this.completo() ? this.checar() : this.ajuda());
   },
   pontas() { return Object.keys(this.at).filter(l => l !== "meio"); },
   // os átomos nos lugares (certo ou errado): viram o desenho das ligações, no mesmo lugar; os toques valem
@@ -11137,12 +11169,13 @@ const ModoLivre = {
     Vibra.tocar("toqueEletron");
   },
   toque(e) {
-    if (Palco.pausado) return;
+    if (Palco.pausado || this.remontando) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
     let alvo = null, d0 = Infinity;
     Object.entries(this.at).forEach(([l, a]) => { const d = Math.hypot(x - a.x, y - a.y); if (d < d0) { d0 = d; alvo = l; } });
     const a = this.at[alvo];
     Cena84.circulo(x, y, "");
+    this.conferirBotao();   // ("Ajuda" ou "Confirmar", depois do que este toque fizer)
     if (d0 <= a.R * 1.15) return this.tocouAtomo(alvo);
     if (d0 <= a.R * 3.2) return this.par(alvo, x - a.x, y - a.y);
   },
@@ -11282,6 +11315,8 @@ const ModoLivre = {
     Vibra.tocar("cloroCerta");
     this.ativo = false;
     if (this.cfg.proxima) { Palco.animar(Palco.el, [{}, {}], { duracao: 2.4, fill: "none" }).finished.then(() => this.cfg.proxima(), () => {}); return; }
+    // sem próxima molécula (o HCN, o CO₂): passada a festa, ela se desmonta e se monta de novo, passo a passo
+    if (!this.cfg.comPlay) { Palco.animar(Palco.el, [{}, {}], { duracao: 2.6, fill: "none" }).finished.then(() => this.remontar(), () => {}); return; }
     const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "";   // o "Passo 1" volta
     if (this.cfg.comPlay) ui.semPlay(false);                                // (ou o play volta: a narração segue dali)
   },
@@ -11342,6 +11377,58 @@ const ModoLivre = {
     Palco.el.querySelectorAll(".c11l-pop, .c11l-svg, .c11l-toques, .c11l-checar, .c133-at, .c133-slot, .c12-fila, .c12-voo, .c84-aviso").forEach(el => el.remove());
     Cena133.feito = false; Cena133.conferindo = false; this.at = null;
     const bt = this.$(".c11-passo-bt"); if (bt) bt.style.visibility = "";
+  },
+  // o botão de baixo: "Ajuda" enquanto a molécula está no meio do caminho; "Confirmar" quando ela está montada (os átomos
+  // nos lugares, todas as pontas ligadas e nenhum elétron sobrando)
+  completo() { return !!this.at && this.pontas().every(l => this.lig[l] > 0) && this.livres().length === 0; },
+  atualizarBotao() {
+    const b = this.$(".c11l-checar .c10-bt"); if (!b || b.disabled) return;
+    const txt = this.completo() ? "Confirmar" : "Ajuda";
+    if (b.textContent !== txt) { b.textContent = txt; Palco.animar(b, [{ scale: "1" }, { scale: "1.12", offset: .4 }, { scale: "1" }], { duracao: .4, easing: "ease-out", fill: "none" }); }
+  },
+  // (os toques mudam o estado: o botão é conferido quando as animações deles acabam)
+  conferirBotao() { Palco.animar(Palco.el, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => this.atualizarBotao(), () => {}); },
+  // "Ajuda": a dica do próximo passo, em verde, embaixo dos átomos (sem tremer nada)
+  ajuda() {
+    const msg = !this.at ? "Leve os átomos até os contornos (o central fica no meio)"
+      : this.pontas().some(l => !this.lig[l]) ? "Ligue o átomo do meio a cada ponta: toque num e depois no outro"
+      : "Distribua os elétrons que sobraram em pares — ou use um par da ponta numa ligação dupla";
+    let av = this.$(".c84-aviso");
+    const baixo = this.at ? Math.max(...Object.values(this.at).map(a => a.y + a.R * 2.4)) : Palco.el.clientHeight * .5;
+    if (!av) { Palco.adicionar(`<p class="c84-aviso verde" style="top:${baixo}px"></p>`); av = this.$(".c84-aviso"); }
+    av.classList.add("verde"); av.textContent = msg; av.getAnimations().forEach(x => x.cancel());
+    Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: .08 }, { opacity: 1, offset: .85 }, { opacity: 0 }], { duracao: 3.4, easing: "linear" }).finished.then(() => av.remove(), () => {});
+    Vibra.tocar("toqueEletron");
+  },
+  // certo (sem próxima molécula): a molécula se desmonta e se monta de novo, passo a passo, como se o aluno a montasse —
+  // os átomos saltam para os lugares, as ligações, os pares e, por fim, as duplas e triplas
+  async remontar() {
+    const fim = { pos: Object.fromEntries(Object.entries(this.at).map(([l, a]) => [l, a.sim])), lig: { ...this.lig },
+      pares: Object.fromEntries(Object.entries(this.pares).map(([l, p]) => [l, Object.keys(p)])) };
+    const espera = s => Palco.animar(Palco.el, [{}, {}], { duracao: s, fill: "none" }).finished.catch(() => {});
+    const mol = this.mol, n = this.n;
+    this.limpar(); this.mol = mol; this.cfg = this.CFG[mol]; this.n = n; this.ativo = true; this.remontando = true;
+    const fila = Cena12.fila(n); [...fila.children].forEach(e => { e.style.opacity = ""; });
+    Cena133.comecar(this.cfg.montagem); await espera(.35); Cena133.hidrogenios(); await espera(1.2);
+    // os átomos, um a um, saltam para os lugares (o central primeiro); o último encaixe vira o desenho (ModoLivre.montado)
+    for (const l of ["meio", ...Object.keys(fim.pos).filter(x => x !== "meio")]) {
+      const a = Cena133.atomos.find(x => x.tipo === fim.pos[l] && !x.slot); if (!a) continue;
+      Cena133.encaixar(a, l, true); await espera(.8);
+    }
+    await espera(1);
+    if (!this.at) { this.remontando = false; return; }
+    const pontas = this.pontas(), V = { cima: [0, -1], baixo: [0, 1], esq: [-1, 0], dir: [1, 0] };
+    for (const p of pontas) { this.ligar(p); await espera(.9); }
+    // os pares: os que ficam no fim e, nas pontas com dupla/tripla, os que vão virar os traços novos
+    const extras = {};
+    for (const l of Object.keys(this.at)) {
+      const livresLados = Object.keys(V).filter(x => !fim.pares[l].includes(x) && !(l === "meio" ? pontas : [this.OPOSTO[l]]).includes(x));
+      extras[l] = livresLados.slice(0, Math.max(0, (fim.lig[l] || 1) - 1));
+      for (const lado of [...extras[l], ...fim.pares[l]]) { this.par(l, ...V[lado]); await espera(.9); }
+    }
+    for (const p of pontas) for (const lado of extras[p]) { if (this.lig[p] === 1) this.dupla(p, lado); else this.tripla(p, lado); await espera(1); }
+    const t = this.$(".c11l-toques"); if (t) t.remove();
+    this.remontando = false;
   },
   // o "×" do pop-up: o modo livre sai e o play (ou o "Passo 1") volta
   fechar() { this.limpar(); this.ativo = false; if (this.cfg && this.cfg.comPlay) ui.semPlay(false); },
