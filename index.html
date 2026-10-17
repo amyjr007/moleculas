@@ -1509,7 +1509,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v344 · 17/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v345 · 17/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11155,8 +11155,8 @@ const ModoLivre = {
     const ponta = de === "meio" ? l : de;
     if (this.lig[ponta] === 0) return this.ligar(ponta);
     if (this.lig[ponta] === 3) return this.aviso([ponta], "Essa ligação já é tripla");
-    // (a dupla e a tripla só da ponta para o centro: quem cede o par é a ponta)
-    if (de === "meio") return this.aviso([ponta, "meio"], "Toque primeiro na ponta e depois no centro");
+    // (a dupla só da ponta para o centro, com a simples já feita; a tripla, só com a dupla já feita — em qualquer ordem)
+    if (this.lig[ponta] === 1 && de === "meio") return this.aviso([ponta, "meio"], "Toque primeiro na ponta e depois no centro");
     const lados = Object.keys(this.pares[ponta]); if (!lados.length) return this.aviso([ponta], "Esse átomo não tem par para ligar");
     const lado = lados.includes("cima") ? "cima" : lados[0];
     if (this.lig[ponta] === 1) this.dupla(ponta, lado); else this.tripla(ponta, lado);
