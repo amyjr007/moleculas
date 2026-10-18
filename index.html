@@ -557,7 +557,8 @@
   .c17-email svg { width: 26px; height: 26px; flex: none; }
   .c17-email:hover { border-color: #A3DBF7; }
   .c17-fim { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; pointer-events: none; }
-  .c17-fim img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 16px; }
+  /* (a foto inteira dentro do palco, sem cortar nem esticar: a caixa do tamanho do palco e a foto encaixada nela) */
+  .c17-fim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
   .c17-tchau { position: absolute; left: 0; right: 0; top: 6%; margin: 0; text-align: center; font-family: var(--display); font-weight: 800;
     font-size: clamp(2.4rem, 8vmin + 1rem, 5rem); color: #FFC24B; text-shadow: 0 0 24px rgba(255,194,75,.6), 0 4px 18px rgba(0,0,0,.6); }
   /* o par escolhido para virar a ligação dupla/tripla: âmbar escuro, com brilho, tremendo de leve */
@@ -1544,7 +1545,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v381 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v382 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
