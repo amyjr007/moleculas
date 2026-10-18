@@ -779,7 +779,7 @@
        (a pequena é posta no lugar já contando com o deslocamento da que saiu: a diferença entre os dois é o ajuste medido no 12.3) */
     /* o modo livre (HCN): a dica da etapa 1 mais baixa */
     /* os botões do modo livre (?, refazer, martelo): à direita e mais baixos (medido no HCN) */
-    #conteudoPalco .c11l-checar { translate: calc(var(--pw, 965px) * .245) calc(-100% + var(--ph, 448px) * .15); }
+    #conteudoPalco .c11l-checar { translate: calc(var(--pw, 965px) * .245) calc(-100% + var(--ph, 448px) * .038); }
     #conteudoPalco .c11l-dica[data-etapa="1"] { translate: 0 calc(-50% + var(--ph, 448px) * .105); }
     /* o martelo, enquanto os átomos vão para os contornos ("Colocando o C no centro"...): mais baixo */
     #conteudoPalco .c11l-dica[data-etapa="m1"] { translate: calc(var(--pw, 965px) * -.004) calc(-50% + var(--ph, 448px) * .082); }
@@ -1533,7 +1533,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v367 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v368 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11301,6 +11301,12 @@ const ModoLivre = {
     const a = this.at[alvo];
     Cena84.circulo(x, y, "");
     this.conferirBotao();   // ("Ajuda" ou "Confirmar", depois do que este toque fizer)
+    // com um par aceso, o toque na ligação dele (entre a ponta e o centro, fora das bolas) também faz a dupla/tripla
+    if (this.parSel && d0 > a.R * 1.15) {
+      const A = this.at.meio, B = this.at[this.parSel.ponta], vx = B.x - A.x, vy = B.y - A.y, L2 = vx * vx + vy * vy || 1;
+      const t = Math.max(0, Math.min(1, ((x - A.x) * vx + (y - A.y) * vy) / L2)), dist = Math.hypot(x - (A.x + vx * t), y - (A.y + vy * t));
+      if (t > .15 && t < .85 && dist < Math.max(18, B.R * .9)) return this.tocouAtomo("meio");
+    }
     if (d0 <= a.R * 1.15) return this.tocouAtomo(alvo);
     if (d0 <= a.R * 3.2) return this.par(alvo, x - a.x, y - a.y);
   },
