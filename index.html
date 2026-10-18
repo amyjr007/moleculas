@@ -1535,7 +1535,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v373 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v374 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3840,7 +3840,8 @@ const NARRACOES = [
     eventos: [
       { tempo: 6,    acao: () => Cena15F.paraBolas() }
     ],
-    aoFim: () => { ui.semPlay(true); Cena15F.paraBolas(); Cena11Copo.botaoPasso1("e", "Entendi"); } },   // o "Entendi" leva ao 16
+    // no fim, a molécula vira 3D e gira ("Você pode girar a molécula"); o "Entendi" leva ao 16
+    aoFim: () => { ui.semPlay(true); Cena15F.paraBolas(); Cena157.transformar(); Cena11Copo.botaoPasso1("e", "Entendi"); } },
   // os exemplos livres: o 16 é cortado aos 27s; 1s depois, o 16A — aos 2,5s dele a tela vira (de baixo para cima) e traz o
   // primeiro exemplo (o H₂S); os outros vêm um depois do outro (ModoLivre.SEQ). (O HCN, que vinha aqui, saiu da sequência)
   { id: "dialogo16", titulo: "Exemplos livres", src: "audio/audio_moleculas_16.mp3", semNav: true,
@@ -11056,6 +11057,85 @@ const Cena148 = {
       const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora; t += dt;
       mats.forEach(x => { x.opacity = suave(t / .6); });
       // depois de aparecer: inclina um pouco e gira sozinho (na mão, segue o dedo)
+      const fim = suave((t - this.DUR) / 1.2);
+      if (t > this.DUR && !arraste && dt) { if (parado > 0) parado -= dt; else giroY += dt * .6 * fim; }
+      mol.rotation.set(giroX + .35 * fim, giroY, 0);
+      if (t > this.DUR && !arraste) cv.style.cursor = "grab";
+      renderer.render(cena, camera);
+      requestAnimationFrame(quadro);
+    };
+    requestAnimationFrame(quadro);
+  }
+};
+
+/* ---------- Fim do 15.7: o SO₃ em 3D ----------
+   A molécula de bolas (trigonal plana, já na geometria do 15.7) vira 3D no mesmo lugar e do mesmo tamanho: o S, os três O,
+   as ligações em bastões (a dupla com dois) e os pares de elétrons dos O (duas bolinhas cada). Ela aparece por cima do
+   desenho, que se apaga, e começa a girar (sozinha, e com o dedo), com "Você pode girar a molécula". */
+const Cena157 = {
+  $(sel) { return Palco.el.querySelector(sel); },
+  L: 1.7, DUR: 1.3,
+  transformar() {
+    const s = this.$(".c121-esqueleto.so3"); if (!s || this.$(".c157-3d") || !window.THREE) return;
+    const T = THREE, P = Palco.el.getBoundingClientRect(), m = s.getScreenCTM(); if (!m) return;
+    const [cx0, cy0] = Cena121.xy("meio"), [ox] = Cena121.xy("dir");
+    const pt = s.createSVGPoint(); pt.x = cx0; pt.y = cy0; const c = pt.matrixTransform(m);
+    const d = (ox - cx0) * Math.hypot(m.a, m.b), cy = c.y - P.top, cxTela = c.x - P.left, alto = 3.6 * d;
+    Palco.adicionar(`<div class="c157-3d" aria-label="Molécula de trióxido de enxofre em 3D: trigonal plana, o S no meio e os três O em volta, com uma ligação dupla e os pares de elétrons dos oxigênios. Arraste para girar"
+      style="position:absolute;left:${cxTela - 1.8 * d}px;width:${3.6 * d}px;top:${cy - alto / 2}px;height:${alto}px;z-index:4"></div>`);
+    const caixa = this.$(".c157-3d");
+    Cena113C.dica(caixa, this.DUR + .5);   // "Você pode girar a molécula", depois de aparecer
+    let renderer;
+    try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return; }
+    renderer.outputEncoding = T.sRGBEncoding; renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    caixa.appendChild(renderer.domElement);
+    const cv = renderer.domElement; Object.assign(cv.style, { display: "block", width: "100%", height: "100%", touchAction: "none" });
+    const cena = new T.Scene(), fov = 35, camera = new T.PerspectiveCamera(fov, 1, .1, 100);
+    const dist = 3.6 * this.L / (2 * Math.tan(T.MathUtils.degToRad(fov / 2)));   // (a caixa tem 3,6 d de altura: 1,7 vira d px)
+    cena.add(new T.HemisphereLight(0xdfefff, 0x1b2a40, .85));
+    const luz = new T.DirectionalLight(0xffffff, 1.2); luz.position.set(3, 5, 7); cena.add(luz);
+    const luz2 = new T.DirectionalLight(0xA3DBF7, .5); luz2.position.set(-6, -3, -4); cena.add(luz2);
+    const mat = cor => new T.MeshPhysicalMaterial({ color: cor, roughness: .3, clearcoat: .7, clearcoatRoughness: .18, transparent: true, opacity: 0 });
+    const esf = new T.SphereGeometry(1, 48, 32), bas = new T.CylinderGeometry(.1, .1, 1, 24), Y = new T.Vector3(0, 1, 0), L = this.L;
+    const mol = new T.Group(); cena.add(mol);
+    const S = new T.Mesh(esf, mat(0xE8C93A)); S.scale.setScalar(.62); mol.add(S);
+    const objs = [S];
+    // os O nos ângulos do 15.7 (o de baixo a 270°, o da esquerda a 150°, o da direita a 30°); a dupla, onde o aluno a fez
+    const dupla = ["esq", "baixo", "dir"].find(o => s.querySelector(`.lig [data-l="${o}2"]`)) || "esq";
+    const bastao = (a, b) => { const v = b.clone().sub(a), o = new T.Mesh(bas, mat(0xC8C8C8)); o.scale.set(1, v.length(), 1); o.position.copy(a).addScaledVector(v, .5); o.quaternion.setFromUnitVectors(Y, v.normalize()); mol.add(o); objs.push(o); };
+    const eletron = p => { const e = new T.Mesh(esf, mat(0xA3DBF7)); e.scale.setScalar(.085); e.position.copy(p); mol.add(e); objs.push(e); };
+    [["baixo", 270], ["esq", 150], ["dir", 30]].forEach(([o, ang]) => {
+      const r = ang * Math.PI / 180, u = new T.Vector3(Math.cos(r), Math.sin(r), 0), n = new T.Vector3(-u.y, u.x, 0), pos = u.clone().multiplyScalar(L);
+      const O = new T.Mesh(esf, mat(Quantico.CORES.O)); O.scale.setScalar(.58); O.position.copy(pos); mol.add(O); objs.push(O);
+      const de = u.clone().multiplyScalar(.62), ate = u.clone().multiplyScalar(L - .58);
+      if (o === dupla) [-.17, .17].forEach(k => bastao(de.clone().addScaledVector(n, k), ate.clone().addScaledVector(n, k)));
+      else bastao(de, ate);
+      // os pares: três no O da ligação simples (para fora, e dos dois lados); dois no da dupla (inclinados para fora)
+      const dirs = o === dupla ? [u.clone().add(n).normalize(), u.clone().sub(n).normalize()] : [u, n, n.clone().negate()];
+      dirs.forEach(v => { const centro = pos.clone().addScaledVector(v, .82), lado = new T.Vector3(-v.y, v.x, 0).multiplyScalar(.1);
+        eletron(centro.clone().add(lado)); eletron(centro.clone().sub(lado)); });
+    });
+    const mats = objs.map(o => o.material);
+    const ajustar = () => { const w = caixa.clientWidth || 1, h = caixa.clientHeight || 1; renderer.setSize(w, h, false); camera.aspect = w / h; camera.position.set(0, 0, dist); camera.updateProjectionMatrix(); };
+    const obs = new ResizeObserver(ajustar); obs.observe(caixa); ajustar();
+    let giroY = 0, giroX = 0, arraste = null, parado = 0, t = 0;
+    cv.addEventListener("pointerdown", e => { if (t < this.DUR) return; arraste = { x: e.clientX, y: e.clientY }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} cv.style.cursor = "grabbing"; });
+    cv.addEventListener("pointermove", e => {
+      if (!arraste) return;
+      giroY += (e.clientX - arraste.x) * .012; giroX = Math.max(-1.3, Math.min(1.3, giroX + (e.clientY - arraste.y) * .012));
+      arraste = { x: e.clientX, y: e.clientY };
+    });
+    const soltar = () => { arraste = null; parado = 1.5; cv.style.cursor = "grab"; };
+    cv.addEventListener("pointerup", soltar); cv.addEventListener("pointercancel", soltar);
+    // o desenho se apaga enquanto as bolas aparecem por cima dele
+    s.getAnimations().forEach(x => { if (x.playState === "finished") x.cancel(); });   // (só as do próprio desenho: as das peças seguram a geometria)
+    Palco.animar(s, [{ opacity: 1 }, { opacity: 0 }], { duracao: .7, easing: "ease-in", fill: "none" }).finished.then(() => { s.style.opacity = "0"; }, () => {});
+    const suave = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+    let antes = performance.now();
+    const quadro = agora => {
+      if (!cv.isConnected) { obs.disconnect(); Copo.soltar(renderer); return; }
+      const dt = Palco.pausado ? 0 : Math.min((agora - antes) / 1000, .05); antes = agora; t += dt;
+      mats.forEach(x => { x.opacity = suave(t / .6); });
       const fim = suave((t - this.DUR) / 1.2);
       if (t > this.DUR && !arraste && dt) { if (parado > 0) parado -= dt; else giroY += dt * .6 * fim; }
       mol.rotation.set(giroX + .35 * fim, giroY, 0);
