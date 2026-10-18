@@ -1544,7 +1544,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v380 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v381 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3868,7 +3868,7 @@ const NARRACOES = [
   // a despedida (pelo botão "Despedida" do cartão da nota): o 17 e, em seguida, sozinho, o 17.1
   // 2s: tudo o que está na tela desmorona e a tela fica vazia; 16,5s: o e-mail do professor (toca: abre o app de e-mail).
   // No fim, o play volta: ele leva ao 17.1
-  { id: "dialogo17", titulo: "Despedida", src: "audio/audio_moleculas_17.mp3", oculta: true,
+  { id: "dialogo17", titulo: "Despedida e contato", src: "audio/audio_moleculas_17.mp3", fim: true,   // (fim: no sumário, depois dos exemplos livres)
     eventos: [
       { tempo: 2,    acao: () => Cena17.desmontar() },
       { tempo: 16.5, acao: () => Cena17.email() }
@@ -13893,21 +13893,24 @@ function montarSumario() {
   // semNav / oculta: fica fora da lista (mas toca normalmente na sequência).
   // A numeração é corrida: 1, 2, 3… só com o que aparece na lista, sem pular número
   let k = 0;
-  sumario.innerHTML = NARRACOES.map((n, i) => n.oculta || n.semNav ? "" : `
+  const item = (n, i) => n.oculta || n.semNav ? "" : `
     <li>
       <button class="item-sumario" data-indice="${i}">
         <span class="num">${++k}</span>
         <span class="item-texto">${n.titulo}</span>
       </button>
-    </li>`).join("")
-    // (os exemplos livres depois do HCN: não são narrações — abrem a tela do exemplo direto)
+    </li>`;
+  sumario.innerHTML = NARRACOES.map((n, i) => n.fim ? "" : item(n, i)).join("")
+    // (os exemplos livres depois do primeiro: não são narrações — abrem a tela do exemplo direto)
     + ModoLivre.SEQ.slice(1).map(mol => `
     <li>
       <button class="item-sumario" data-livre="${mol}">
         <span class="num">${++k}</span>
         <span class="item-texto">${ModoLivre.TITULOS[mol]}</span>
       </button>
-    </li>`).join("");
+    </li>`).join("")
+    // (e, por último, a despedida)
+    + NARRACOES.map((n, i) => n.fim ? item(n, i) : "").join("");
 }
 function atualizarSumario() {
   sumario.querySelectorAll(".item-sumario").forEach(b => {
