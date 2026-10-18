@@ -551,6 +551,11 @@
   .c11l-checar .c11l-ic.c11l-ok { background: #3DBE7A; color: #fff; box-shadow: 0 0 16px rgba(110,231,160,.6); }
   .c11l-dica { translate: 0 -50%; }
   /* 17.1: a despedida — a imagem final ocupando o palco (inteira) e o "Tchau!" por cima */
+  .c17-email { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6; display: flex; align-items: center; gap: 10px;
+    max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 14px; border: 2px solid rgba(163,219,247,.5); background: rgba(20,33,52,.85);
+    color: #A3DBF7; text-decoration: none; font: 700 clamp(.85rem, 1.6vmin + .55rem, 1.25rem)/1.2 var(--display); overflow-wrap: anywhere; }
+  .c17-email svg { width: 26px; height: 26px; flex: none; }
+  .c17-email:hover { border-color: #A3DBF7; }
   .c17-fim { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; pointer-events: none; }
   .c17-fim img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 16px; }
   .c17-tchau { position: absolute; left: 0; right: 0; top: 6%; margin: 0; text-align: center; font-family: var(--display); font-weight: 800;
@@ -1539,7 +1544,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v376 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v377 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3861,11 +3866,16 @@ const NARRACOES = [
     ],
     aoFim: () => ui.semPlay(true) },   // sem play: quem leva adiante é a resposta (e depois a montagem)
   // a despedida (pelo botão "Despedida" do cartão da nota): o 17 e, em seguida, sozinho, o 17.1
+  // 2s: tudo o que está na tela desmorona e a tela fica vazia; 16,5s: o e-mail do professor (toca: abre o app de e-mail).
+  // No fim, o play volta: ele leva ao 17.1
   { id: "dialogo17", titulo: "Despedida", src: "audio/audio_moleculas_17.mp3", oculta: true,
-    eventos: [],
-    aoFim: () => { ui.semPlay(true); Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo17_1"), true); } },
-  // o 17.1: "Tchau!" e a imagem final, em fade
-  { id: "dialogo17_1", titulo: "Tchau!", src: "audio/audio_moleculas_17.1.mp3", oculta: true,
+    eventos: [
+      { tempo: 2,    acao: () => Cena17.desmontar() },
+      { tempo: 16.5, acao: () => Cena17.email() }
+    ],
+    aoFim: () => { Player.terminou = true; ui.semPlay(false); ui.modoEntendi(false); ui.atualizarBotao(false); } },
+  // o 17.1 (pelo play): "Tchau!" e a imagem final, em fade
+  { id: "dialogo17_1", titulo: "Tchau!", src: "audio/audio_moleculas_17.1.mp3", semNav: true,
     eventos: [
       { tempo: 0,    acao: () => Cena17.tchau() }
     ],
@@ -11084,6 +11094,21 @@ const Cena148 = {
 
 /* ---------- 17.1: a despedida — "Tchau!" e a imagem final, em fade (o que estava na tela sai) ---------- */
 const Cena17 = {
+  EMAIL: "amauri.junior@escola.seduc.pa.gov.br",
+  // 17, 2s: tudo o que está no palco desmorona (balança e cai girando) e sai — a tela fica vazia
+  desmontar() {
+    const pecas = [...Palco.el.children].filter(el => !el.matches(".c17-email, .c17-fim"));
+    if (!pecas.length) return;
+    Promise.all(Palco.desmoronar(pecas, { duracao: 1.3, espalhar: .5 }).map(a => a.finished)).then(() => pecas.forEach(el => el.remove()), () => {});
+  },
+  // 17, 16,5s: o e-mail do professor, no meio da tela; o toque abre o app de e-mail já com ele de destinatário
+  email() {
+    if (Palco.el.querySelector(".c17-email")) return;
+    Palco.adicionar(`<a class="c17-email" href="mailto:${this.EMAIL}" aria-label="Enviar e-mail para ${this.EMAIL}">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>
+        <span>${this.EMAIL}</span></a>`);
+    Palco.animar(Palco.el.lastElementChild, [{ opacity: 0, transform: "translate(-50%, -50%) scale(.9)" }, { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }], { duracao: .6, easing: "cubic-bezier(.3,1.3,.5,1)" });
+  },
   tchau() {
     if (Palco.el.querySelector(".c17-fim")) return;
     [...Palco.el.children].forEach(el => Palco.animar(el, [{ opacity: getComputedStyle(el).opacity }, { opacity: 0 }], { duracao: .6, easing: "ease-in" }).finished.then(() => el.remove(), () => {}));
