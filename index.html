@@ -1544,7 +1544,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v377 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v378 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8853,6 +8853,8 @@ const Cena133 = {
     if (this.mol === "livreNF3" && noTablet()) { ajX = W * .001; ajY = H * -.042; }   // (o NF₃: contornos e molécula 19px mais altos)
     // (os exemplos livres com pontas grandes — F, O, Cl —, em cruz: as ligações 15% mais compridas; as bolas quase se encostavam)
     if (["livreNF3", "livreCH2O", "livreCCl4"].includes(this.mol)) D *= 1.15;
+    // (o CH₂O: as bolas 15% maiores, na mesma proporção; a ligação cresce junto, para elas não se encostarem)
+    if (this.mol === "livreCH2O") { RC *= 1.15; RH *= 1.15; D *= 1.15; }
     if (linear) {
       RC *= 1.2; RH *= 1.2; D = Math.max(D, RC + RH + 18);
       const lg = 2 * RC + n * (2 * RH + vao), z0 = W / 2 - lg / 2; XS = [z0 + RC, ...Array.from({ length: n }, (_, j) => z0 + 2 * RC + vao + RH + j * (2 * RH + vao))];
