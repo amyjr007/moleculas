@@ -1544,7 +1544,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v379 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v380 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11108,7 +11108,7 @@ const Cena17 = {
     if (Palco.el.querySelector(".c17-email")) return;
     Palco.adicionar(`<a class="c17-email" href="mailto:${this.EMAIL}" aria-label="Enviar e-mail para ${this.EMAIL}">
         <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>
-        <span>${this.EMAIL}</span></a>`);
+        <span>${this.EMAIL.replace("@", "<br>@")}</span></a>`);   // (em duas linhas: o nome e, embaixo, o "@escola...")
     Palco.animar(Palco.el.lastElementChild, [{ opacity: 0, transform: "translate(-50%, -50%) scale(.9)" }, { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }], { duracao: .6, easing: "cubic-bezier(.3,1.3,.5,1)" });
   },
   tchau() {
