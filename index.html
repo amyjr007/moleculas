@@ -1535,7 +1535,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v372 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v373 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3841,16 +3841,18 @@ const NARRACOES = [
       { tempo: 6,    acao: () => Cena15F.paraBolas() }
     ],
     aoFim: () => { ui.semPlay(true); Cena15F.paraBolas(); Cena11Copo.botaoPasso1("e", "Entendi"); } },   // o "Entendi" leva ao 16
-  // o HCN: 29s a tela vira (de baixo para cima) e traz a fórmula HCN no topo; 32s → 33s as famílias; 34s a pergunta do total
-  // (o certo: 10 e⁻) — o acerto, depois da festa, abre a montagem livre (como o modo livre)
-  { id: "dialogo16", titulo: "A molécula de HCN", entrada: 33.7, src: "audio/audio_moleculas_16.mp3",
-    inicio: () => Cena16.inicio(),   // (pelo sumário: o SO₃ montado, como o 15.7 o deixa)
+  // os exemplos livres: o 16 é cortado aos 27s; 1s depois, o 16A — aos 2,5s dele a tela vira (de baixo para cima) e traz o
+  // primeiro exemplo (o H₂S); os outros vêm um depois do outro (ModoLivre.SEQ). (O HCN, que vinha aqui, saiu da sequência)
+  { id: "dialogo16", titulo: "Exemplos livres", src: "audio/audio_moleculas_16.mp3", semNav: true,
+    inicio: () => Cena12A.inicio(),
     eventos: [
-      { tempo: 29,   acao: () => Cena16.virar() },
-      { tempo: 32,   acao: () => Cena12N.familia("H", "1A") },
-      { tempo: 32.5, acao: () => Cena12N.familia("C", "4A") },
-      { tempo: 33,   acao: () => Cena12N.familia("N", "5A") },
-      { tempo: 34,   acao: () => Cena16.pergunta() }
+      { tempo: 27,   acao: () => Cena16.cortar() }
+    ],
+    aoFim: () => Cena16.cortar() },   // (se o áudio acabar antes dos 27s)
+  { id: "dialogo16A", titulo: "A molécula de H₂S", src: "audio/audio_moleculas_16A.mp3",
+    inicio: () => Cena12A.inicio(),
+    eventos: [
+      { tempo: 2.5,  acao: () => ModoLivre.proximoExemplo(ModoLivre.SEQ[0]) }   // a virada: o H₂S, com as famílias e a pergunta do total
     ],
     aoFim: () => ui.semPlay(true) },   // sem play: quem leva adiante é a resposta (e depois a montagem)
 
@@ -5790,7 +5792,7 @@ const Cena71 = {
   errou(b) {
     b.classList.add("errada"); b.disabled = true;
     if (this.perg && /^dialogo10_/.test(this.perg.de)) Placar.erro(this.perg.de);
-    if (this.perg && this.perg.de === "dialogo16") PontosLivre.tira("total");   // (os exemplos livres: errou o total de elétrons)
+    if (this.perg && this.perg.livre) PontosLivre.tira("total");   // (os exemplos livres: errou o total de elétrons)
     Vibra.tocar(this.perg && this.perg.tipo === "oxigenio" ? "oxigenioErrada" : "cloroErrada");
     const palco = document.getElementById("palco");
     palco.animate([0, -14, 12, -10, 8, -5, 3, 0].map(x => ({ transform: `translateX(${x}px)` })), { duration: 520, easing: "ease-out" });
@@ -10943,6 +10945,17 @@ const Cena16 = {
       const t = s.querySelector(`.at [data-l="${o}"] text`); if (t) Object.assign(t.style, { transformBox: "fill-box", transformOrigin: "center", rotate: `${-ang}deg` });
     });
   },
+  // 27s do 16: o áudio é cortado; 1s depois, o 16A
+  cortar() {
+    const i = Player.indice; if (!NARRACOES[i] || NARRACOES[i].id !== "dialogo16" || this.cortado === i) return;
+    this.cortado = i;
+    Player.calar();
+    Palco.animar(Palco.el, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => {
+      this.cortado = null;
+      if (Player.indice !== i) return;
+      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo16A"), true);
+    }, () => {});
+  },
   // 34s: a pergunta do total, com as opções (o certo: 10 e⁻); o acerto, depois da festa, abre a montagem livre
   pergunta() {
     Cena12N.pergunta("Qual o total de elétrons de valência?", [["8 e<sup>−</sup>", 0], ["10 e<sup>−</sup>", 1], ["12 e<sup>−</sup>", 0]], "dialogo16", "dialogo16_x", true);
@@ -11098,11 +11111,11 @@ const ModoLivre = {
               certo: { n: 32, meio: "C", pontas: ["Cl", "Cl", "Cl", "Cl"], porPonta: { Cl: { lig: 1, pares: 3 } }, paresMeio: 0 } }
   },
   // a ordem dos exemplos livres; os elogios (revezando) e os sons de passagem
-  SEQ: ["hcn", "nf3", "h2s", "cs2", "ch2o", "ccl4"],
+  SEQ: ["h2s", "nf3", "ccl4", "cs2", "ch2o"],   // (a ordem; o HCN saiu)
   TITULOS: { nf3: "A molécula de NF₃", h2s: "A molécula de H₂S", cs2: "A molécula de CS₂", ch2o: "A molécula de CH₂O", ccl4: "A molécula de CCl₄" },
   // pelo sumário: a tela do exemplo, direto (sem áudio — o Player fica no fim do 16)
   abrirExemplo(mol) {
-    const i = NARRACOES.findIndex(n => n.id === "dialogo16");
+    const i = NARRACOES.findIndex(n => n.id === "dialogo16A");
     Player.calar(); Player.indice = i; Player.terminou = true; Player.disparados = new Set();
     this.limpar(); this.ativo = false; this.mol = null;
     Palco.mostrar(""); ui.semPlay(true); ui.modoEntendi(false);
@@ -11122,8 +11135,10 @@ const ModoLivre = {
       PontosLivre.iniciar(mol);   // (a nota deste exemplo começa aqui)
       cfg.fams.forEach(([l, f]) => Cena12N.familia(l, f));
       const e = n => `${n} e<sup>−</sup>`, certo = cfg.certo.n;
-      Cena12N.pergunta("Qual o total de elétrons de valência?", cfg.opcoes.map(n => [e(n), n === certo ? 1 : 0]), "dialogo16", "dialogo16_x", true);
+      const aqui = (NARRACOES[Player.indice] || {}).id || "dialogo16A";   // (a festa do acerto confere a narração da tela)
+      Cena12N.pergunta("Qual o total de elétrons de valência?", cfg.opcoes.map(n => [e(n), n === certo ? 1 : 0]), aqui, "dialogo16_x", true);
       Cena71.perg.antes = () => { Cena71.tirarPergunta(); this.direto(mol, certo); };
+      Cena71.perg.livre = true;
     });
   },
   // sem o pop-up (o HCN): descem os n elétrons e começa a montagem livre
@@ -12278,8 +12293,8 @@ const PontosLivre = {
       e.currentTarget.disabled = true;
       Espoca.botao(e.currentTarget).then(() => {
         this.ex = {};
-        const i = NARRACOES.findIndex(x => x.id === "dialogo16");
-        Player.terminou = false; Player.irPara(i, false, NARRACOES[i].entrada || 0);
+        const i = NARRACOES.findIndex(x => x.id === "dialogo16A");   // (refazer: de novo do primeiro exemplo)
+        Player.terminou = false; Player.irPara(i, false, 0);
       });
     });
     Palco.animar(c, [{ opacity: 0, transform: "translate(-50%, -46%) scale(.9)" }, { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }],
