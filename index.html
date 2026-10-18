@@ -1544,7 +1544,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v378 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v379 · 18/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11491,6 +11491,8 @@ const ModoLivre = {
     const lado = ["cima", "baixo", "esq", "dir"].find(x => lados.includes(x) && x !== ponta) || lados[0];
     if (this.lig[ponta] === 1) this.dupla(ponta, lado); else this.tripla(ponta, lado);
   },
+  // o desvio do meio do salto do par até a ligação: para o lado em que o par está (18px)
+  curva(lado) { return { cima: [0, -18], baixo: [0, 18], esq: [-18, 0], dir: [18, 0] }[lado] || [0, -18]; },
   // os pares de uma ponta, na ordem em que acendem: os de cima e de baixo (e dos lados) primeiro; o de fora por último
   paresOrdem(l) { const ls = Object.keys(this.pares[l] || {}); return [...["cima", "baixo", "esq", "dir"].filter(x => ls.includes(x) && x !== l), ...(ls.includes(l) ? [l] : [])]; },
   ciclarPar(l) {
@@ -11513,7 +11515,7 @@ const ModoLivre = {
     const l1 = this.$(`.c11l-svg .lig [data-l="${ponta}"]`), l2 = this.$(`.c11l-svg .lig [data-l="${ponta}2"]`);
     const par = [...Palco.el.querySelectorAll(`.c11l-svg .par [data-l="${ponta}"][data-lado="${lado}"]`)];
     par.forEach((c, j) => {
-      const tx = mx + (j ? 3.5 : -3.5) * -ny - +c.getAttribute("cx"), ty = my + (j ? 3.5 : -3.5) * nx - +c.getAttribute("cy"), cx = tx * .5, cy = Math.min(ty * .5, 0) - 18;
+      const tx = mx + (j ? 3.5 : -3.5) * -ny - +c.getAttribute("cx"), ty = my + (j ? 3.5 : -3.5) * nx - +c.getAttribute("cy"), cx = tx * .5 + this.curva(lado)[0], cy = ty * .5 + this.curva(lado)[1];   // (o salto curva para o lado do par: o da esquerda para a esquerda, o de cima para cima...)
       Palco.animar(c, Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u; return { transform: `translate(${a * cx + b * tx}px, ${a * cy + b * ty}px)`, offset: u }; }), { duracao: .7, easing: "ease-in-out" });
     });
     Cena74.somSalto(Palco.el);
@@ -11580,7 +11582,7 @@ const ModoLivre = {
     const { x1, y1, x2, y2, mx, my, nx, ny } = this.traco(ponta), off = 6.5;
     const lin = this.$(`.c11l-svg .lig [data-l="${ponta}"]`), par = [...Palco.el.querySelectorAll(`.c11l-svg .par [data-l="${ponta}"][data-lado="${lado}"]`)];
     par.forEach((c, j) => {
-      const tx = mx + nx * off + (j ? 3.5 : -3.5) * -ny - +c.getAttribute("cx"), ty = my + ny * off + (j ? 3.5 : -3.5) * nx - +c.getAttribute("cy"), cx = tx * .5, cy = Math.min(ty * .5, 0) - 18;
+      const tx = mx + nx * off + (j ? 3.5 : -3.5) * -ny - +c.getAttribute("cx"), ty = my + ny * off + (j ? 3.5 : -3.5) * nx - +c.getAttribute("cy"), cx = tx * .5 + this.curva(lado)[0], cy = ty * .5 + this.curva(lado)[1];   // (o salto curva para o lado do par: o da esquerda para a esquerda, o de cima para cima...)
       Palco.animar(c, Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u; return { transform: `translate(${a * cx + b * tx}px, ${a * cy + b * ty}px)`, offset: u }; }), { duracao: .7, easing: "ease-in-out" });
     });
     Cena74.somSalto(Palco.el);
