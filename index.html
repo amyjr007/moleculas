@@ -1552,7 +1552,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v389 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v390 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8870,6 +8870,10 @@ const Cena133 = {
       RC *= 1.2; RH *= 1.2; D = Math.max(D, RC + RH + 18);
       const lg = 2 * RC + n * (2 * RH + vao), z0 = W / 2 - lg / 2; XS = [z0 + RC, ...Array.from({ length: n }, (_, j) => z0 + 2 * RC + vao + RH + j * (2 * RH + vao))];
     }
+    // (celular em pé, H₂S: a montagem toda 34% maior — os átomos, as distâncias e o lugar, crescendo em volta do meio do palco —
+    //  e 42px mais alta: ajuste da professora, medido na molécula montada)
+    let esc = 1, mx = 0, my = 0;
+    if (this.mol === "livreH2S" && matchMedia("(orientation: portrait) and (max-width: 600px)").matches) { esc = 1.342; mx = W * -.003; my = H * -.064; RC *= esc; RH *= esc; D *= esc; }
     // (pontas diferentes entre si — os exemplos livres —: a fila com o raio de cada um; o H menor, os outros do tamanho do central)
     const lista = (this.CFG[this.mol] || {}).pontas;
     if (lista) {
@@ -8877,7 +8881,8 @@ const Cena133 = {
       let x = W / 2 - lg / 2; XS = rs.map(r => { const c = x + r; x += 2 * r + vao; return c; });
     }
     // (a amônia não tem lugar em cima: o desenho todo sobe meio passo, para ficar no meio do espaço)
-    return { W, H, cx: W / 2 + (sobe ? W * -.002 : 0) + ajX, cy: (topo + fundo) / 2 + (sobe ? H * -.124 : 0) - (this.LADOS.includes("baixo") && !this.LADOS.includes("cima") ? D / 2 : 0) + desce + ajY, desce, d: D, rC: RC, rH: RH, xs: XS, yFila };
+    const cx0 = W / 2 + (sobe ? W * -.002 : 0) + ajX, cy0 = (topo + fundo) / 2 + (sobe ? H * -.124 : 0) - (this.LADOS.includes("baixo") && !this.LADOS.includes("cima") ? D / 2 : 0) + desce + ajY;
+    return { W, H, cx: W / 2 + (cx0 - W / 2) * esc + mx, cy: H / 2 + (cy0 - H / 2) * esc + my, desce, d: D, rC: RC, rH: RH, xs: XS, yFila };
   },
   // o quanto o CSS aumenta o desenho das ligações (no celular em pé, 1,256; no tablet, nada): medido num desenho de teste
   escalaDesenho() {
