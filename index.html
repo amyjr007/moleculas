@@ -1547,7 +1547,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v383 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v384 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8810,7 +8810,7 @@ const Cena133 = {
          livreCCl4: { lados: ["meio", "cima", "dir", "baixo", "esq"], ponta: "Cl", pontas: ["Cl", "Cl", "Cl", "Cl"], primeiro: "C" },
          livreSiO2: { lados: ["meio", "esq", "dir"], ponta: "O", pontas: ["O", "O"], primeiro: "Si" },
          livrePH3: { lados: ["meio", "esq", "dir", "baixo"], ponta: "H", pontas: ["H", "H", "H"], primeiro: "P" },
-         livreO3: { lados: ["meio", "esq", "dir"], ponta: "O", pontas: ["O", "O"], primeiro: "O" } },   // (livreHCN: as pontas são diferentes)         // (so3: o S no meio, um O à esquerda, um embaixo e um à direita)
+         livreO3: { lados: ["meio", "esq", "dir"], ponta: "O", pontas: ["O", "O"], primeiro: "O", angulo: 117 } },   // (angulo: a geometria angular — o O₃, 117° entre as ligações)   // (livreHCN: as pontas são diferentes)         // (so3: o S no meio, um O à esquerda, um embaixo e um à direita)
   mol: "metano",
   // 6s: os 8 elétrons brilham por 1s, com o texto em cima da fileira (os dois somem juntos)
   total() {
@@ -8858,7 +8858,7 @@ const Cena133 = {
     if (linear && noTablet()) { ajX = W * .002; ajY = H * -.069; }
     if (this.mol === "livreNF3" && noTablet()) { ajX = W * .001; ajY = H * -.042; }   // (o NF₃: contornos e molécula 19px mais altos)
     // (os exemplos livres com pontas grandes — F, O, Cl —, em cruz: as ligações 15% mais compridas; as bolas quase se encostavam)
-    if (["livreNF3", "livreCH2O", "livreCCl4"].includes(this.mol)) D *= 1.15;
+    if (["livreNF3", "livreCH2O", "livreCCl4", "livreO3"].includes(this.mol)) D *= 1.15;
     // (o CH₂O: as bolas 15% maiores, na mesma proporção; a ligação cresce junto, para elas não se encostarem)
     if (this.mol === "livreCH2O") { RC *= 1.15; RH *= 1.15; D *= 1.15; }
     if (linear) {
@@ -8891,6 +8891,12 @@ const Cena133 = {
     const M = this.M = this.medidas();
     this.slots = {}; this.atomos = []; this.feito = false;
     const pos = { meio: [M.cx, M.cy], cima: [M.cx, M.cy - M.d], baixo: [M.cx, M.cy + M.d], esq: [M.cx - M.d, M.cy], dir: [M.cx + M.d, M.cy] };
+    // (angular — o O₃: as pontas descem, cada uma a metade do ângulo da vertical; o central sobe meio caminho, para o conjunto ficar centrado)
+    const ang = this.CFG[mol].angulo;
+    if (ang) {
+      const a = ang / 2 * Math.PI / 180, dx = M.d * Math.sin(a), dy = M.d * Math.cos(a);
+      pos.meio = [M.cx, M.cy - dy / 2]; pos.esq = [M.cx - dx, M.cy + dy / 2]; pos.dir = [M.cx + dx, M.cy + dy / 2];
+    }
     this.LADOS.forEach(l => {
       const [x, y] = pos[l], tam = 2 * (l === "meio" ? M.rC : M.rH) + 12;
       Palco.adicionar(`<div class="c133-slot" data-l="${l}" style="left:${x}px;top:${y}px;width:${tam}px;height:${tam}px"></div>`);
@@ -11585,7 +11591,8 @@ const ModoLivre = {
     this.marcarPar(null);   // (um par aceso apaga)
     if (this.pontas().some(p => !this.lig[p])) return this.aviso(Object.keys(this.at), "Faça as ligações primeiro");
     const lado = Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? "cima" : "baixo") : (dx > 0 ? "dir" : "esq");
-    const ladoLig = l === "meio" ? this.pontas() : [this.OPOSTO[l]];
+    // (angular: embaixo do central ficam as duas ligações — ali não cabe par)
+    const ladoLig = l === "meio" ? [...this.pontas(), ...(this.angular() ? ["baixo"] : [])] : [this.OPOSTO[l]];
     if (ladoLig.includes(lado)) return this.aviso([l], "Desse lado fica a ligação");
     if (this.pares[l][lado]) return this.aviso([l], "Só cabe um par em cada lado");
     const ks = this.livres().slice(-2); if (ks.length < 2) return this.aviso([l], "Acabaram os elétrons");
@@ -11790,6 +11797,7 @@ const ModoLivre = {
     if (fixo) { av.dataset.fixo = "1"; Palco.animar(av, [{ opacity: 0 }, { opacity: 1 }], { duracao: .3, fill: "none" }); return; }
     Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: Math.min(.3 / dur, .2) }, { opacity: 1, offset: 1 - Math.min(.4 / dur, .2) }, { opacity: 0 }], { duracao: dur, easing: "linear" }).finished.then(() => av.remove(), () => {});
   },
+  angular() { return !!(Cena133.CFG[this.cfg && this.cfg.montagem] || {}).angulo; },
   // o que uma ponta precisa ter no fim (ligação e pares): pelo tipo dela — ou, no O₃ (combos), pela ordem das pontas
   alvoDe(p) { const c = this.cfg.certo; if (c.combos) return c.combos[this.pontas().indexOf(p)] || c.combos[0]; return c.porPonta[this.at[p].sim]; },
   // ---- o martelo: a molécula se monta sozinha, passo a passo, cada passo escrito antes (1s) de acontecer ----
@@ -11875,7 +11883,7 @@ const ModoLivre = {
         await grupo(`Completando o octeto ${de(sim, n)}`, acoes, .7);
       }
       // 3b) os pares do átomo central (no NF₃, um; no H₂S, dois) — nos lados sem ligação
-      const livresMeio = ["cima", "baixo", "esq", "dir"].filter(x => !pontas.includes(x) && !this.pares.meio[x]);
+      const livresMeio = ["cima", "baixo", "esq", "dir"].filter(x => !pontas.includes(x) && !this.pares.meio[x] && !(x === "baixo" && this.angular()));
       const nMeio = Math.max(0, (c.paresMeio || 0) - Object.keys(this.pares.meio).length);
       await grupo(nMeio > 1 ? `Colocando os pares de elétrons no ${c.meio}` : `Colocando um par de elétrons no ${c.meio}`,
         livresMeio.slice(0, nMeio).map(lado => () => this.par("meio", ...V[lado])), .7);
