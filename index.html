@@ -1552,7 +1552,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v390 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v391 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8873,7 +8873,10 @@ const Cena133 = {
     // (celular em pé, H₂S: a montagem toda 34% maior — os átomos, as distâncias e o lugar, crescendo em volta do meio do palco —
     //  e 42px mais alta: ajuste da professora, medido na molécula montada)
     let esc = 1, mx = 0, my = 0;
-    if (this.mol === "livreH2S" && matchMedia("(orientation: portrait) and (max-width: 600px)").matches) { esc = 1.342; mx = W * -.003; my = H * -.064; RC *= esc; RH *= esc; D *= esc; }
+    const celular = matchMedia("(orientation: portrait) and (max-width: 600px)").matches;
+    if (celular && this.mol === "livreH2S") { esc = 1.342; mx = W * -.003; my = H * -.064; }
+    if (celular && this.mol === "livreNF3") { esc = 1.351; mx = W * .002; my = H * -.012; }   // (o NF₃: 35% maior e 8px mais alto)
+    if (esc !== 1) { RC *= esc; RH *= esc; D *= esc; }
     // (pontas diferentes entre si — os exemplos livres —: a fila com o raio de cada um; o H menor, os outros do tamanho do central)
     const lista = (this.CFG[this.mol] || {}).pontas;
     if (lista) {
