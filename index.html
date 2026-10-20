@@ -1552,7 +1552,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v396 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v397 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3576,7 +3576,7 @@ const NARRACOES = [
   // a molécula de CH₄ no meio (7s): aos 6s, "Qual a fórmula do metano?"; as opções no fim (o certo: CH₄)
   { id: "dialogo13_1", titulo: "Qual a fórmula do metano?", src: "audio/audio_moleculas_13.1.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 6,    acao: () => Cena13A.pergunta(false) }
+      { tempo: 1,    acao: () => Cena13A.pergunta(false) }                 // a pergunta começa a ser digitada (as opções no fim)
     ],
     aoFim: () => { ui.semPlay(true); Cena13A.opcoes(); } },
   // a resposta (29s): a fórmula sobe de 1s a 2s (e a molécula encolhe para o lado dela); 4A em cima do C (22,5s) e 1A em
