@@ -1552,7 +1552,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v388 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v389 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8954,6 +8954,7 @@ const Cena133 = {
       if (!pega.andou) {
         if (Math.hypot(e.clientX - pega.x0, e.clientY - pega.y0) < 6) return;
         pega.andou = true; this.escolher(null);
+        if (this.mol.startsWith("livre")) ModoLivre.registrar();   // (o "voltar" do modo livre: guarda onde os átomos estavam)
         a.el.classList.add("pegando");
         if (a.slot) { this.slots[a.slot].ocupante = null; a.slot = null; }   // tirou de um lugar: o lugar fica livre
         Vibra.tocar("pegar");
@@ -8983,6 +8984,7 @@ const Cena133 = {
     const a = this.selAt, s = this.slots[l];
     if (!a || this.feito || this.conferindo || this.bloqueado || Palco.pausado) return;
     if (s.ocupante) { if (s.ocupante === a) this.escolher(null); return; }
+    if (this.mol.startsWith("livre")) ModoLivre.registrar();
     if (a.slot) { this.slots[a.slot].ocupante = null; a.slot = null; }
     this.escolher(null);
     this.encaixar(a, l, true);
@@ -11310,6 +11312,7 @@ const ModoLivre = {
   },
   // descem os elétrons escolhidos; os átomos em cima e os lugares no meio; o "Checar"
   descer() {
+    this.hist = [];   // (o "voltar": a lista das ações, começa vazia)
     Palco.el.querySelectorAll(".c12-fila").forEach(f => f.remove());
     Cena12.fila(this.n);
     const passo = Math.min(.15, 3 / this.n);   // (muitos elétrons — o CCl₄, 32 — descem mais depressa)
@@ -11416,7 +11419,7 @@ const ModoLivre = {
     const [b, r, m] = this.$(".c11l-checar").querySelectorAll(".c10-bt");
     [b, r, m].forEach((x, i) => Palco.animar(x, [{ opacity: 0, transform: "translateY(12px)" }, { opacity: 1, transform: "none" }], { duracao: .4, atraso: i * .1, easing: "ease-out" }));
     b.addEventListener("click", () => { if (this.remontando) return; this.completo() ? this.checar() : this.ajuda(); });
-    r.addEventListener("click", () => this.refazer());
+    r.addEventListener("click", () => this.voltar());   // (o botão da seta: volta a última ação)
     m.addEventListener("click", () => this.martelo());
   },
   ICONES: {
@@ -11426,6 +11429,46 @@ const ModoLivre = {
     martelo: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5l7 7-2.5 2.5-7-7z"/><path d="M12.2 8.8L3.8 17.2a1.9 1.9 0 0 0 2.7 2.7l8.4-8.4"/></svg>`
   },
   // "Refazer": tudo sai e a montagem recomeça (os elétrons descem de novo, os átomos e os contornos voltam)
+  // ---- o "voltar": antes de cada ação, uma foto do estado; o botão da seta volta para a última foto — até os átomos voltarem
+  // para a fila. Antes dos átomos montados: onde cada átomo está. Depois: as ligações, os pares, o desenho e a fileira
+  registrar() {
+    if (this.remontando || this.restaurando || !this.ativo) return;
+    this.hist = this.hist || [];
+    if (!this.at) { this.hist.push({ tipo: "slots", m: (Cena133.atomos || []).map(a => a.slot) }); return; }
+    const s = this.$(".c11l-svg"), fila = Cena12.fila();
+    this.hist.push({ tipo: "mol", lig: { ...this.lig }, pares: JSON.parse(JSON.stringify(this.pares)),
+      ligHtml: s.querySelector(".lig").innerHTML, parHtml: s.querySelector(".par").innerHTML,
+      fila: [...fila.children].map(e => e.style.visibility), at: JSON.parse(JSON.stringify(this.at)) });
+    this.ultima = performance.now();
+  },
+  async voltar() {
+    if (this.remontando || this.restaurando || !this.hist || !this.hist.length) { Vibra.tocar("toqueErrado"); return; }
+    if (performance.now() - (this.ultima || 0) < 900) return;   // (espera a ação de agora terminar — o voo dos elétrons)
+    const f = this.hist.pop(), espera = s => Palco.animar(Palco.el, [{}, {}], { duracao: s, fill: "none" }).finished.catch(() => {});
+    this.restaurando = true; this.marcarPar(null); if (this.sel) this.selecionar(null);
+    Vibra.tocar("toqueEletron");
+    try {
+      if (f.tipo === "mol") {
+        const s = this.$(".c11l-svg"); if (!s) return;
+        this.lig = f.lig; this.pares = f.pares;
+        s.querySelector(".lig").innerHTML = f.ligHtml; s.querySelector(".par").innerHTML = f.parHtml;
+        const fila = Cena12.fila(); [...fila.children].forEach((e, k) => { e.style.visibility = f.fila[k] || ""; e.style.opacity = ""; });
+        return;
+      }
+      // os átomos de volta aos lugares de antes (se a molécula já estava montada, ela se desfaz e as bolas voltam)
+      if (this.at) {
+        Palco.el.querySelectorAll(".c11l-svg, .c11l-toques, .c133-at, .c133-slot, .c12-voo").forEach(e => e.remove());
+        this.at = null; Cena133.feito = false; Cena133.conferindo = false;
+        [...Cena12.fila().children].forEach(e => { e.style.visibility = ""; e.style.opacity = ""; });
+        Cena133.comecar(this.cfg.montagem); await espera(.35); Cena133.hidrogenios(); await espera(.15 + 120 * Cena133.LADOS.length / 1000);
+      }
+      const at = Cena133.atomos;
+      at.forEach(a => { if (a.slot) { Cena133.slots[a.slot].ocupante = null; a.slot = null; } });
+      at.forEach((a, k) => { const l = f.m[k]; if (l && Cena133.slots[l]) { Cena133.slots[l].ocupante = a; a.slot = l; Cena133.pos(a, [Cena133.slots[l].x, Cena133.slots[l].y]); } else Cena133.pos(a, a.origem); });
+    } finally {
+      this.restaurando = false; this.conferirBotao();
+    }
+  },
   refazer() {
     if (this.remontando) return;
     const mol = this.mol, n = this.n; if (!mol) return;
@@ -11531,6 +11574,7 @@ const ModoLivre = {
   // a ligação puxada: o traço fica no lugar na hora e os dois elétrons somem da fileira ao mesmo tempo (sem o voo)
   ligarJa(ponta) {
     const ks = this.livres().slice(-2); if (ks.length < 2) return this.aviso([ponta, "meio"], "Acabaram os elétrons");
+    this.registrar();
     this.lig[ponta] = 1;
     const fila = Cena12.fila();
     // (style.opacity "0" já tira os dois da conta dos livres; a animação os apaga encolhendo, e no fim ficam escondidos)
@@ -11610,6 +11654,7 @@ const ModoLivre = {
   },
   // a tripla (o HCN): mais um par da ponta vai para dentro da ligação; os dois traços se afastam e o novo fica no meio
   tripla(ponta, lado) {
+    this.registrar();
     this.lig[ponta] = 3; delete this.pares[ponta][lado];
     const { x1, y1, x2, y2, mx, my, nx, ny } = this.traco(ponta), off = 6.5 * 1.5;
     const l1 = this.$(`.c11l-svg .lig [data-l="${ponta}"]`), l2 = this.$(`.c11l-svg .lig [data-l="${ponta}2"]`);
@@ -11648,6 +11693,7 @@ const ModoLivre = {
   // a ligação simples: dois elétrons da fileira voam para o meio da ligação e viram o traço
   ligar(ponta) {
     const ks = this.livres().slice(-2); if (ks.length < 2) return this.aviso([ponta, "meio"], "Acabaram os elétrons");
+    this.registrar();
     this.lig[ponta] = 1;
     const { x1, y1, x2, y2, mx, my, nx, ny } = this.traco(ponta);
     ks.forEach(k => { Cena12.fila().children[k].style.visibility = "hidden"; });
@@ -11672,6 +11718,7 @@ const ModoLivre = {
     if (ladoLig.includes(lado)) return this.aviso([l], "Desse lado fica a ligação");
     if (this.pares[l][lado]) return this.aviso([l], "Só cabe um par em cada lado");
     const ks = this.livres().slice(-2); if (ks.length < 2) return this.aviso([l], "Acabaram os elétrons");
+    this.registrar();
     this.pares[l][lado] = 1;
     ks.forEach(k => { Cena12.fila().children[k].style.visibility = "hidden"; });
     ks.forEach((k, j) => { const p = this.lugar(l, lado, j); this.voar(k, p, j * .08, () => {
@@ -11679,6 +11726,7 @@ const ModoLivre = {
   },
   // a dupla: o par da ponta vai, numa curva, para dentro da ligação e vira o segundo traço
   dupla(ponta, lado) {
+    this.registrar();
     this.lig[ponta] = 2; delete this.pares[ponta][lado];
     const { x1, y1, x2, y2, mx, my, nx, ny } = this.traco(ponta), off = 6.5;
     const lin = this.$(`.c11l-svg .lig [data-l="${ponta}"]`), par = [...Palco.el.querySelectorAll(`.c11l-svg .par [data-l="${ponta}"][data-lado="${lado}"]`)];
@@ -11980,7 +12028,7 @@ const ModoLivre = {
       }
       this.legenda("Pronto! Agora é só confirmar", "#6EE7A0", 2.4);
     } finally {
-      this.remontando = false; Cena133.bloqueado = false;
+      this.remontando = false; Cena133.bloqueado = false; this.hist = [];   // (depois do martelo, o "voltar" recomeça dali)
       this.relogio(false);
       this.conferirBotao();
     }
