@@ -1560,7 +1560,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v408 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v409 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11651,7 +11651,7 @@ const ModoLivre = {
       at.forEach(a => { if (a.slot) { Cena133.slots[a.slot].ocupante = null; a.slot = null; } });
       at.forEach((a, k) => { const l = f.m[k]; if (l && Cena133.slots[l]) { Cena133.slots[l].ocupante = a; a.slot = l; Cena133.pos(a, [Cena133.slots[l].x, Cena133.slots[l].y]); } else Cena133.pos(a, a.origem); });
     } finally {
-      this.restaurando = false; this.conferirBotao();
+      this.restaurando = false; this.conferirBotao();   // (e o tremor de quem voltou a ficar instável)
     }
   },
   refazer() {
@@ -11687,6 +11687,7 @@ const ModoLivre = {
     tq.addEventListener("pointermove", e => this.arrasta(e));
     ["pointerup", "pointercancel"].forEach(ev => tq.addEventListener(ev, e => this.solta(e)));
     const ch = this.$(".c11l-checar"); if (ch) ch.style.zIndex = "6";
+    this.instaveis();   // (montada, todos ainda tremem: ninguém tem o octeto)
     // (a nota dos exemplos livres: o esqueleto montado com o central errado desconta; na remontagem do martelo, não)
     if (this.cfg && this.cfg.semPop && !this.remontando && this.cfg.certo && this.at.meio.sim !== this.cfg.certo.meio) PontosLivre.tira("esq");   // (o "Checar" por cima da camada dos toques)
   },
@@ -12115,7 +12116,19 @@ const ModoLivre = {
     }
   },
   // (os toques mudam o estado: o botão é conferido quando as animações deles acabam)
-  conferirBotao() { Palco.animar(Palco.el, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => this.atualizarBotao(), () => {}); },
+  conferirBotao() {
+    this.instaveis();
+    Palco.animar(Palco.el, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => { this.atualizarBotao(); this.instaveis(); }, () => {});
+  },
+  // os exemplos livres: cada átomo da molécula montada treme enquanto não tem o dueto (o H, 2 elétrons) ou o octeto (os outros, 8)
+  instaveis() {
+    if (!this.at || !this.cfg || !this.cfg.semPop) return;
+    Object.keys(this.at).forEach(l => {
+      const g = this.$(`.c11l-svg .at [data-l="${l}"]`); if (!g) return;
+      const cheio = this.eletrons(l) >= (this.at[l].sim === "H" ? 2 : 8);
+      g.classList.toggle("c112-inst", !cheio);
+    });
+  },
   // "Ajuda": a dica do próximo passo, em verde, embaixo dos átomos (sem tremer nada)
   ajuda() {
     // (cada dica com a sua cor: celeste, âmbar, verde e lilás — uma para cada etapa)
