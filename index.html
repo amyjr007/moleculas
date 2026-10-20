@@ -550,6 +550,9 @@
   .c11l-checar .c11l-ic svg { width: 24px; height: 24px; }
   .c11l-checar .c11l-ic.c11l-ok { background: #3DBE7A; color: #fff; box-shadow: 0 0 16px rgba(110,231,160,.6); }
   .c11l-dica { translate: 0 -50%; }
+  /* a ligação puxada com o dedo (H₂S): tracejada, celeste; vira branca e cheia quando está em cima de um átomo que pode receber */
+  .c11l-svg .c11l-puxa { stroke: #A3DBF7; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 7 7; opacity: .85; transition: x2 .08s, y2 .08s; }
+  .c11l-svg .c11l-puxa.pronta { stroke: #fff; stroke-dasharray: none; opacity: 1; filter: drop-shadow(0 0 4px rgba(163,219,247,.9)); }
   /* 17.1: a despedida — a imagem final ocupando o palco (inteira) e o "Tchau!" por cima */
   .c17-email { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6; display: flex; align-items: center; gap: 10px;
     max-width: calc(100% - 32px); padding: 12px 18px; border-radius: 14px; border: 2px solid rgba(163,219,247,.5); background: rgba(20,33,52,.85);
@@ -1547,7 +1550,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v384 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v385 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11448,7 +11451,10 @@ const ModoLivre = {
     });
     Palco.el.querySelectorAll(".c133-at, .c133-slot").forEach(el => Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => el.remove(), () => {}));
     Palco.adicionar(`<div class="c84-toques c11l-toques" aria-label="Toque num átomo e depois em outro para ligar; depois, em volta dos átomos para colocar os pares"></div>`);
-    this.$(".c11l-toques").addEventListener("pointerdown", e => this.toque(e));
+    const tq = this.$(".c11l-toques");
+    tq.addEventListener("pointerdown", e => this.baixa(e));
+    tq.addEventListener("pointermove", e => this.arrasta(e));
+    ["pointerup", "pointercancel"].forEach(ev => tq.addEventListener(ev, e => this.solta(e)));
     const ch = this.$(".c11l-checar"); if (ch) ch.style.zIndex = "6";
     // (a nota dos exemplos livres: o esqueleto montado com o central errado desconta; na remontagem do martelo, não)
     if (this.cfg && this.cfg.semPop && !this.remontando && this.cfg.certo && this.at.meio.sim !== this.cfg.certo.meio) PontosLivre.tira("esq");   // (o "Checar" por cima da camada dos toques)
@@ -11486,6 +11492,59 @@ const ModoLivre = {
     }
     if (d0 <= a.R * 1.15) return this.tocouAtomo(alvo);
     if (d0 <= a.R * 3.2) return this.par(alvo, x - a.x, y - a.y);
+  },
+  // ---- a ligação puxada com o dedo (por enquanto, só no H₂S): enquanto faltam ligações simples, segurar um átomo e arrastar
+  // estica uma ligação que acompanha o dedo; solta em cima de outro átomo, ela se forma (os elétrons sobem para ela).
+  // Um toque sem arrastar continua sendo um toque (ModoLivre.toque)
+  podeArrastar() { return this.mol === "h2s" && !!this.at && this.pontas().some(p => !this.lig[p]); },
+  atomoEm(x, y, folga = 1.15) {
+    let alvo = null, d0 = Infinity;
+    Object.entries(this.at).forEach(([l, a]) => { const d = Math.hypot(x - a.x, y - a.y); if (d <= a.R * folga && d < d0) { d0 = d; alvo = l; } });
+    return alvo;
+  },
+  baixa(e) {
+    if (Palco.pausado || this.remontando) return;
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    const l = this.podeArrastar() ? this.atomoEm(x, y) : null;
+    if (!l) return this.toque(e);
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+    this.arr = { de: l, x0: x, y0: y, e0: e, linha: null };
+  },
+  arrasta(e) {
+    const r = this.arr; if (!r) return;
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    if (!r.linha) {
+      if (Math.hypot(x - r.x0, y - r.y0) < 8) return;
+      if (this.sel) this.selecionar(null);
+      const a = this.at[r.de];
+      this.$(".c11l-svg .lig").insertAdjacentHTML("beforeend", `<line class="c11l-puxa" x1="${a.x}" y1="${a.y}" x2="${x}" y2="${y}"/>`);
+      r.linha = this.$(".c11l-svg .lig .c11l-puxa");
+      Vibra.tocar("pegar");
+    }
+    // a ponta da ligação acompanha o dedo; perto de um átomo que pode receber, ela gruda no centro dele
+    const alvo = this.atomoEm(x, y, 1.3), ok = alvo && alvo !== r.de && this.ligavel(r.de, alvo);
+    const [px, py] = ok ? [this.at[alvo].x, this.at[alvo].y] : [x, y];
+    r.linha.setAttribute("x2", px); r.linha.setAttribute("y2", py); r.linha.classList.toggle("pronta", !!ok);
+  },
+  // os dois átomos podem receber uma ligação simples (um deles o central, a ponta ainda sem ligação)
+  ligavel(a, b) { if (a !== "meio" && b !== "meio") return false; const p = a === "meio" ? b : a; return !this.lig[p]; },
+  solta(e) {
+    const r = this.arr; if (!r) return; this.arr = null;
+    if (!r.linha) return this.toque(r.e0);   // (não arrastou: é um toque)
+    const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    const alvo = this.atomoEm(x, y, 1.3);
+    const linha = r.linha;
+    if (alvo && alvo !== r.de && this.ligavel(r.de, alvo)) {
+      linha.remove();
+      this.ligar(r.de === "meio" ? alvo : r.de);   // (os dois elétrons voam da fileira e viram o traço)
+      this.conferirBotao();
+      return;
+    }
+    // soltou longe (ou num par que não pode ligar): a ligação volta, encolhendo para o átomo
+    const a = this.at[r.de];
+    Palco.animar(linha, [{ opacity: 1 }, { opacity: 0 }], { duracao: .25 }).finished.then(() => linha.remove(), () => {});
+    linha.setAttribute("x2", a.x); linha.setAttribute("y2", a.y);
+    if (alvo && alvo !== r.de) this.aviso([r.de, alvo], alvo !== "meio" && r.de !== "meio" ? "Ligue ao átomo do meio" : "Essa ligação já existe");
   },
   // toque num átomo: o primeiro seleciona; o segundo liga os dois (sempre com o do meio) ou faz a dupla
   tocouAtomo(l) {
