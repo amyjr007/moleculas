@@ -481,6 +481,8 @@
   /* áudio 7.6: o círculo tracejado do octeto em volta de um átomo, com "8 elétrons" escrito em cima */
   .c76-octeto { position: absolute; z-index: 3; pointer-events: none; border-radius: 50%; translate: -50% -50%;
     border: 2.5px dashed rgba(255,194,75,.9); box-shadow: 0 0 18px rgba(255,194,75,.25), inset 0 0 18px rgba(255,194,75,.12); }
+  .c135-txt { position: absolute; z-index: 3; margin: 0; translate: -50% -100%; pointer-events: none; white-space: nowrap;
+    font-family: var(--display); font-weight: 800; font-size: clamp(1rem, 2vmin + .5rem, 1.6rem); color: var(--ambar); text-shadow: 0 0 16px rgba(255,194,75,.55); }
   .c76-octeto span { position: absolute; left: 50%; bottom: 100%; translate: -50% -.35em; white-space: nowrap;
     font-family: var(--display); font-weight: 800; font-size: clamp(1rem, 2vmin + .5rem, 1.6rem); color: var(--ambar); text-shadow: 0 0 16px rgba(255,194,75,.55); }
   /* áudio 7.7: os pares em destaque mudam de cor — não ligantes (isolados) em lilás, ligante em verde —
@@ -809,6 +811,9 @@
        em 3D, o "Entendi" fica no lugar de sempre). (A montagem das bolas já conta com esse deslocamento do desenho.) */
     #conteudoPalco > .c121-esqueleto.metano { translate: calc(var(--pw, 965px) * -.001) calc(var(--ph, 448px) * -.032); }
     #conteudoPalco:has(> .c121-esqueleto.metano):not(:has(> .c137-3d)) > .c11-passo-bt.ne .c10-bt { translate: calc(var(--pw, 965px) * .109) calc(var(--ph, 448px) * .042); scale: .677; }
+    /* 13.7: o metano em 3D — o "Entendi" um pouco mais baixo e a dica "Você pode girar a molécula" mais alta e à direita */
+    #conteudoPalco:has(> .c137-3d) > .c11-passo-bt.ne .c10-bt { translate: calc(var(--pw, 965px) * -.004) calc(var(--ph, 448px) * .022); }
+    #conteudoPalco > .c137-3d .c3d-dica { translate: calc(var(--pw, 965px) * .135) calc(var(--ph, 448px) * -.386); }
     /* 12.9: a amônia em 3D um pouco mais alta, a dica "Você pode girar a molécula" mais alta e o "Entendi" mais baixo */
     #conteudoPalco .c113-3d.amonia canvas { translate: calc(var(--pw, 965px) * -.002) calc(var(--ph, 448px) * -.024); }
     #conteudoPalco .c113-3d.amonia .c3d-dica { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * -.032); }
@@ -1555,7 +1560,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v406 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v407 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11193,21 +11198,24 @@ const Cena148 = {
   }
 };
 
-/* ---------- 13.5: o círculo tracejado em volta da molécula toda, com um texto em cima (a mesma cor, em fade) ---------- */
+/* ---------- 13.5: um círculo tracejado em volta de cada átomo (os cinco do metano), com um texto em cima (a mesma cor, em fade) ---------- */
 const Cena135 = {
   circulo(texto) {
-    const velho = Palco.el.querySelector(".c135-circ");
-    if (!texto) { if (velho) Palco.animar(velho, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => velho.remove(), () => {}); return; }
-    if (velho) return;
+    const velhos = [...Palco.el.querySelectorAll(".c135-circ, .c135-txt")];
+    if (!texto) { velhos.forEach(v => Palco.animar(v, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5 }).finished.then(() => v.remove(), () => {})); return; }
+    if (velhos.length) return;
     const s = Palco.el.querySelector(".c121-esqueleto"); if (!s) return;
-    const P = Palco.el.getBoundingClientRect(), r = [...s.querySelectorAll(".at circle")].map(c => c.getBoundingClientRect());
+    const P = Palco.el.getBoundingClientRect(), r = [...s.querySelectorAll(".at circle:not(.c112-halo):not(.c112-sel)")].map(c => c.getBoundingClientRect());
     if (!r.length) return;
-    const x0 = Math.min(...r.map(b => b.left)), x1 = Math.max(...r.map(b => b.right)), y0 = Math.min(...r.map(b => b.top)), y1 = Math.max(...r.map(b => b.bottom));
-    const cx = (x0 + x1) / 2 - P.left, cy = (y0 + y1) / 2 - P.top, d = Math.max(x1 - x0, y1 - y0) * 1.08 + 16;
-    Palco.adicionar(`<div class="c76-octeto c135-circ" style="left:${cx}px;top:${cy}px;width:${d}px;height:${d}px"><span>${texto}</span></div>`);
-    const c = Palco.el.lastElementChild;
-    Palco.animar(c, [{ opacity: 0, scale: .85 }, { opacity: 1, scale: 1 }], { duracao: .6, easing: "ease-out" });
-    Palco.animar(c.querySelector("span"), [{ opacity: 0 }, { opacity: 0, offset: .3 }, { opacity: 1 }], { duracao: 1.2, easing: "ease-out" });
+    r.forEach((b, k) => {
+      const cx = b.left + b.width / 2 - P.left, cy = b.top + b.height / 2 - P.top, d = b.width + 18;
+      Palco.adicionar(`<div class="c76-octeto c135-circ" style="left:${cx}px;top:${cy}px;width:${d}px;height:${d}px"></div>`);
+      Palco.animar(Palco.el.lastElementChild, [{ opacity: 0, scale: .85 }, { opacity: 1, scale: 1 }], { duracao: .6, atraso: k * .08, easing: "ease-out" });
+    });
+    // o texto, em cima do átomo mais alto
+    const topo = Math.min(...r.map(b => b.top)) - P.top - 9, cx = (Math.min(...r.map(b => b.left)) + Math.max(...r.map(b => b.right))) / 2 - P.left;
+    Palco.adicionar(`<p class="c135-txt" style="left:${cx}px;top:${topo}px">${texto}</p>`);
+    Palco.animar(Palco.el.lastElementChild, [{ opacity: 0 }, { opacity: 0, offset: .3 }, { opacity: 1 }], { duracao: 1.2, easing: "ease-out" });
     Cena74.somEletron();
   }
 };
