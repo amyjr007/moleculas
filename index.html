@@ -1552,7 +1552,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v392 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v393 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11613,6 +11613,29 @@ const ModoLivre = {
       { strokeWidth: 5, stroke: "#fff", filter: "drop-shadow(0 0 0 rgba(255,194,75,0))" }], { duracao: .7, easing: "ease-out" });
     Cena74.somSalto(Palco.el);
     Vibra.tocar("toqueEletron");
+    // depois do estouro, o par aparece dentro da ligação (transparente) indo e vindo por 2s, e some
+    const linha = this.$(".c11l-svg .lig").lastElementChild;
+    Palco.animar(linha, [{}, {}], { duracao: .55, fill: "none" }).finished.then(() => { if (linha.isConnected) this.parVaiVem(linha, 2); }, () => {});
+  },
+  // o traço fica transparente e o par vai e vem dentro dele (cada elétron sai de uma ponta até o meio e volta), entrando e
+  // saindo em fade; depois de dur segundos o traço volta ao normal (o mesmo efeito das moléculas de antes)
+  parVaiVem(linha, dur) {
+    const s = this.$(".c11l-svg"); if (!s) return;
+    const x1 = +linha.getAttribute("x1"), y1 = +linha.getAttribute("y1"), x2 = +linha.getAttribute("x2"), y2 = +linha.getAttribute("y2"), mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const ent = Math.min(.3 / dur, .2), idas = Math.max(1, Math.round(dur / 1.2));
+    Palco.animar(linha, [{ opacity: 1 }, { opacity: .22, offset: ent }, { opacity: .22, offset: 1 - ent }, { opacity: 1 }], { duracao: dur, fill: "none" });
+    s.insertAdjacentHTML("beforeend", `<g class="vai"></g>`);
+    const g = s.lastElementChild;
+    [[x1, y1], [x2, y2]].forEach(([xa, ya]) => {
+      g.insertAdjacentHTML("beforeend", `<g><circle cx="${mx}" cy="${my}" r="10" fill="#A3DBF7" opacity=".38" style="filter:blur(2.5px)"/>`
+        + `<circle cx="${mx}" cy="${my}" r="4.6" fill="#E6F6FF" style="filter:drop-shadow(0 0 4px rgba(163,219,247,.95))"/></g>`);
+      const c = g.lastElementChild, ini = `translate(${xa - mx}px, ${ya - my}px)`, q = [{ transform: ini, opacity: 0, offset: 0 }, { opacity: 1, offset: .12 }];
+      for (let i = 0; i < idas; i++) q.push({ transform: "translate(0px, 0px)", offset: (i + .5) / idas }, { transform: ini, offset: (i + 1) / idas });
+      q.splice(q.length - 1, 0, { opacity: 1, offset: .88 });
+      q[q.length - 1].opacity = 0;
+      Palco.animar(c, q, { duracao: dur, easing: "ease-in-out" });
+    });
+    Palco.animar(g, [{ opacity: 1 }, { opacity: 1 }], { duracao: dur, fill: "none" }).finished.then(() => g.remove(), () => {});
   },
   // os dois átomos podem receber uma ligação simples (um deles o central, a ponta ainda sem ligação)
   ligavel(a, b) { if (a !== "meio" && b !== "meio") return false; const p = a === "meio" ? b : a; return !this.lig[p]; },
