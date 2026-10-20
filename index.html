@@ -1560,7 +1560,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v407 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v408 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -4983,10 +4983,8 @@ const Quantico = {
             at.position.x += jx * forca / pxUn; at.position.y -= jy * forca / pxUn;
             estado.tremor[k] = [jx * forca, jy * forca];
             const halo = u.halos[i], brilho = .5 - .5 * Math.cos(2 * Math.PI * t / 1.1);   // pulsa em 1,1s
-            if (halo) {
-              halo.visible = inst > .01;
-              halo.material.opacity = inst * (.3 + .45 * brilho) * s.opac;
-            }
+            // (o brilho em volta dos átomos separados saiu, a pedido da professora: eles só tremem)
+            if (halo) { halo.visible = false; void brilho; }
           });
         }
         if (u.acao) {
