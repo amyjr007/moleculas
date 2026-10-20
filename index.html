@@ -653,6 +653,8 @@
   .c133-at.sel { outline: 3px solid #6EE7A0; outline-offset: 3px; filter: drop-shadow(0 0 10px rgba(110,231,160,.85)); }   /* escolhido pelo toque */
   .c133-at.F { background: radial-gradient(circle at 35% 30%, #DDFBA8, #A6E25A 55%, #5E8F22); color: #13240A; border: 2px solid #4C7A18; }
   .c133-at.Cl { background: radial-gradient(circle at 35% 30%, #B9F5A8, #4FD13F 55%, #22801A); color: #0A1F07; border: 2px solid #1C6A14; font-size: .8em; }
+  .c133-at.Si { background: radial-gradient(circle at 35% 30%, #F1E4C6, #C9B48A 55%, #8A7448); color: #1B2330; border: 2px solid #6E5A30; font-size: .8em; }
+  .c133-at.P { background: radial-gradient(circle at 35% 30%, #FFD3A6, #FF9A3C 55%, #B8611A); color: #fff; border: 2px solid #8A4A10; }
   .c133-at.S { background: radial-gradient(circle at 35% 30%, #FFF0A0, #E8C93A 55%, #9C8016); color: #1B2330; border: 2px solid #7A6410; }
   .c133-at.H { background: radial-gradient(circle at 35% 30%, #FFFFFF, #E4EAF1 55%, #A9B4C2); color: #0A1322; border: 2px solid #7C8BA0; }
   .c133-at.instavel { animation: c75Treme .26s linear infinite, c133Halo 1.1s ease-in-out infinite; }
@@ -1545,7 +1547,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v382 · 18/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v383 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -8805,7 +8807,10 @@ const Cena133 = {
          livreH2S: { lados: ["meio", "esq", "dir"], ponta: "H", pontas: ["H", "H"], primeiro: "S" },
          livreCS2: { lados: ["meio", "esq", "dir"], ponta: "S", pontas: ["S", "S"], primeiro: "C" },
          livreCH2O: { lados: ["meio", "cima", "esq", "dir"], ponta: "H", pontas: ["O", "H", "H"], primeiro: "C" },
-         livreCCl4: { lados: ["meio", "cima", "dir", "baixo", "esq"], ponta: "Cl", pontas: ["Cl", "Cl", "Cl", "Cl"], primeiro: "C" } },   // (livreHCN: as pontas são diferentes)         // (so3: o S no meio, um O à esquerda, um embaixo e um à direita)
+         livreCCl4: { lados: ["meio", "cima", "dir", "baixo", "esq"], ponta: "Cl", pontas: ["Cl", "Cl", "Cl", "Cl"], primeiro: "C" },
+         livreSiO2: { lados: ["meio", "esq", "dir"], ponta: "O", pontas: ["O", "O"], primeiro: "Si" },
+         livrePH3: { lados: ["meio", "esq", "dir", "baixo"], ponta: "H", pontas: ["H", "H", "H"], primeiro: "P" },
+         livreO3: { lados: ["meio", "esq", "dir"], ponta: "O", pontas: ["O", "O"], primeiro: "O" } },   // (livreHCN: as pontas são diferentes)         // (so3: o S no meio, um O à esquerda, um embaixo e um à direita)
   mol: "metano",
   // 6s: os 8 elétrons brilham por 1s, com o texto em cima da fileira (os dois somem juntos)
   total() {
@@ -8849,7 +8854,7 @@ const Cena133 = {
     // (o HCN: as bolas 20% maiores, na mesma proporção entre elas; os contornos acompanham. No tablet e no Chromebook, os
     //  contornos — e a molécula montada neles — 31px mais altos e 2px à direita: ajuste da professora, alinhados entre si)
     let ajX = 0, ajY = 0;
-    const linear = ["livreHCN", "livreH2S", "livreCS2"].includes(this.mol);   // (os livres em linha: o HCN e os parecidos com ele)
+    const linear = ["livreHCN", "livreH2S", "livreCS2", "livreSiO2", "livreO3"].includes(this.mol);   // (os livres em linha: o HCN e os parecidos com ele)
     if (linear && noTablet()) { ajX = W * .002; ajY = H * -.069; }
     if (this.mol === "livreNF3" && noTablet()) { ajX = W * .001; ajY = H * -.042; }   // (o NF₃: contornos e molécula 19px mais altos)
     // (os exemplos livres com pontas grandes — F, O, Cl —, em cruz: as ligações 15% mais compridas; as bolas quase se encostavam)
@@ -8909,7 +8914,7 @@ const Cena133 = {
   },
   // um átomo (bola, instável) na fileira da direita, pronto para ser arrastado
   atomo(tipo, x, y, r) {
-    Palco.adicionar(`<div class="c133-at ${tipo} instavel" role="button" aria-label="Átomo de ${({ C: "carbono", H: "hidrogênio", O: "oxigênio", N: "nitrogênio", S: "enxofre", F: "flúor", Cl: "cloro" })[tipo]}: arraste até um dos lugares no centro"
+    Palco.adicionar(`<div class="c133-at ${tipo} instavel" role="button" aria-label="Átomo de ${({ C: "carbono", H: "hidrogênio", O: "oxigênio", N: "nitrogênio", S: "enxofre", F: "flúor", Cl: "cloro", Si: "silício", P: "fósforo" })[tipo]}: arraste até um dos lugares no centro"
       style="left:${x}px;top:${y}px;width:${2 * r}px;height:${2 * r}px;margin:${-r}px 0 0 ${-r}px;font-size:${r * .95}px">${tipo}</div>`);
     const el = Palco.el.lastElementChild, a = { el, tipo, origem: [x, y], slot: null };
     this.atomos.push(a);
@@ -9321,7 +9326,7 @@ const Cena13C = {
    aos 14s, "Qual dos elementos fica no centro?" (N). */
 const Cena12N = {
   $(sel) { return Palco.el.querySelector(sel); },
-  CORES: { N: "#8FA8FF", H: "#FFFFFF", C: "#AEB9CC", O: "#FF7A66", S: "#F2D24B", F: "#B9F06A", Cl: "#7BE36B" },
+  CORES: { N: "#8FA8FF", H: "#FFFFFF", C: "#AEB9CC", O: "#FF7A66", S: "#F2D24B", F: "#B9F06A", Cl: "#7BE36B", Si: "#D9C49A", P: "#FFB066" },
   // a família em cima de uma letra cresce com brilho e fica assim (ligar = false: volta) — 15.2
   realcarFam(l, ligar = true) {
     const f = this.$(`.c12-l[data-l="${l}"] .c12-fam`); if (!f || !!f.dataset.grande === ligar) return;
@@ -11226,7 +11231,18 @@ const ModoLivre = {
               pode: () => !ModoLivre.$(".c72-quiz"), certo: { n: 16, meio: "C", pontas: "O", lig: 2, paresMeio: 0, paresPonta: 2 } },
     // o HCN (16): sem o pop-up — o total já veio da pergunta do áudio 16; as pontas são diferentes (o H e o N): porPonta
     hcn:    { narr: "dialogo16", formula: "HCN", letra: k => k < 1 ? "H" : k < 5 ? "C" : "N", montagem: "livreHCN", semPop: true,
-              certo: { n: 10, meio: "C", porPonta: { H: { lig: 1, pares: 0 }, N: { lig: 3, pares: 1 } }, paresMeio: 0 } },
+              html: `<span class="c12-l" data-l="H">H</span><span class="c12-l" data-l="C">C</span><span class="c12-l" data-l="N">N</span>`, fams: [["H", "1A"], ["C", "4A"], ["N", "5A"]], opcoes: [8, 10, 12],
+              certo: { n: 10, meio: "C", pontas: ["H", "N"], porPonta: { H: { lig: 1, pares: 0 }, N: { lig: 3, pares: 1 } }, paresMeio: 0 } },
+    sio2:   { semPop: true, montagem: "livreSiO2", letra: k => k < 4 ? "Si" : "O",
+              html: `<span class="c12-l" data-l="Si">Si</span><span class="c12-l" data-l="O">O</span><sub class="c12-l" data-l="2">2</sub>`, fams: [["Si", "4A"], ["O", "6A"]], opcoes: [14, 16, 18],
+              certo: { n: 16, meio: "Si", pontas: ["O", "O"], porPonta: { O: { lig: 2, pares: 2 } }, paresMeio: 0 } },
+    ph3:    { semPop: true, montagem: "livrePH3", letra: k => k < 5 ? "P" : "H",
+              html: `<span class="c12-l" data-l="P">P</span><span class="c12-l" data-l="H">H</span><sub class="c12-l" data-l="3">3</sub>`, fams: [["P", "5A"], ["H", "1A"]], opcoes: [6, 8, 10],
+              certo: { n: 8, meio: "P", pontas: ["H", "H", "H"], porPonta: { H: { lig: 1, pares: 0 } }, paresMeio: 1 } },
+    // o O₃: as duas pontas são O, mas diferentes (uma com a dupla e 2 pares, a outra com a simples e 3 pares): combos
+    o3:     { semPop: true, montagem: "livreO3", letra: () => "O",
+              html: `<span class="c12-l" data-l="O">O</span><sub class="c12-l" data-l="3">3</sub>`, fams: [["O", "6A"]], opcoes: [16, 18, 20],
+              certo: { n: 18, meio: "O", pontas: ["O", "O"], porPonta: { O: { lig: 2, pares: 3 } }, combos: [{ lig: 2, pares: 2 }, { lig: 1, pares: 3 }], paresMeio: 1 } },
     // os exemplos livres seguintes (um depois do outro, depois do HCN): a fórmula (com as letras), as famílias, as opções do total
     nf3:    { semPop: true, montagem: "livreNF3", letra: k => k < 5 ? "N" : "F",
               html: `<span class="c12-l" data-l="N">N</span><span class="c12-l" data-l="F">F</span><sub class="c12-l" data-l="3">3</sub>`, fams: [["N", "5A"], ["F", "7A"]], opcoes: [24, 26, 28],
@@ -11245,8 +11261,8 @@ const ModoLivre = {
               certo: { n: 32, meio: "C", pontas: ["Cl", "Cl", "Cl", "Cl"], porPonta: { Cl: { lig: 1, pares: 3 } }, paresMeio: 0 } }
   },
   // a ordem dos exemplos livres; os elogios (revezando) e os sons de passagem
-  SEQ: ["h2s", "nf3", "ccl4", "cs2", "ch2o"],   // (a ordem; o HCN saiu)
-  TITULOS: { nf3: "A molécula de NF₃", h2s: "A molécula de H₂S", cs2: "A molécula de CS₂", ch2o: "A molécula de CH₂O", ccl4: "A molécula de CCl₄" },
+  SEQ: ["h2s", "nf3", "ccl4", "cs2", "hcn", "sio2", "ph3", "o3", "ch2o"],   // (a ordem)
+  TITULOS: { hcn: "A molécula de HCN", sio2: "A molécula de SiO₂", ph3: "A molécula de PH₃", o3: "A molécula de O₃", nf3: "A molécula de NF₃", h2s: "A molécula de H₂S", cs2: "A molécula de CS₂", ch2o: "A molécula de CH₂O", ccl4: "A molécula de CCl₄" },
   // pelo sumário: a tela do exemplo, direto (sem áudio — o Player fica no fim do 16)
   abrirExemplo(mol) {
     const i = NARRACOES.findIndex(n => n.id === "dialogo16A");
@@ -11295,7 +11311,8 @@ const ModoLivre = {
   },
   OPOSTO: { esq: "dir", dir: "esq", cima: "baixo", baixo: "cima" },
   COR: { O: ["#FF5A4E", "#8E1E16", "#fff"], N: ["#4F74F7", "#1B2F86", "#fff"], C: ["#3B414C", "#12161C", "#fff"], H: ["#F4F7FB", "#7C8BA0", "#0A1322"],
-         S: ["#E8C93A", "#7A6410", "#1B2330"], F: ["#A6E25A", "#4C7A18", "#13240A"], Cl: ["#4FD13F", "#1C6A14", "#0A1F07"] },
+         S: ["#E8C93A", "#7A6410", "#1B2330"], F: ["#A6E25A", "#4C7A18", "#13240A"], Cl: ["#4FD13F", "#1C6A14", "#0A1F07"],
+         Si: ["#C9B48A", "#6E5A30", "#1B2330"], P: ["#FF9A3C", "#8A4A10", "#fff"] },
   // fim do 11.1B (água) e do 12.2 (amônia): segurar a fórmula por 2s abre o modo livre (enquanto o dedo segura, ela vai acendendo)
   armar(mol = "agua") {
     // (o modo livre só vale a partir do HCN — que abre sozinho, depois da pergunta: segurar a fórmula da água, da amônia,
@@ -11597,6 +11614,11 @@ const ModoLivre = {
   certa() {
     const c = this.cfg.certo; if (!this.at || this.n !== c.n || this.at.meio.sim !== c.meio) return false;
     // (pontas diferentes, o HCN: cada uma com as suas ligações e os seus pares; e uma de cada tipo)
+    // (o O₃: as pontas, com as ligações e os pares de cada uma, têm de bater com os combos, em qualquer ordem)
+    if (c.combos) {
+      const tem = this.pontas().map(l => `${this.at[l].sim}${this.lig[l]}-${Object.keys(this.pares[l]).length}`).sort().join(), quer = c.combos.map((x, k) => `${c.pontas[k]}${x.lig}-${x.pares}`).sort().join();
+      return tem === quer && Object.keys(this.pares.meio).length === c.paresMeio && this.livres().length === 0;
+    }
     if (c.porPonta) {
       const sims = this.pontas().map(l => this.at[l].sim).sort().join(), esperado = (c.pontas || Object.keys(c.porPonta)).slice().sort().join();   // (pontas: a lista, quando há repetidas)
       return sims === esperado && this.pontas().every(l => { const p = c.porPonta[this.at[l].sim]; return this.lig[l] === p.lig && Object.keys(this.pares[l]).length === p.pares; })
@@ -11734,7 +11756,7 @@ const ModoLivre = {
   ajuda() {
     // (cada dica com a sua cor: celeste, âmbar, verde e lilás — uma para cada etapa)
     // (antes das etapas, os erros: o central errado, o H com mais de um par, algum átomo com mais de 8 elétrons)
-    const c = this.cfg.certo, nomes = { C: "o C (carbono)", N: "o N (nitrogênio)", O: "o O (oxigênio)", H: "o H (hidrogênio)", S: "o S (enxofre)", F: "o F (flúor)", Cl: "o Cl (cloro)" };
+    const c = this.cfg.certo, nomes = { C: "o C (carbono)", N: "o N (nitrogênio)", O: "o O (oxigênio)", H: "o H (hidrogênio)", S: "o S (enxofre)", F: "o F (flúor)", Cl: "o Cl (cloro)", Si: "o Si (silício)", P: "o P (fósforo)" };
     const hErrado = this.at && Object.keys(this.at).some(l => this.at[l].sim === "H" && this.eletrons(l) > 2);
     const mais8 = this.at && Object.keys(this.at).some(l => this.at[l].sim !== "H" && this.eletrons(l) > 8);
     const [msg, cor] = !this.at ? ["Leve os átomos até os contornos (o central fica no meio)", "#A3DBF7"]
@@ -11768,6 +11790,8 @@ const ModoLivre = {
     if (fixo) { av.dataset.fixo = "1"; Palco.animar(av, [{ opacity: 0 }, { opacity: 1 }], { duracao: .3, fill: "none" }); return; }
     Palco.animar(av, [{ opacity: 0 }, { opacity: 1, offset: Math.min(.3 / dur, .2) }, { opacity: 1, offset: 1 - Math.min(.4 / dur, .2) }, { opacity: 0 }], { duracao: dur, easing: "linear" }).finished.then(() => av.remove(), () => {});
   },
+  // o que uma ponta precisa ter no fim (ligação e pares): pelo tipo dela — ou, no O₃ (combos), pela ordem das pontas
+  alvoDe(p) { const c = this.cfg.certo; if (c.combos) return c.combos[this.pontas().indexOf(p)] || c.combos[0]; return c.porPonta[this.at[p].sim]; },
   // ---- o martelo: a molécula se monta sozinha, passo a passo, cada passo escrito antes (1s) de acontecer ----
   // se o que já está feito está certo, ela continua dali; se não, ela se desmonta toda (o contrário da montagem) e se monta do zero
   NOMES: { C: "C", H: "H", N: "N", O: "O", S: "S" },
@@ -11843,7 +11867,7 @@ const ModoLivre = {
       for (const sim of sims) {
         const acoes = [];
         pontas.filter(p => this.at[p].sim === sim).forEach(p => {
-          const alvo = c.porPonta[sim], precisa = alvo.pares + (alvo.lig - Math.max(this.lig[p], 1));
+          const alvo = this.alvoDe(p), precisa = alvo.pares + (alvo.lig - Math.max(this.lig[p], 1));
           const ordem = [...["cima", "baixo", "esq", "dir"].filter(x => x !== p), p].filter(x => x !== this.OPOSTO[p] && !this.pares[p][x]);   // (o de fora por último)
           ordem.slice(0, Math.max(0, precisa - Object.keys(this.pares[p]).length)).forEach(lado => acoes.push(() => this.par(p, ...V[lado])));
         });
@@ -11859,13 +11883,13 @@ const ModoLivre = {
       for (const tipo of [2, 3]) {
         const acoes = [];
         pontas.forEach(p => {
-          const alvo = c.porPonta[this.at[p].sim];
+          const alvo = this.alvoDe(p);
           if (alvo.lig >= tipo && this.lig[p] < tipo) acoes.push(() => {
             const lados = Object.keys(this.pares[p]), lado = ["cima", "baixo", "esq", "dir"].find(x => lados.includes(x) && x !== p) || lados[0]; if (!lado) return;
             if (this.lig[p] === 1) this.dupla(p, lado); else this.tripla(p, lado);
           });
         });
-        const quem = [...new Set(pontas.filter(p => c.porPonta[this.at[p].sim].lig >= tipo).map(p => this.at[p].sim))].join(" e ");
+        const quem = [...new Set(pontas.filter(p => this.alvoDe(p).lig >= tipo).map(p => this.at[p].sim))].join(" e ");
         const msg = tipo === 2 ? (acoes.length > 1 ? `Ligações duplas: um par de cada ${quem} vai para a ligação` : `Ligação dupla: um par do ${quem} vai para a ligação`)
           : `Ligação tripla: mais um par do ${quem} vai para a ligação`;
         await grupo(msg, acoes, 1);
@@ -12400,7 +12424,7 @@ const Cena7A = {
    exemplo, o cartão com a nota (0 a 10) e o quanto ficou em cada molécula. */
 const PontosLivre = {
   PESO: { total: 2, esq: 3, el: 5 },
-  NOMES: { hcn: "HCN", nf3: "NF₃", h2s: "H₂S", cs2: "CS₂", ch2o: "CH₂O", ccl4: "CCl₄" },
+  NOMES: { hcn: "HCN", nf3: "NF₃", h2s: "H₂S", cs2: "CS₂", ch2o: "CH₂O", ccl4: "CCl₄", sio2: "SiO₂", ph3: "PH₃", o3: "O₃" },
   ex: {}, atual: null,
   // um exemplo começa (a pergunta do total aparece): os pontos dele voltam ao máximo
   iniciar(mol) { this.ex[mol] = { ...this.PESO, fim: false }; this.atual = mol; },
