@@ -1552,7 +1552,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v394 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v395 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -9013,7 +9013,8 @@ const Cena133 = {
       { boxShadow: "0 0 0 0 rgba(110,231,160,0)", borderColor: "rgba(163,219,247,.38)" }], { duracao: .8, easing: "ease-out", fill: "none" });
     try { const r = new Audio("audio/vfx/right.mp3"); r.volume = .6; r.play().catch(() => {}); } catch (_) {}
     Vibra.tocar("toqueEletron");
-    if (this.LADOS.every(x => this.slots[x].ocupante)) { this.conferindo = true; Palco.animar(s.el, [{}, {}], { duracao: .6, fill: "none" }).finished.then(() => this.conferir(), () => {}); }
+    // (todos no lugar: confere assim que o último termina de chegar — o salto leva 0,6s, o deslize 0,35s)
+    if (this.LADOS.every(x => this.slots[x].ocupante)) { this.conferindo = true; Palco.animar(s.el, [{}, {}], { duracao: salto ? .6 : .35, fill: "none" }).finished.then(() => this.conferir(), () => {}); }
   },
   // 13.4, 0s: os átomos montados viram o esqueleto das ligações (o mesmo desenho da água e da amônia), exatamente no mesmo
   // lugar e do mesmo tamanho (o desenho entra em fade e os átomos e contornos saem); continuam instáveis
@@ -11502,7 +11503,8 @@ const ModoLivre = {
       at.insertAdjacentHTML("beforeend", `<g data-l="${l}" style="transform-origin:${a.x}px ${a.y}px"><circle cx="${a.x}" cy="${a.y}" r="${a.R}" fill="${fundo}" stroke="${borda}" stroke-width="2"/>
         <text x="${a.x}" y="${a.y + a.R * .36}" text-anchor="middle" font-size="${a.R}" font-weight="800" fill="${letra}" font-family="Bricolage Grotesque, sans-serif">${a.sim}</text></g>`);
     });
-    Palco.el.querySelectorAll(".c133-at, .c133-slot").forEach(el => Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }).finished.then(() => el.remove(), () => {}));
+    // (as bolas soltas saem em fade, mas já sem pegar toque: o primeiro toque depois de montar vai direto para a molécula)
+    Palco.el.querySelectorAll(".c133-at, .c133-slot").forEach(el => { el.style.pointerEvents = "none"; Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .25 }).finished.then(() => el.remove(), () => {}); });
     Palco.adicionar(`<div class="c84-toques c11l-toques" aria-label="Toque num átomo e depois em outro para ligar; depois, em volta dos átomos para colocar os pares"></div>`);
     const tq = this.$(".c11l-toques");
     tq.addEventListener("pointerdown", e => this.baixa(e));
