@@ -1552,7 +1552,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v386 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v387 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11528,6 +11528,19 @@ const ModoLivre = {
     const [px, py] = ok ? [this.at[alvo].x, this.at[alvo].y] : [x, y];
     r.linha.setAttribute("x2", px); r.linha.setAttribute("y2", py); r.linha.classList.toggle("pronta", !!ok);
   },
+  // a ligação puxada: o traço fica no lugar na hora e os dois elétrons somem da fileira ao mesmo tempo (sem o voo)
+  ligarJa(ponta) {
+    const ks = this.livres().slice(-2); if (ks.length < 2) return this.aviso([ponta, "meio"], "Acabaram os elétrons");
+    this.lig[ponta] = 1;
+    const fila = Cena12.fila();
+    // (style.opacity "0" já tira os dois da conta dos livres; a animação os apaga encolhendo, e no fim ficam escondidos)
+    ks.forEach(k => { const el = fila.children[k]; el.style.opacity = "0";
+      Palco.animar(el, [{ opacity: 1, scale: "1" }, { opacity: 0, scale: ".3" }], { duracao: .25, easing: "ease-in", fill: "none" })
+        .finished.then(() => { el.style.visibility = "hidden"; el.style.opacity = ""; }, () => {}); });
+    const { x1, y1, x2, y2 } = this.traco(ponta);
+    this.$(".c11l-svg .lig").insertAdjacentHTML("beforeend", `<line data-l="${ponta}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`);
+    Vibra.tocar("toqueEletron");
+  },
   // os dois átomos podem receber uma ligação simples (um deles o central, a ponta ainda sem ligação)
   ligavel(a, b) { if (a !== "meio" && b !== "meio") return false; const p = a === "meio" ? b : a; return !this.lig[p]; },
   solta(e) {
@@ -11538,7 +11551,7 @@ const ModoLivre = {
     const linha = r.linha;
     if (alvo && alvo !== r.de && this.ligavel(r.de, alvo)) {
       linha.remove();
-      this.ligar(r.de === "meio" ? alvo : r.de);   // (os dois elétrons voam da fileira e viram o traço)
+      this.ligarJa(r.de === "meio" ? alvo : r.de);   // (sem o salto: a ligação fica e o par some da fileira na hora)
       this.conferirBotao();
       return;
     }
