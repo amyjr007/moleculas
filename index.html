@@ -1555,7 +1555,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v405 · 20/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v406 · 20/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11219,19 +11219,19 @@ const Cena135 = {
 const Cena134 = {
   $(sel) { return Palco.el.querySelector(sel); },
   toque() { return matchMedia("(pointer: coarse)").matches; },
+  // (as ligações valem desde o começo; a demonstração usa uma ponta que ainda não foi ligada — se todas já foram, não acontece)
+  livre() { const ls = Cena112L.lig || {}; return ["dir", "esq", "cima", "baixo"].find(l => !ls[l]); },
   get EV_PC() { return [
-    { tempo: 0,    acao: () => Cena133.paraLigacoes() },
+    { tempo: 0,    acao: () => { Cena133.paraLigacoes(); Cena112L.liberar(); } },
     { tempo: 2.5,  acao: () => this.instrucao("Ligue o átomo central às pontas", 1.5) },   // até 4s
-    { tempo: 4.6,  acao: () => this.tocar("meio", true) },                                  // a mãozinha toca no C: ele fica selecionado
-    { tempo: 7.5,  acao: () => this.tocar("dir", false, () => this.ligacaoDemo("dir")) },  // e no H da direita: a ligação aparece e some
-    { tempo: 10,   acao: () => Cena112L.liberar() }                                         // as ligações pelo toque
+    { tempo: 4.6,  acao: () => { if (this.livre()) this.tocar("meio", true); } },          // a mãozinha toca no C: ele fica selecionado
+    { tempo: 7.5,  acao: () => { const l = this.livre(); if (l && this.$(".c134-mao")) this.tocar(l, false, () => this.ligacaoDemo(l)); } }   // e num H: a ligação aparece e some
   ]; },
   get EV_TOQUE() { return [
-    { tempo: 0,    acao: () => Cena133.paraLigacoes() },
+    { tempo: 0,    acao: () => { Cena133.paraLigacoes(); Cena112L.liberar(); } },
     { tempo: 2,    acao: () => this.instrucao("Ligue os átomos traçando uma linha entre eles", 5) },   // até 7s
-    { tempo: 10.8, acao: () => this.tocar("meio", true) },                                  // a mãozinha seleciona o C
-    { tempo: 12,   acao: () => this.puxar("dir") },                                          // e puxa uma linha até o H: a ligação aparece e some
-    { tempo: 14.5, acao: () => Cena112L.liberar() }
+    { tempo: 10.8, acao: () => { if (this.livre()) this.tocar("meio", true); } },          // a mãozinha seleciona o C
+    { tempo: 12,   acao: () => { const l = this.livre(); if (l && this.$(".c134-mao")) this.puxar(l); } }   // e puxa uma linha até um H: a ligação aparece e some
   ]; },
   // a instrução, digitada entre a fórmula e o desenho
   instrucao(texto, dur) {
