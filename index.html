@@ -865,6 +865,10 @@
        o cubo de átomos à direita do título, 70% maior; o título um pouco mais alto; o "Iniciar" 19% menor; a "Demonstração" mais à direita */
     #capa #logoCubo { translate: 60.4vw 4.9vh; scale: 1.701; }
     #capa h1 { translate: -3vw -5.7vh; }
+    /* os botões dos exemplos livres (?, refazer, martelo): 10% menores, alinhados, mais embaixo e um pouco à direita (palco de 356 × 655) */
+    #conteudoPalco .c11l-checar { gap: 28px; translate: calc(var(--pw, 356px) * .05) calc(-100% + var(--ph, 655px) * .189); }
+    #conteudoPalco .c11l-checar .c11l-ic { width: 41px; height: 41px; font-size: 1.35rem; }
+    #conteudoPalco .c11l-checar .c11l-ic svg { width: 22px; height: 22px; }
     #capa #btnIniciar { scale: .811; }
     /* 7.9: o Cl₂ como no caderno, 29% maior (ajuste da professora) */
     #conteudoPalco .c79-caderno { scale: 1.29; translate: calc(var(--pw, 356px) * .002) 0; }
@@ -1560,7 +1564,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v412 · 21/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v413 · 21/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10507,7 +10511,8 @@ const Cena14P = {
   LADOS: { dir: ["cima", "baixo", "dir"], esq: ["cima", "baixo", "esq"] },
   // onde ficam os dois elétrons (j = 0 ou 1) do par, num lado do O (o: "esq" ou "dir")
   lugar(o, lado, j) {
-    const [x, y] = Cena121.xy(o), r = Cena121.RAIO.O + 8, d = j ? 6.5 : -6.5;
+    // (no CO₂, os pares um pouco mais longe do O e os dois elétrons mais separados: fica mais fácil pegar o par para arrastar)
+    const co2 = Cena121.arranjo().central === "C", [x, y] = Cena121.xy(o), r = Cena121.RAIO.O + (co2 ? 11 : 8), d = (j ? 1 : -1) * (co2 ? 8.5 : 6.5);
     return lado === "cima" ? [x + d, y - r] : lado === "baixo" ? [x + d, y + r] : [x + (lado === "dir" ? r : -r), y + d];
   },
   // 14.4, 3s: um retângulo em volta dos elétrons de baixo (entra e sai em fade)
@@ -10597,6 +10602,42 @@ const Cena14P = {
    Toca-se num O e depois no C: o par de cima daquele O desliza para dentro da ligação e vira o segundo traço (a ligação dupla).
    Um O que já tem a dupla: treme em vermelho, "Tente o outro oxigênio". As duas duplas: o C fecha o octeto (bola verde),
    confetes, aplausos e fanfarra, e o 14.7 (quando existir). */
+/* ---------- O arrasto de um par não ligante para dentro de uma ligação (a dupla/tripla: CO₂, SO₃ e os exemplos livres) ----------
+   O par (els: os dois círculos, dentro de um svg) acompanha o dedo; ao soltar, soltou(x, y, d) — x, y no palco; d, o deslocamento
+   em unidades do svg — diz se ele virou ligação. Se não virou, o par desliza de volta para o lugar. */
+const ArrastaPar = {
+  // (tocou: o que fazer se o dedo não arrastou — o toque de sempre)
+  pegar(e, els, svg, cls, soltou, tocou) {
+    e.preventDefault();
+    const k = 1 / ((svg.getScreenCTM() || { a: 1 }).a || 1), x0 = e.clientX, y0 = e.clientY;
+    let d = [0, 0];
+    els.forEach(c => c.classList.add(cls));
+    Vibra.tocar("toqueEletron");
+    const mover = ev => { d = [(ev.clientX - x0) * k, (ev.clientY - y0) * k]; els.forEach(c => { c.style.transform = `translate(${d[0]}px, ${d[1]}px)`; }); };
+    const fim = ev => {
+      removeEventListener("pointermove", mover); removeEventListener("pointerup", fim); removeEventListener("pointercancel", fim);
+      els.forEach(c => c.classList.remove(cls));
+      const P = Palco.el.getBoundingClientRect();
+      if (Math.hypot(d[0], d[1]) <= 4) { els.forEach(c => { c.style.transform = ""; }); if (tocou && ev.type === "pointerup") tocou(); return; }
+      if (ev.type === "pointerup" && soltou(ev.clientX - P.left, ev.clientY - P.top, d)) return;
+      // fora do lugar: o par volta para onde estava
+      els.forEach(c => { c.style.transform = ""; Palco.animar(c, [{ transform: `translate(${d[0]}px, ${d[1]}px)` }, { transform: "translate(0px, 0px)" }], { duracao: .3, easing: "ease-out" }); });
+    };
+    addEventListener("pointermove", mover); addEventListener("pointerup", fim); addEventListener("pointercancel", fim);
+  },
+  // o ponto (x, y) do palco está entre os átomos A e B (na tela: { x, y, R }) — perto do traço, fora das bolas
+  entre(A, B, x, y) {
+    if (!A || !B) return false;
+    const vx = B.x - A.x, vy = B.y - A.y, L2 = vx * vx + vy * vy || 1, t = ((x - A.x) * vx + (y - A.y) * vy) / L2;
+    return t > .1 && t < .9 && Math.hypot(x - (A.x + vx * t), y - (A.y + vy * t)) < Math.max(A.R, B.R, 24);
+  },
+  // o círculo mais perto do dedo (clientX/Y), até 26px
+  perto(circs, cx, cy) {
+    let melhor = null, d0 = 26;
+    circs.forEach(c => { const r = c.getBoundingClientRect(), d = Math.hypot(cx - (r.left + r.width / 2), cy - (r.top + r.height / 2)); if (d < d0) { d0 = d; melhor = c; } });
+    return melhor;
+  }
+};
 const Cena14D = {
   $(sel) { return Palco.el.querySelector(sel); },
   pares(o) { return [...Palco.el.querySelectorAll(`.c121-esqueleto .c124-e${o ? `[data-o="${o}"]` : ""}`)]; },
@@ -10654,10 +10695,10 @@ const Cena14D = {
     this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
     Cena121.pulsarAtomo(["esq", "dir"], 1);   // convite: os O dão uma pulsada
   },
-  toque(e) {
+  toque(e, semPar = false) {
     if (Palco.pausado || this.demoAtivo) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
-    if (this.arrastar) { const p = this.parPerto(e.clientX, e.clientY); if (p) return this.pegar(e, p); }
+    if (this.arrastar && !semPar) { const p = this.parPerto(e.clientX, e.clientY); if (p) return this.pegar(e, p); }
     let alvo = null, d0 = Infinity;
     ["meio", "esq", "dir"].forEach(l => { const A = Cena112L.naTela(l); if (!A) return; const d = Math.hypot(x - A.x, y - A.y); if (d < Math.max(A.R * 1.9, 26) && d < d0) { d0 = d; alvo = l; } });
     if (!alvo) return;
@@ -10744,24 +10785,12 @@ const Cena14D = {
   },
   // arrastando o par: ele acompanha o dedo; solto entre o seu O e o C, vira a dupla; fora, volta para o lugar
   pegar(e, p) {
-    if (this.feitos[p.o]) return Cena112L.erro([p.o], "Esse oxigênio já tem a ligação dupla");
-    e.preventDefault();
-    this.sel = null; this.marcar(null); Cena112L.selecionar(null, false);
-    const k = 1 / Cena121.svg().getScreenCTM().a, x0 = e.clientX, y0 = e.clientY;
-    let d = [0, 0];
-    p.els.forEach(c => c.classList.add("brilha"));
-    Vibra.tocar("toqueEletron");
-    const mover = ev => { d = [(ev.clientX - x0) * k, (ev.clientY - y0) * k]; p.els.forEach(c => { c.style.transform = `translate(${d[0]}px, ${d[1]}px)`; }); };
-    const soltar = ev => {
-      removeEventListener("pointermove", mover); removeEventListener("pointerup", soltar); removeEventListener("pointercancel", soltar);
-      p.els.forEach(c => c.classList.remove("brilha"));
-      const P = Palco.el.getBoundingClientRect(), x = ev.clientX - P.left, y = ev.clientY - P.top, A = Cena112L.naTela(p.o), C = Cena112L.naTela("meio");
-      const entre = A && C && x > Math.min(A.x, C.x) && x < Math.max(A.x, C.x) && Math.abs(y - (A.y + C.y) / 2) < Math.max(A.R, 24);
-      if (entre && !this.feitos[p.o] && !this.demoAtivo) return this.dupla(p.o, p.lado, d);
-      // fora do lugar: o par volta para onde estava
-      p.els.forEach(c => { c.style.transform = ""; Palco.animar(c, [{ transform: `translate(${d[0]}px, ${d[1]}px)` }, { transform: "translate(0px, 0px)" }], { duracao: .3, easing: "ease-out" }); });
-    };
-    addEventListener("pointermove", mover); addEventListener("pointerup", soltar); addEventListener("pointercancel", soltar);
+    if (this.feitos[p.o]) return this.toque(e, true);   // (o O que já tem a dupla: o toque de sempre — "Tente o outro oxigênio")
+    ArrastaPar.pegar(e, p.els, Cena121.svg(), "brilha", (x, y, d) => {
+      if (!ArrastaPar.entre(Cena112L.naTela(p.o), Cena112L.naTela("meio"), x, y) || this.feitos[p.o] || this.demoAtivo) return false;
+      this.sel = null; this.marcar(null); Cena112L.selecionar(null, false);
+      this.dupla(p.o, p.lado, d); return true;
+    }, () => this.toque(e, true));
   },
   // a ligação dupla: o par do O (o de cima, nos toques; o arrastado, no arrasto) vai para dentro da ligação; o traço de antes
   // desce um pouco e o par vira o traço de cima (ja: o deslocamento do par arrastado — ele vai reto, dali)
@@ -10875,8 +10904,9 @@ const Cena15D = {
   liberar() {
     if (this.$(".c84-toques") || this.feito) return;
     this.usados = {}; this.sel = null; this.feito = false;
-    Palco.adicionar(`<div class="c84-toques" aria-label="Toque num oxigênio e depois no enxofre para fazer a ligação múltipla"></div>`);
+    Palco.adicionar(`<div class="c84-toques" aria-label="Toque num oxigênio e depois no enxofre, ou arraste um par do oxigênio até a ligação, para fazer a ligação múltipla"></div>`);
     this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    this.$(".c84-toques").style.touchAction = "none";   // (o arrasto dos pares não rola a página)
     Cena121.pulsarAtomo(this.OS, 1);
   },
   // 15.5, 2,7s: os O dão uma pulsada e só os pares deles crescem e ficam dourados (ligar = false: os pares voltam)
@@ -10910,9 +10940,19 @@ const Cena15D = {
     return Math.abs(vy) > Math.abs(vx) ? (vy < 0 ? "cima" : "baixo") : (vx < 0 ? "esq" : "dir");
   },
   marcar(o) { Cena14D.pares().forEach(c => c.classList.toggle("pulsa", !!o && c.dataset.o === o && c.dataset.lado === this.ladoPar(o))); },
-  toque(e) {
+  toque(e, semPar = false) {
     if (Palco.pausado || this.feito) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    // um par de um O arrastado até a ligação dele com o S: vira a dupla (sem arrastar: o toque de sempre)
+    const c = !semPar && ArrastaPar.perto(Cena14D.pares().filter(c => !this.usados[c.dataset.o]), e.clientX, e.clientY);
+    if (c) {
+      const o = c.dataset.o, lado = c.dataset.lado, els = Cena14D.pares(o).filter(x => x.dataset.lado === lado);
+      return ArrastaPar.pegar(e, els, Cena121.svg(), "brilha", (x, y, d) => {
+        if (this.feito || this.usados[o] || !ArrastaPar.entre(Cena112L.naTela(o), Cena112L.naTela("meio"), x, y)) return false;
+        this.sel = null; Cena112L.selecionar(null, false); this.marcar(null);
+        this.dupla(o, lado, d); return true;
+      }, () => this.toque(e, true));
+    }
     let alvo = null, d0 = Infinity;
     ["meio", ...this.OS].forEach(l => { const A = Cena112L.naTela(l); if (!A) return; const d = Math.hypot(x - A.x, y - A.y); if (d < Math.max(A.R * 1.9, 26) && d < d0) { d0 = d; alvo = l; } });
     if (!alvo) return;
@@ -10927,7 +10967,8 @@ const Cena15D = {
     this.dupla(o);
   },
   // a ligação vira dupla: o par vai, numa curva, para dentro dela; o traço de antes se afasta um pouco e o par vira o traço novo
-  dupla(o) {
+  // (lado/ja: o par arrastado — ele vai reto, de onde foi solto)
+  dupla(o, ladoPar = null, ja = null) {
     this.usados[o] = true;
     Vibra.tocar("toqueEletron");
     // com o 15.5 ainda falando: ele se cala e os destaques dele saem (o "6 elétrons", o S e os O grandes, os brilhos, o retângulo)
@@ -10940,9 +10981,10 @@ const Cena15D = {
     const s = Cena121.svg(), lin = s.querySelector(`.lig [data-l="${o}"]`), { x1, y1, x2, y2, mx, my } = Cena121.pontas(o), off = 6.5;
     const [vx, vy] = this.lado(o), nx = -vx, ny = -vy;
     const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L;
-    const par = Cena14D.pares(o).filter(c => c.dataset.lado === this.ladoPar(o));
+    const par = Cena14D.pares(o).filter(c => c.dataset.lado === (ladoPar || this.ladoPar(o)));
     par.forEach((c, j) => {
       const k = j ? 3.5 : -3.5, tx = mx - nx * off + ux * k - +c.getAttribute("cx"), ty = my - ny * off + uy * k - +c.getAttribute("cy");
+      if (ja) { c.style.transform = ""; return Palco.animar(c, [{ transform: `translate(${ja[0]}px, ${ja[1]}px)` }, { transform: `translate(${tx}px, ${ty}px)` }], { duracao: .7, easing: "ease-out", fill: "forwards" }); }
       const cx = tx * .5 - nx * 14, cy = ty * .5 - ny * 14;
       const q = Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u;
         return { transform: `translate(${(a * cx + b * tx).toFixed(2)}px, ${(a * cy + b * ty).toFixed(2)}px)`, offset: u }; });
@@ -11841,6 +11883,7 @@ const ModoLivre = {
   baixa(e) {
     if (Palco.pausado || this.remontando) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    if (this.arrastarPar(e)) return;
     const l = this.podeArrastar() ? this.atomoEm(x, y) : null;
     if (!l) return this.toque(e);
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
@@ -11923,6 +11966,23 @@ const ModoLivre = {
         { duracao: .5 + Math.random() * .3, atraso: .2 + j * .06, easing: "cubic-bezier(.15,.8,.3,1)" }).finished.then(() => f.remove(), () => {});
     }
   },
+  // as ligações múltiplas pelo arrasto (como no CO₂): com as simples feitas e os elétrons todos distribuídos, um par de uma ponta
+  // arrastado até a ligação dela com o centro vira a dupla (com a dupla já feita, a tripla); solto fora, volta. Sem arrastar: o toque
+  arrastarPar(e) {
+    if (!this.cfg || !this.cfg.semPop || !this.at || !this.pontas().every(p => this.lig[p] > 0) || this.livres().length) return false;
+    const c = ArrastaPar.perto([...Palco.el.querySelectorAll(".c11l-svg .par circle")].filter(c => c.dataset.l !== "meio" && this.lig[c.dataset.l] < 3), e.clientX, e.clientY);
+    if (!c) return false;
+    const ponta = c.dataset.l, lado = c.dataset.lado, els = [...Palco.el.querySelectorAll(`.c11l-svg .par [data-l="${ponta}"][data-lado="${lado}"]`)];
+    if (this.sel) this.selecionar(null);
+    ArrastaPar.pegar(e, els, this.$(".c11l-svg"), "c11l-parsel", (x, y, d) => {
+      if (this.remontando || this.lig[ponta] >= 3 || !ArrastaPar.entre(this.at.meio, this.at[ponta], x, y)) return false;
+      this.marcarPar(null);
+      if (this.lig[ponta] === 1) this.dupla(ponta, lado, d); else this.tripla(ponta, lado, d);
+      this.conferirBotao();
+      return true;
+    }, () => this.toque(e));
+    return true;
+  },
   // os dois átomos podem receber uma ligação simples (um deles o central, a ponta ainda sem ligação)
   ligavel(a, b) { if (a !== "meio" && b !== "meio") return false; const p = a === "meio" ? b : a; return !this.lig[p]; },
   solta(e) {
@@ -11995,7 +12055,8 @@ const ModoLivre = {
     if (ps) Palco.el.querySelectorAll(`.c11l-svg .par [data-l="${ps.ponta}"][data-lado="${ps.lado}"]`).forEach(c => c.classList.add("c11l-parsel"));
   },
   // a tripla (o HCN): mais um par da ponta vai para dentro da ligação; os dois traços se afastam e o novo fica no meio
-  tripla(ponta, lado) {
+  // (ja: o deslocamento do par arrastado — ele vai reto, de onde foi solto)
+  tripla(ponta, lado, ja = null) {
     this.registrar();
     this.lig[ponta] = 3; delete this.pares[ponta][lado];
     const { x1, y1, x2, y2, mx, my, nx, ny } = this.traco(ponta), off = 6.5 * 1.5;
@@ -12003,6 +12064,7 @@ const ModoLivre = {
     const par = [...Palco.el.querySelectorAll(`.c11l-svg .par [data-l="${ponta}"][data-lado="${lado}"]`)];
     par.forEach((c, j) => {
       const tx = mx + (j ? 3.5 : -3.5) * -ny - +c.getAttribute("cx"), ty = my + (j ? 3.5 : -3.5) * nx - +c.getAttribute("cy"), cx = tx * .5 + this.curva(lado, ponta)[0], cy = ty * .5 + this.curva(lado, ponta)[1];   // (o salto curva para o lado do par: o da esquerda para a esquerda, o de cima para cima...)
+      if (ja) { c.style.transform = ""; return Palco.animar(c, [{ transform: `translate(${ja[0]}px, ${ja[1]}px)` }, { transform: `translate(${tx}px, ${ty}px)` }], { duracao: .7, easing: "ease-out", fill: "forwards" }); }
       Palco.animar(c, Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u; return { transform: `translate(${a * cx + b * tx}px, ${a * cy + b * ty}px)`, offset: u }; }), { duracao: .7, easing: "ease-in-out" });
     });
     Cena74.somSalto(Palco.el);
@@ -12067,13 +12129,14 @@ const ModoLivre = {
       this.$(".c11l-svg .par").insertAdjacentHTML("beforeend", `<circle data-l="${l}" data-lado="${lado}" cx="${p[0]}" cy="${p[1]}" r="4.5" fill="#A3DBF7" style="filter:drop-shadow(0 0 3px rgba(163,219,247,.9))"/>`); }); });
   },
   // a dupla: o par da ponta vai, numa curva, para dentro da ligação e vira o segundo traço
-  dupla(ponta, lado) {
+  dupla(ponta, lado, ja = null) {
     this.registrar();
     this.lig[ponta] = 2; delete this.pares[ponta][lado];
     const { x1, y1, x2, y2, mx, my, nx, ny } = this.traco(ponta), off = 6.5;
     const lin = this.$(`.c11l-svg .lig [data-l="${ponta}"]`), par = [...Palco.el.querySelectorAll(`.c11l-svg .par [data-l="${ponta}"][data-lado="${lado}"]`)];
     par.forEach((c, j) => {
       const tx = mx + nx * off + (j ? 3.5 : -3.5) * -ny - +c.getAttribute("cx"), ty = my + ny * off + (j ? 3.5 : -3.5) * nx - +c.getAttribute("cy"), cx = tx * .5 + this.curva(lado, ponta)[0], cy = ty * .5 + this.curva(lado, ponta)[1];   // (o salto curva para o lado do par: o da esquerda para a esquerda, o de cima para cima...)
+      if (ja) { c.style.transform = ""; return Palco.animar(c, [{ transform: `translate(${ja[0]}px, ${ja[1]}px)` }, { transform: `translate(${tx}px, ${ty}px)` }], { duracao: .7, easing: "ease-out", fill: "forwards" }); }
       Palco.animar(c, Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u; return { transform: `translate(${a * cx + b * tx}px, ${a * cy + b * ty}px)`, offset: u }; }), { duracao: .7, easing: "ease-in-out" });
     });
     Cena74.somSalto(Palco.el);
