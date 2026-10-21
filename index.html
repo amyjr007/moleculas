@@ -1560,7 +1560,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v411 · 21/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v412 · 21/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3745,10 +3745,18 @@ const NARRACOES = [
   // e vira o segundo traço. As duas duplas: o C estável, confetes, aplausos e fanfarra; depois, o 14.7 (quando existir)
   { id: "dialogo14_6A", titulo: "Gás carbônico: as ligações duplas", src: "audio/audio_moleculas_14.6A.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 0,    acao: () => { Cena14D.apagarO(false); Cena14D.liberar(); } },  // os O voltam; os toques já valem
-      { tempo: 2,    acao: () => Cena14D.piscarPares(2) }                   // os pares não ligantes piscam, um de cada vez (até 4s)
+      { tempo: 0,    acao: () => { Cena14D.arrastar = false; Cena14D.demoAtivo = false; Cena14D.apagarO(false); Cena14D.liberar(); } },  // os O voltam; os toques já valem
+      { tempo: 2,    acao: () => Cena14D.piscarPares(2) },                  // os pares não ligantes piscam, um de cada vez (até 4s)
+      { tempo: 9.5,  acao: () => Cena14D.cortarToque() }                    // (celular/tablet: corta; 1s depois, o 14.6B)
     ],
     aoFim: () => { ui.semPlay(true); Cena14D.liberar(); } },
+  // só no celular/tablet: 0s a mãozinha arrasta um par não ligante até entre o O e o C e ele vira a dupla (até 4,5s; depois tudo
+  // volta). No fim, os pares podem ser arrastados: solto entre o O e o C, vira a dupla; fora do lugar, volta
+  { id: "dialogo14_6B", titulo: "Gás carbônico: arraste os pares", src: "audio/audio_moleculas_14.6B.mp3", semNav: true, extra: true, oculta: true,
+    eventos: [
+      { tempo: 0,    acao: () => Cena14D.demo() }
+    ],
+    aoFim: () => { ui.semPlay(true); Cena14D.liberarArrasto(); } },
   // o CO₂ pronto: 5s o C apaga e os O crescem (até 6s); 6s os traços de cima das duplas brilham, 7s os de baixo, 7,8s os
   // pares dos lados, 8s os de baixo; 10,4s os O apagam (ficam o C e as quatro ligações); cada traço pulsa (12,4s, 13s, 14s,
   // 14,7s); 17s pausa de 1,5s com a festa de quiz certo (tudo volta); 20,8s as duas duplas brilham (1s). No fim, a molécula
@@ -10647,8 +10655,9 @@ const Cena14D = {
     Cena121.pulsarAtomo(["esq", "dir"], 1);   // convite: os O dão uma pulsada
   },
   toque(e) {
-    if (Palco.pausado) return;
+    if (Palco.pausado || this.demoAtivo) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    if (this.arrastar) { const p = this.parPerto(e.clientX, e.clientY); if (p) return this.pegar(e, p); }
     let alvo = null, d0 = Infinity;
     ["meio", "esq", "dir"].forEach(l => { const A = Cena112L.naTela(l); if (!A) return; const d = Math.hypot(x - A.x, y - A.y); if (d < Math.max(A.R * 1.9, 26) && d < d0) { d0 = d; alvo = l; } });
     if (!alvo) return;
@@ -10664,22 +10673,114 @@ const Cena14D = {
   },
   // o O escolhido: o par de cima dele pulsa até virar a ligação dupla (o: null — nenhum pulsa)
   marcar(o) { this.pares().forEach(c => c.classList.toggle("pulsa", !!o && c.dataset.o === o && c.dataset.lado === "cima")); },
-  // a ligação dupla: o par de cima do O vai para dentro da ligação; o traço de antes desce um pouco e o par vira o traço de cima
-  dupla(o) {
+  // 14.6A no celular/tablet, 9,5s: o áudio é cortado; 1s depois, o 14.6B (a mãozinha mostra o arrasto)
+  cortarToque() {
+    const i = Player.indice; if (!Cena134.toque() || !NARRACOES[i] || NARRACOES[i].id !== "dialogo14_6A") return;
+    if (this.feitos && this.feitos.esq && this.feitos.dir) return;
+    Player.calar();
+    Palco.animar(Palco.el, [{}, {}], { duracao: 1, fill: "none" }).finished.then(() => {
+      if (Player.indice !== i) return;
+      Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo14_6B"), true);
+    }, () => {});
+  },
+  // um ponto do desenho (svg) na tela (palco)
+  naTelaSvg(x, y) {
+    const s = Cena121.svg(), P = Palco.el.getBoundingClientRect(), pt = s.createSVGPoint(); pt.x = x; pt.y = y;
+    const m = pt.matrixTransform(s.getScreenCTM()); return [m.x - P.left, m.y - P.top];
+  },
+  // 14.6B, 0s: a mãozinha toca no par de cima de um O e o arrasta até entre o O e o C; o par vira a ligação dupla
+  // (de mostra) e, aos 4,5s, tudo volta como estava
+  demo() {
+    const o = ["esq", "dir"].find(l => !(this.feitos || {})[l]); if (!o) return;
+    const s = Cena121.svg(), par = this.pares(o).filter(c => c.dataset.lado === "cima"); if (!s || par.length < 2) return;
+    this.demoAtivo = true; this.sel = null; this.marcar(null); Cena112L.selecionar(null, false);
+    const k = s.getScreenCTM().a, { x1, y1, x2, y2, mx, my } = Cena121.pontas(o), off = 6.5;
+    const [px, py] = this.naTelaSvg((+par[0].getAttribute("cx") + +par[1].getAttribute("cx")) / 2, +par[0].getAttribute("cy")), [bx, by] = this.naTelaSvg(mx, my);
+    Palco.adicionar(`<div class="c83-mao c134-mao" style="left:${px}px;top:${py}px">${Cena83.MAO}</div>`);
+    const mao = Palco.el.lastElementChild, lin = s.querySelector(`.lig [data-l="${o}"]`);
+    let nova = null;
+    const voltar = () => {
+      this.demoAtivo = false;
+      if (mao.isConnected) mao.remove();
+      if (nova) nova.remove();
+      if (lin) lin.getAnimations().forEach(a => a.cancel());
+      par.forEach(c => { c.getAnimations().forEach(a => a.cancel()); c.style.visibility = ""; Palco.animar(c, [{ opacity: 0 }, { opacity: 1 }], { duracao: .4 }); });
+    };
+    Palco.animar(mao, [{ opacity: 0, transform: "translate(40px, 60px)" }, { opacity: 1, transform: "translate(0px, 0px)", offset: .7 },
+      { transform: "translate(0px, 0px) scale(.85)", offset: .85 }, { transform: "translate(0px, 0px)" }], { duracao: .9, easing: "ease-out", fill: "none" }).finished.then(() => {
+      // o arrasto (1,5s): a mão e o par juntos
+      const dx = bx - px, dy = by - py, dur = 1.5;
+      Palco.animar(mao, [{ transform: "translate(0px, 0px)" }, { transform: `translate(${dx}px, ${dy}px)` }], { duracao: dur, easing: "ease-in-out", fill: "forwards" });
+      par.forEach((c, j) => Palco.animar(c, [{ transform: "translate(0px, 0px)" }, { transform: `translate(${dx / k}px, ${dy / k}px)` }], { duracao: dur, easing: "ease-in-out", fill: "forwards" }));
+      return Palco.animar(s, [{}, {}], { duracao: dur, fill: "none" }).finished;
+    }).then(() => {
+      // o par vira a dupla: o traço de antes desce e o novo cresce em cima; a mão sai
+      if (!s.isConnected) return voltar();
+      par.forEach(c => { c.style.visibility = "hidden"; });
+      if (lin) Palco.animar(lin, [{ transform: "translate(0px, 0px)" }, { transform: `translate(0px, ${off}px)` }], { duracao: .3, easing: "ease-out", fill: "forwards" });
+      s.querySelector(".lig").insertAdjacentHTML("beforeend", `<line x1="${x1}" y1="${y1 - off}" x2="${x2}" y2="${y2 - off}" stroke="#fff" stroke-width="5" stroke-linecap="round" style="transform-origin:${mx}px ${my - off}px"/>`);
+      nova = s.querySelector(".lig").lastElementChild;
+      Palco.animar(nova, [{ transform: "scale(0)" }, { transform: "scale(1.12)", offset: .7 }, { transform: "scale(1)" }], { duracao: .35, easing: "ease-out" });
+      try { const a = new Audio("audio/vfx/right.mp3"); a.volume = .5; a.play().catch(() => {}); } catch (_) {}
+      Palco.animar(mao, [{ opacity: 1 }, { opacity: 0 }], { duracao: .5, fill: "forwards" });
+      return Palco.animar(s, [{}, {}], { duracao: 2.1, fill: "none" }).finished;   // (até os 4,5s)
+    }).then(voltar, voltar);
+  },
+  // fim do 14.6B: os pares podem ser arrastados (e os toques de antes continuam valendo)
+  liberarArrasto() {
+    this.demoAtivo = false; this.arrastar = true;
+    this.liberar();
+    const z = this.$(".c84-toques"); if (z) z.style.touchAction = "none";
+  },
+  // o par não ligante perto do dedo (na tela): { o, lado, els }
+  parPerto(cx, cy) {
+    let melhor = null, d0 = 26;
+    this.pares().forEach(c => {
+      const r = c.getBoundingClientRect(), d = Math.hypot(cx - (r.left + r.width / 2), cy - (r.top + r.height / 2));
+      if (d < d0) { d0 = d; melhor = { o: c.dataset.o, lado: c.dataset.lado }; }
+    });
+    if (melhor) melhor.els = this.pares(melhor.o).filter(c => c.dataset.lado === melhor.lado);
+    return melhor;
+  },
+  // arrastando o par: ele acompanha o dedo; solto entre o seu O e o C, vira a dupla; fora, volta para o lugar
+  pegar(e, p) {
+    if (this.feitos[p.o]) return Cena112L.erro([p.o], "Esse oxigênio já tem a ligação dupla");
+    e.preventDefault();
+    this.sel = null; this.marcar(null); Cena112L.selecionar(null, false);
+    const k = 1 / Cena121.svg().getScreenCTM().a, x0 = e.clientX, y0 = e.clientY;
+    let d = [0, 0];
+    p.els.forEach(c => c.classList.add("brilha"));
+    Vibra.tocar("toqueEletron");
+    const mover = ev => { d = [(ev.clientX - x0) * k, (ev.clientY - y0) * k]; p.els.forEach(c => { c.style.transform = `translate(${d[0]}px, ${d[1]}px)`; }); };
+    const soltar = ev => {
+      removeEventListener("pointermove", mover); removeEventListener("pointerup", soltar); removeEventListener("pointercancel", soltar);
+      p.els.forEach(c => c.classList.remove("brilha"));
+      const P = Palco.el.getBoundingClientRect(), x = ev.clientX - P.left, y = ev.clientY - P.top, A = Cena112L.naTela(p.o), C = Cena112L.naTela("meio");
+      const entre = A && C && x > Math.min(A.x, C.x) && x < Math.max(A.x, C.x) && Math.abs(y - (A.y + C.y) / 2) < Math.max(A.R, 24);
+      if (entre && !this.feitos[p.o] && !this.demoAtivo) return this.dupla(p.o, p.lado, d);
+      // fora do lugar: o par volta para onde estava
+      p.els.forEach(c => { c.style.transform = ""; Palco.animar(c, [{ transform: `translate(${d[0]}px, ${d[1]}px)` }, { transform: "translate(0px, 0px)" }], { duracao: .3, easing: "ease-out" }); });
+    };
+    addEventListener("pointermove", mover); addEventListener("pointerup", soltar); addEventListener("pointercancel", soltar);
+  },
+  // a ligação dupla: o par do O (o de cima, nos toques; o arrastado, no arrasto) vai para dentro da ligação; o traço de antes
+  // desce um pouco e o par vira o traço de cima (ja: o deslocamento do par arrastado — ele vai reto, dali)
+  dupla(o, lado = "cima", ja = null) {
     this.feitos[o] = true;
     Vibra.tocar("toqueEletron");
     const s = Cena121.svg(), lin = s.querySelector(`.lig [data-l="${o}"]`), { x1, y1, x2, y2, mx, my } = Cena121.pontas(o), off = 6.5;   // (off: o meio-vão entre os dois traços)
-    const par = this.pares(o).filter(c => c.dataset.lado === "cima");
+    const par = this.pares(o).filter(c => c.dataset.lado === lado), dur = ja ? .3 : .7;
     // (o par vai numa curva: sobe um pouco e desce até o meio da ligação, como num salto)
     par.forEach((c, j) => {
       const tx = mx + (j ? 3.5 : -3.5) - +c.getAttribute("cx"), ty = my - off - +c.getAttribute("cy"), cx = tx * .5, cy = Math.min(ty * .5, 0) - 16;
+      if (ja) { c.style.transform = ""; return Palco.animar(c, [{ transform: `translate(${ja[0]}px, ${ja[1]}px)` }, { transform: `translate(${tx}px, ${ty}px)` }], { duracao: dur, easing: "ease-out", fill: "forwards" }); }
       const q = Array.from({ length: 13 }, (_, i) => { const u = i / 12, a = 2 * u * (1 - u), b = u * u;
         return { transform: `translate(${(a * cx + b * tx).toFixed(2)}px, ${(a * cy + b * ty).toFixed(2)}px)`, offset: u }; });
-      Palco.animar(c, q, { duracao: .7, easing: "ease-in-out" });
+      Palco.animar(c, q, { duracao: dur, easing: "ease-in-out" });
     });
-    Cena74.somSalto(Cena121.svg());   // o som do salto
-    if (lin) Palco.animar(lin, [{ transform: "translate(0px, 0px)" }, { transform: `translate(0px, ${off}px)` }], { duracao: .7, easing: "cubic-bezier(.45,0,.55,1)" });
-    Palco.animar(s, [{}, {}], { duracao: .7, fill: "none" }).finished.then(() => {
+    if (!ja) Cena74.somSalto(Cena121.svg());   // o som do salto
+    if (lin) Palco.animar(lin, [{ transform: "translate(0px, 0px)" }, { transform: `translate(0px, ${off}px)` }], { duracao: dur, easing: "cubic-bezier(.45,0,.55,1)" });
+    Palco.animar(s, [{}, {}], { duracao: dur, fill: "none" }).finished.then(() => {
       if (!s.isConnected) return;
       par.forEach(c => c.remove());
       // o traço de baixo: o de antes, já no lugar (sem a animação presa); o de cima: novo, crescendo do meio
