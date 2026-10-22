@@ -173,7 +173,7 @@
 
   /* retrato / celular */
   @media (max-aspect-ratio: 5/6), (max-width: 700px) {
-    #capa { grid-template-columns: 1fr; align-content: center; gap: 12px; padding: calc(var(--pad-y) + 12px) var(--pad-x) var(--pad-y); }
+    #capa { grid-template-columns: 1fr; align-content: safe center; gap: 12px;   /* (safe: se não couber, começa do alto e rola — sem cortar o desenho em cima) */ padding: calc(var(--pad-y) + 12px) var(--pad-x) var(--pad-y); }
     #capa .art { order: -1; max-height: 40dvh; }
     #capa .credit { margin-top: 26px; }
     #capa .qr-capa { translate: none; }   /* (na capa em coluna — celular, tablet em pé — o QR fica no canto de baixo, do tamanho de antes) */
@@ -1613,7 +1613,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v433 · 22/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v434 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -13847,9 +13847,28 @@ const pagina1 = document.getElementById("pagina1");
 
 const semMovimento = matchMedia("(prefers-reduced-motion: reduce)");
 
+// a capa em coluna (celular, tablet em pé): o QR code preso ao desenho da fábrica — no lugar que a professora escolheu
+// (medido na capa de 384 × 783: o meio do QR a 20,2% da largura e 36,2% da altura do desenho; 21,8% da largura dele).
+// Assim ele não depende da altura da tela, que no iPhone muda com as barras do Safari (e a capa rola)
+const QR_NO_DESENHO = { fx: .202, fy: .362, fw: .218 };
+function posicionarQR() {
+  const qr = capa.querySelector(".qr-capa"), art = capa.querySelector(".art"); if (!qr || !art) return;
+  const svg = qr.querySelector("svg");
+  if (!matchMedia("(max-aspect-ratio: 5/6), (max-width: 700px)").matches || !capa.classList.contains("ativa")) {
+    ["left", "top", "right", "bottom", "translate"].forEach(p => qr.style.removeProperty(p)); svg.style.removeProperty("width"); return;
+  }
+  const C = capa.getBoundingClientRect(), a = art.getBoundingClientRect(), q = QR_NO_DESENHO;
+  svg.style.width = `${a.width * q.fw}px`;
+  const cx = a.left - C.left + capa.scrollLeft + a.width * q.fx, cy = a.top - C.top + capa.scrollTop + a.height * q.fy;
+  Object.assign(qr.style, { right: "auto", bottom: "auto", translate: "none", left: `${cx - qr.offsetWidth / 2}px`, top: `${cy - svg.getBoundingClientRect().height / 2}px` });
+}
+addEventListener("resize", posicionarQR);
+posicionarQR();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(posicionarQR);
+
 // O que cada tela faz ao aparecer
 function aoEntrar(tela) {
-  if (tela === capa) { capa.classList.remove("play"); void capa.offsetWidth; capa.classList.add("play"); }
+  if (tela === capa) { capa.classList.remove("play"); void capa.offsetWidth; capa.classList.add("play"); posicionarQR(); }
   if (tela === pagina1) Player.carregar(0);   // monta a fábrica no palco, à espera do play
 }
 
