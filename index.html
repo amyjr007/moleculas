@@ -1594,7 +1594,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v426 · 22/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v427 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2832,8 +2832,8 @@ const NARRACOES = [
     eventos: [
       { tempo: 9,    acao: () => Cena6.lupa() },           // lupa mostrando as várias moléculas
       { tempo: 13.6, acao: () => Cena6.formula() },        // H₂O em cima do copo
-      { tempo: 19.8, acao: () => Cena6.item(1, "Quais as regras que definem a proporção", 3.2) },   // até 23s
-      { tempo: 24,   acao: () => Cena6.item(2, "Como os átomos compartilham elétrons", 5) }        // até 29s
+      { tempo: 19.8, acao: () => Cena6.item(1, "Quais as regras que definem a proporção?", 3.2) },   // até 23s
+      { tempo: 24,   acao: () => Cena6.item(2, "Como os átomos compartilham elétrons?", 5) }        // até 29s
     ] },
   { id: "dialogo7", titulo: "Regra do Octeto", src: "audio/audio_moleculas_7.mp3",
     inicio: () => { if (!Palco.el.firstElementChild) Cena6.titulo(); },   // pela navegação rápida: só o título "Moléculas"
@@ -2900,14 +2900,16 @@ const NARRACOES = [
       { tempo: 4,     acao: () => Cena74.mostrar(6, "A", { doAtomo: true }) },   // 7 elétrons saem do Cl e sobem para a fileira abaixo do título (até 6s)
       // o áudio novo (07/10/2026) é 1,28s mais longo: daqui em diante, tudo 1,28s mais tarde que antes
       { tempo: 12.28, acao: () => Cena74.hund() },              // "Regra de Hund" embaixo dos elétrons espalhados
-      // Regra de Hund: primeiro um elétron em cada lado do Cl, e só depois os pares
-      { tempo: 30.78, acao: () => Cena74.saltar([0], "cima1") },   // um para cima (meio segundo depois do resto do ajuste)
-      { tempo: 31.48, acao: () => Cena74.saltar([1], "fora1") },   // um para a esquerda
-      { tempo: 33.18, acao: () => Cena74.saltar([2], "baixo1") },  // um para baixo
-      { tempo: 35.28, acao: () => Cena74.saltar([6], "frente") },  // o isolado, à direita, um pouco acima (o espaço ao lado é do elétron do outro Cl)
-      { tempo: 39.28, acao: () => Cena74.emparelhar(3, 0, "cima") },   // os pares: em cima,
-      { tempo: 40.28, acao: () => Cena74.emparelhar(4, 1, "fora") },   // à esquerda
-      { tempo: 41.28, acao: () => Cena74.emparelhar(5, 2, "baixo") },  // e embaixo
+      // Regra de Hund: primeiro um elétron em cada lado do Cl, e só depois os pares. Antes de cada um, a mãozinha toca no lado
+      // em que ele cai (como no O₂): ela sai 0,5s antes e o elétron salta no toque — nos mesmos tempos de antes
+      { tempo: 30.28, acao: () => Cena83.tocar("cima", () => Cena74.saltar([0], "cima1")) },     // um para cima (30,78s)
+      { tempo: 30.98, acao: () => Cena83.tocar("fora", () => Cena74.saltar([1], "fora1")) },     // um para a esquerda (31,48s)
+      { tempo: 32.68, acao: () => Cena83.tocar("baixo", () => Cena74.saltar([2], "baixo1")) },   // um para baixo (33,18s)
+      { tempo: 34.78, acao: () => Cena83.tocar("frente", () => Cena74.saltar([6], "frente")) },  // o isolado, à direita, um pouco acima (35,28s)
+      { tempo: 38.78, acao: () => Cena83.tocar("cima", () => Cena74.emparelhar(3, 0, "cima")) },   // os pares: em cima (39,28s),
+      { tempo: 39.78, acao: () => Cena83.tocar("fora", () => Cena74.emparelhar(4, 1, "fora")) },   // à esquerda (40,28s)
+      { tempo: 40.78, acao: () => Cena83.tocar("baixo", () => Cena74.emparelhar(5, 2, "baixo")) }, // e embaixo (41,28s)
+      { tempo: 42,    acao: () => Cena83.tirarMao() },                                            // a mãozinha sai
       { tempo: 43.28, acao: () => Cena74.crescer([0, 1, 2, 3, 4, 5, 6]) },   // os 7 crescem com brilho
       { tempo: 47.28, acao: () => { Cena74.crescer([0, 1, 2, 3, 4, 5], false); Cena74.crescer([6], true, 1.7); } }  // voltam; cresce só o isolado
     ] },
@@ -14585,8 +14587,8 @@ document.getElementById("btnQuiz").addEventListener("click", () => Quiz.abrir())
 // "Entendi" / "Bora" / "OK": espoca e some (a animação sai depois, para ele voltar inteiro na próxima vez)
 document.getElementById("btnEntendi").addEventListener("click", e => {
   const b = e.currentTarget; if (b.dataset.espocando) return; b.dataset.espocando = "1";
-  Player.seguirSozinho();
-  Espoca.botao(b).then(() => { ui.modoEntendi(false); b.getAnimations().forEach(a => a.cancel()); delete b.dataset.espocando; });
+  // (o próximo áudio só depois do estouro: a troca de narração esconde o botão, e o estouro não aparecia)
+  Espoca.botao(b).then(() => { ui.modoEntendi(false); b.getAnimations().forEach(a => a.cancel()); delete b.dataset.espocando; Player.seguirSozinho(); });
 });
 
 /* ---------- Navegação rápida (sumário) ---------- */
