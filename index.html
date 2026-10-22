@@ -291,6 +291,12 @@
   /* narração 2 — molécula de água em 3D */
   .c2-cena { position: absolute; left: 0; right: 0; top: 33%; bottom: 13%; }   /* top e a posição da legenda são calculados no script */
   .c2-cena canvas { display: block; width: 100%; height: 100%; }
+  /* 6: a lista do que falta aprender — tela deitada, à direita do copo; em pé, entre o título e a fórmula */
+  .c6-lista { position: absolute; left: 50%; right: 5%; top: 34%; z-index: 3; display: flex; flex-direction: column; gap: .8em; pointer-events: none;
+    font-family: var(--display); font-weight: 700; color: #fff; line-height: 1.25; font-size: clamp(1.1rem, 2.4vmin + .5rem, 1.9rem); text-shadow: 0 2px 12px rgba(0,0,0,.55); }
+  .c6-lista p { margin: 0; }
+  .c6-lista .c6-num { color: var(--ambar); }
+  @media (orientation: portrait) { .c6-lista { left: 7%; right: 7%; top: 21%; font-size: clamp(1.05rem, 2.2vmin + .55rem, 1.5rem); } }
   /* "Exemplo de molécula": no alto da área da molécula (o top vem do script), pequeno e celeste */
   .c2-exemplo { position: absolute; left: 0; right: 0; top: 33%; margin: 0; text-align: center; z-index: 2; pointer-events: none;
     font-family: var(--display); font-weight: 700; color: var(--celeste); font-size: clamp(.9rem, 1.6vmin + .55rem, 1.35rem); letter-spacing: .01em; }
@@ -1588,7 +1594,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v425 · 22/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v426 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2825,7 +2831,9 @@ const NARRACOES = [
     //  6,2s copo em fade in · 7s a molécula mergulha na água
     eventos: [
       { tempo: 9,    acao: () => Cena6.lupa() },           // lupa mostrando as várias moléculas
-      { tempo: 13.6, acao: () => Cena6.formula() }         // H₂O em cima do copo
+      { tempo: 13.6, acao: () => Cena6.formula() },        // H₂O em cima do copo
+      { tempo: 19.8, acao: () => Cena6.item(1, "Quais as regras que definem a proporção", 3.2) },   // até 23s
+      { tempo: 24,   acao: () => Cena6.item(2, "Como os átomos compartilham elétrons", 5) }        // até 29s
     ] },
   { id: "dialogo7", titulo: "Regra do Octeto", src: "audio/audio_moleculas_7.mp3",
     inicio: () => { if (!Palco.el.firstElementChild) Cena6.titulo(); },   // pela navegação rápida: só o título "Moléculas"
@@ -5581,6 +5589,14 @@ const Cena6 = {
     };
   },
 
+  // 19,8s e 24s: a lista numerada do que falta aprender, cada item digitado (o número em âmbar). No 7, sobe com a tela
+  item(n, texto, dur) {
+    let l = this.$(".c6-lista");
+    if (!l) { Palco.adicionar(`<div class="c6-lista"></div>`); l = this.$(".c6-lista"); }
+    if (l.querySelector(`[data-n="${n}"]`)) return;
+    l.insertAdjacentHTML("beforeend", `<p data-n="${n}"></p>`);
+    Palco.digitar(l.lastElementChild, [{ classe: "c6-num", texto: `${n}.` }, { texto: " " + texto }], dur);
+  },
   // 9s: a lupa da narração 4R, sobre a água (arrastável)
   lupa() { Cena4R.lupa(this.ctx, this.$(".c6-copo")); },
 
