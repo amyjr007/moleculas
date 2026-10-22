@@ -111,7 +111,9 @@
   #capa .credit { display: flex; align-items: center; gap: 14px; margin-top: 2.2rem; }
   /* o QR code com o link do app, ao lado do crédito */
   #capa .qr-capa { position: absolute; right: var(--pad-x); bottom: calc(40px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; }
-  #capa .qr-capa svg { display: block; width: clamp(60px, 3vw + 40px, 80px); height: auto; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+  /* (ajuste da professora na capa do computador, 1422 × 800: o QR 48% maior, mais à esquerda e para cima; o "Abra no celular" vai junto, logo abaixo) */
+  #capa .qr-capa { translate: calc(-35.8vw + 19px) calc(-50.6vh + 19px); }
+  #capa .qr-capa svg { display: block; width: clamp(89px, 4.43vw + 59px, 118px); height: auto; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
   #capa .qr-capa small { font-size: .62rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #93A3BA; }
   /* versão publicada (atualizada automaticamente pelo publicar.ps1) */
   #capa .versao { position: absolute; right: var(--pad-x); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: .72rem; letter-spacing: .08em; color: #93A3BA; opacity: .75; font-variant-numeric: tabular-nums;
@@ -174,6 +176,8 @@
     #capa { grid-template-columns: 1fr; align-content: center; gap: 12px; padding: calc(var(--pad-y) + 12px) var(--pad-x) var(--pad-y); }
     #capa .art { order: -1; max-height: 40dvh; }
     #capa .credit { margin-top: 26px; }
+    #capa .qr-capa { translate: none; }   /* (na capa em coluna — celular, tablet em pé — o QR fica no canto de baixo, do tamanho de antes) */
+    #capa .qr-capa svg { width: clamp(60px, 3vw + 40px, 80px); }
     .btn-iniciar { width: 100%; max-width: 420px; justify-content: center; padding: 0 24px 0 12px; }
     .btn-iniciar .ico { margin-right: auto; }
     .btn-iniciar .lbl { margin-right: auto; transform: translateX(-19px); }
@@ -1570,7 +1574,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v417 · 21/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v418 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
