@@ -1606,7 +1606,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v430 · 22/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v431 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -13993,8 +13993,8 @@ const Dev = {
   achar(x, y) {
     let melhor = null, area = Infinity;
     // (na capa também os botões, os créditos e o conjunto do logo)
-    // (no palco também os botões amarelos — "Checar", "Passo", "Entendi", "Confirma" — e o pop-up do modo livre)
-    this.raiz().querySelectorAll(this.ALVOS + ", " + this.VISUAIS + (this.raiz().id === "capa" ? ", button, .credit, .logo-linha" : ", .c10-bt, .c11l-pop, .c133-slot")).forEach(el => {   // (.c133-slot: os contornos da montagem)
+    // (no palco também os botões amarelos — "Checar", "Passo", "Entendi", "Confirma" —, o pop-up do modo livre e a fileira de elétrons da base)
+    this.raiz().querySelectorAll(this.ALVOS + ", " + this.VISUAIS + (this.raiz().id === "capa" ? ", button, .credit, .logo-linha" : ", .c10-bt, .c11l-pop, .c133-slot, .c12-fila")).forEach(el => {   // (.c133-slot: os contornos da montagem; .c12-fila: os elétrons da base)
       if (el.closest(".dev-barra")) return;
       if (el === this.camada || el.closest(".dev-camada")) return;
       const r = el.getBoundingClientRect();
