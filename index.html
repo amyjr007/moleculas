@@ -837,13 +837,23 @@
     #conteudoPalco:has(> .c113-3d.amonia) > .c11-passo-bt.ne .c10-bt { translate: calc(var(--pw, 965px) * -.001) calc(var(--ph, 448px) * .054); }
     .c11-copo.c12-amonia canvas { transition: translate 1s cubic-bezier(.4,0,.2,1); }
     .c11-copo.c12-amonia.solto canvas { translate: 0 calc(var(--ph, 448px) * -.138); }
-    .c11-copo.c12-amonia.solto.peq canvas { translate: calc(var(--pw, 965px) * -.076) calc(var(--ph, 448px) * -.096); }
+    .c11-copo.c12-amonia.solto.peq canvas { translate: calc(var(--pw, 965px) * -.139) calc(var(--ph, 448px) * -.089); }   /* (mais 86px à esquerda: ajuste do 12.4, Chromebook 1363 × 673) */
     /* o SO₃: o que sai do cilindro (15.1) mais alto; o pequeno, ao lado da fórmula, também (a mesma subida, medida no 15.4 —
        ele é posto no lugar já contando com a subida do que saiu); e o desenho das ligações (15.4) mais alto */
     .c11-copo.c15-so3 canvas { transition: translate 1s cubic-bezier(.4,0,.2,1); }
     .c11-copo.c15-so3.solto canvas { translate: calc(var(--pw, 965px) * -.002) calc(var(--ph, 448px) * -.101); }
     .c11-copo.c15-so3.solto.peq canvas { translate: calc(var(--pw, 965px) * -.003) calc(var(--ph, 448px) * -.082); }
-    #conteudoPalco > .c121-esqueleto.so3 { translate: calc(var(--pw, 965px) * -.001) calc(var(--ph, 448px) * -.079); transition: translate 1.4s cubic-bezier(.45,0,.25,1); }
+    #conteudoPalco > .c121-esqueleto.so3 { translate: calc(var(--pw, 965px) * .001) calc(var(--ph, 448px) * -.025); transition: translate 1.4s cubic-bezier(.45,0,.25,1); }   /* (15.3: 36px mais baixo — ajuste no Chromebook 1363 × 673) */
+    /* 15.3: a instrução do SO₃ 54px mais baixa */
+    #conteudoPalco:has(> .c121-esqueleto.so3) > .c14-instr { translate: 0 calc(-50% + var(--ph, 448px) * .08); }
+    /* 13.5: "Sem pares não ligantes" mais à direita e mais baixo */
+    .c135-txt { translate: calc(-50% + var(--pw, 965px) * .161) calc(-100% + var(--ph, 448px) * .041); }
+    /* 15.1: a pergunta e as opções do SO₃ mais altas */
+    .c72-quiz.c11a.c14q:not(.co2q) .c72-pergunta { translate: calc(var(--pw, 965px) * .005) calc(var(--ph, 448px) * .034); }
+    .c72-quiz.c11a.c14q:not(.co2q) .c4-opcoes { translate: calc(var(--pw, 965px) * .005) calc(var(--ph, 448px) * .092); }
+    /* o CO₂ (14.3 em diante): os 16 elétrons de baixo em duas fileiras centralizadas */
+    #conteudoPalco .c12-fila.lv-co2 { display: grid; grid-template-columns: repeat(8, auto); justify-content: center; row-gap: 12px; }
+    #conteudoPalco .c12-fila.lv-co2 > .c12-e:nth-child(8n+1) { margin-left: 0; }
     /* 15.6: o SO₃ do caderno mais alto (sobe junto com a transformação) e o "Entendi" um pouco menor */
     #conteudoPalco > .c121-esqueleto.so3[data-caderno] { translate: calc(var(--pw, 965px) * -.003) calc(var(--ph, 448px) * -.127); }
     #conteudoPalco:has(> .c121-esqueleto.so3[data-caderno]) > .c11-passo-bt.ne .c10-bt { scale: .864; }
@@ -1594,7 +1604,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v428 · 22/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v429 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -3735,7 +3745,7 @@ const NARRACOES = [
   // "Agora faça as ligações"; as duas ligações pelo toque (como na água): fanfarra e aplausos, e depois o 14.4
   { id: "dialogo14_3", titulo: "Gás carbônico: os elétrons e o esqueleto", src: "audio/audio_moleculas_14.3.mp3", semNav: true, extra: true,
     eventos: [
-      { tempo: 0,    acao: () => { Cena71.tirarPergunta(); Cena12.fila(16); } },   // a pergunta sai; a fileira, agora com 16 lugares
+      { tempo: 0,    acao: () => { Cena71.tirarPergunta(); Cena12.fila(16).classList.add("lv-co2"); } },   // a pergunta sai; a fileira, agora com 16 lugares (no tablet, em duas fileiras)
       ...[0, 1, 2, 3].map(k => ({ tempo: 3.8 + k * .25, acao: () => Cena12.eletron("C", k, ".c12n-e.esq") })),   // 4 elétrons saem do "4 e⁻", em sequência
       // os 12 dos O: 6 saem do "6 e⁻" e 6 do "+ 6 e⁻" (até 7,6s)
       ...Array.from({ length: 12 }, (_, j) => ({ tempo: 5.2 + j * .127, acao: () => Cena12.eletron("O", 4 + j, `.c12n-e.dir > .${j < 6 ? "c12n-um" : "c12n-mais"}`) })),
@@ -8549,8 +8559,7 @@ const Cena12A = {
   FORMULA: `<p class="c111-formula c12-formula c12n"><span class="c12-l" data-l="N">N</span><span class="c12-l" data-l="H">H</span><sub class="c12-l" data-l="3">3</sub></p>`,
   // (o que muda de uma substância para outra — o metano, no capítulo 13, usa a mesma cena com outros valores)
   CLASSE: "c12-amonia", ARIA: "Um frasco de vidro fechado com amônia, um gás", ID: "dialogo12",
-  PEQ: [-.124, .024],   // celular: o lugar da amônia pequena, ao lado do NH₃ (ajustes da professora no 12.2 e no 12.3, tela de 356 × 655)
-  ORIGEM: ".c11-copo:not(.c12-amonia)",   // o que sai na virada (a face de antes)
+  PEQ: [-.124, .024],   // celular: o lugar da amônia pequena, ao lado do NH₃ (ajustes da professora no 12.2 e no 12.3, tela de 356 × 655)  ORIGEM: ".c11-copo:not(.c12-amonia)",   // o que sai na virada (a face de antes)
   PERGUNTA: { texto: "Qual a fórmula da amônia?", opcoes: [["NH<sub>2</sub>", 0], ["NH<sub>3</sub>", 1], ["NH<sub>4</sub>", 0]], de: "dialogo12_1", para: "dialogo12_2" },
   // pela navegação rápida: a tela do capítulo 11 com o título numa linha (vindo do 11.3C, a tela já está pronta)
   inicio() { if (!this.$(".c11-titulo")) { Cena11.tela(); Cena111.abrir(); } },
@@ -8845,8 +8854,7 @@ const Cena13A = Object.assign(Object.create(Cena12A), {
   ENCOLHE: 1,   // 13.2: a fórmula (e a molécula) sobe de 1s a 2s
   FORMULA: `<p class="c111-formula c12-formula c12n"><span class="c12-l" data-l="C">C</span><span class="c12-l" data-l="H">H</span><sub class="c12-l" data-l="4">4</sub></p>`,
   CLASSE: "c13-metano", ARIA: "Um cilindro de gás metano", ID: "dialogo13", ORIGEM: ".c113-3d", DEPOIS_DE_SAIR: true, ESPERA: .8,   // (o 13.1 entra assim que o metano sai do cilindro)
-  PEQ: [-.152, .024],   // celular: o lugar do metano pequeno, ao lado do CH₄ (ajustes da professora no 13.2 e, como na amônia, no 12.3)
-  // a pergunta da fórmula, com a classe do metano (no tablet, a pergunta num lugar próprio)
+  PEQ: [-.152, .024],   // celular: o lugar do metano pequeno, ao lado do CH₄ (ajustes da professora no 13.2 e, como na amônia, no 12.3)  // a pergunta da fórmula, com a classe do metano (no tablet, a pergunta num lugar próprio)
   pergunta(logo = true) { Cena12A.pergunta.call(this, logo); const q = this.$(".c72-quiz"); if (q) q.classList.add("c13f"); },
   PERGUNTA: { texto: "Qual a fórmula do metano?", opcoes: [["CH<sub>2</sub>", 0], ["CH<sub>3</sub>", 0], ["CH<sub>4</sub>", 1]], de: "dialogo13_1", para: "dialogo13_2" },
   // a tela (vindo do 12.9 já está pronta); pela navegação rápida (entra aos 3s): o título e a amônia em 3D, parada no lugar,
