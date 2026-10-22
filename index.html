@@ -1585,7 +1585,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v423 · 22/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v424 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -11855,6 +11855,8 @@ const ModoLivre = {
         const s = this.$(".c11l-svg"); if (!s) return;
         this.lig = f.lig; this.pares = f.pares;
         s.querySelector(".lig").innerHTML = f.ligHtml; s.querySelector(".par").innerHTML = f.parHtml;
+        // (um par que foi arrastado para a ligação volta para o lugar dele: sem o deslocamento do arrasto e sem o destaque)
+        s.querySelectorAll(".par circle").forEach(c => { c.style.transform = ""; c.classList.remove("c11l-parsel"); });
         const fila = Cena12.fila(); [...fila.children].forEach((e, k) => { e.style.visibility = f.fila[k] || ""; e.style.opacity = ""; });
         return;
       }
