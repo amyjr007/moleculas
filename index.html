@@ -523,13 +523,73 @@
     font-family: var(--display); font-weight: 700; line-height: 1.3; color: #fff; font-size: clamp(1.3rem, 3.4vmin + .6rem, 2.5rem); }
   .c72-pergunta:empty { display: none; }
   /* o cartão da nota, no fim do quiz */
-  .c10-cartao { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6; width: min(90%, 30rem);
-    padding: clamp(18px, 3vmin, 30px) clamp(18px, 4vmin, 36px); border-radius: 22px; text-align: center;
-    background: linear-gradient(180deg, rgba(27,42,64,.97), rgba(10,19,34,.97)); border: 2px solid rgba(110,231,160,.55);
-    box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 40px rgba(110,231,160,.18); color: #fff; font-family: var(--display); }
+  /* o cartão da nota (fim do quiz e fim dos exemplos livres): o aluno no alto, o anel âmbar com a nota e as estrelas, o título,
+     os três números, a conquista (sem nenhum erro), o que revisar e os botões. Em pé, uma coluna; deitado, duas */
+  .c10-cartao { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6;
+    width: min(94%, 34rem); max-height: 96%; overflow: auto; overflow-x: hidden; scrollbar-width: none;
+    padding: clamp(14px, 2.6vmin, 26px) clamp(14px, 3vmin, 28px); border-radius: 28px; text-align: center;
+    background: radial-gradient(70% 40% at 50% 22%, rgba(255,194,75,.07), transparent 70%), #121A2E;
+    border: 1.5px solid rgba(163,219,247,.16); box-shadow: 0 24px 60px rgba(0,0,0,.6); color: #fff; font-family: var(--display); }
+  .c10-cartao::-webkit-scrollbar { display: none; }
   .c10-cartao p { margin: 0; }
-  .c10-cartao-botoes { display: flex; justify-content: center; gap: 12px; margin-top: 1.1em; }
-  .c10-cartao-botoes .c10-bt { font-size: clamp(1rem, 1.6vmin + .55rem, 1.3rem); }
+  .cn-deco { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+  .cn-deco i { position: absolute; display: block; border-radius: 50%; opacity: .9; }
+  .cn-deco i.r { border-radius: 3px; }
+  .cn-deco i.b { border-radius: 4px; height: 4px !important; }
+  .cn-topo, .cn-corpo { position: relative; }
+  .cn-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: clamp(6px, 1.6vmin, 16px); }
+  .cn-aluno { display: flex; align-items: center; gap: 10px; min-width: 0; text-align: left; }
+  .cn-avatar { flex: none; display: grid; place-items: center; width: clamp(40px, 6vmin, 54px); aspect-ratio: 1; border-radius: 50%;
+    background: var(--celeste); color: #0A1322; font-weight: 800; font-size: clamp(.95rem, 1.6vmin + .4rem, 1.25rem); box-shadow: 0 0 0 3px #121A2E, 0 0 0 6px var(--ambar); }
+  .cn-aluno .c10-cartao-nome { font-weight: 800; font-size: clamp(1.1rem, 2vmin + .5rem, 1.6rem); line-height: 1.1; color: #fff; margin: 0 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cn-aluno small { display: block; font-family: ui-monospace, "Courier New", monospace; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--celeste); font-size: clamp(.62rem, .9vmin + .35rem, .8rem); margin-top: 3px; }
+  .cn-selo { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; background: #1B2540; border: 1px solid rgba(163,219,247,.18);
+    font-family: ui-monospace, "Courier New", monospace; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--ambar); font-size: clamp(.6rem, .9vmin + .32rem, .78rem); }
+  .cn-selo svg { width: 1.1em; height: 1.1em; }
+  .cn-corpo { display: flex; flex-direction: column; align-items: stretch; gap: clamp(8px, 1.8vmin, 16px); }
+  .cn-esq { display: flex; flex-direction: column; align-items: center; }
+  /* o anel da nota, com as estrelas encaixadas embaixo */
+  .cn-anel { position: relative; width: clamp(118px, 22vmin, 190px); aspect-ratio: 1; border-radius: 50%; padding: clamp(10px, 1.8vmin, 16px); background: var(--ambar);
+    box-shadow: 0 0 40px rgba(255,194,75,.25); margin-bottom: 14px; }
+  .cn-anel-in { width: 100%; height: 100%; border-radius: 50%; background: #16203A; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    outline: 2px dashed rgba(163,219,247,.18); outline-offset: -9px; }
+  .cn-anel .c10-cartao-tit { font-family: ui-monospace, "Courier New", monospace; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--celeste); font-size: clamp(.6rem, .9vmin + .32rem, .8rem); }
+  .cn-anel .c10-cartao-nota { font-weight: 800; line-height: .95; color: var(--ambar); font-size: clamp(2.8rem, 9vmin, 4.8rem); letter-spacing: -.04em; margin: .05em 0 0 !important; }
+  .cn-estrelas { position: absolute; left: 50%; bottom: -16px; translate: -50% 0; display: flex; gap: 4px; padding: 5px 12px; border-radius: 999px; background: #121A2E; border: 1.5px solid rgba(163,219,247,.2); }
+  .cn-estrelas { width: max-content; }
+  .cn-estrelas svg { flex: none; width: clamp(18px, 3vmin, 26px); height: auto; fill: rgba(163,219,247,.18); }
+  .cn-estrelas svg.on { fill: var(--ambar); }
+  .cn-titulo { margin: .45em 0 .1em; font-weight: 800; font-size: clamp(1.6rem, 4vmin + .3rem, 2.5rem); letter-spacing: -.02em; color: var(--celeste); line-height: 1.05; }
+  .cn-esq .c10-cartao-msg { font-family: "Atkinson Hyperlegible", sans-serif; font-weight: 400; font-size: clamp(.92rem, 1.4vmin + .5rem, 1.18rem); line-height: 1.35; color: #E6EEF8; max-width: 26em; }
+  .cn-dir { display: flex; flex-direction: column; gap: clamp(8px, 1.6vmin, 14px); min-width: 0; }
+  /* os três números */
+  .cn-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 1.2vmin, 12px); }
+  .cn-stat { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: clamp(8px, 1.6vmin, 14px) 4px; border-radius: 16px; background: #1A2440; border: 1px solid rgba(163,219,247,.12); }
+  .cn-ic { display: grid; place-items: center; width: clamp(28px, 4.4vmin, 40px); aspect-ratio: 1; border-radius: 50%; }
+  .cn-ic svg { width: 55%; height: 55%; }
+  .cn-stat b { font-weight: 800; font-size: clamp(1.15rem, 2.4vmin + .45rem, 1.75rem); line-height: 1; letter-spacing: -.02em; }
+  .cn-stat small { font-family: ui-monospace, "Courier New", monospace; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #93A3BA; font-size: clamp(.56rem, .8vmin + .3rem, .72rem); }
+  /* a conquista (sem nenhum erro) */
+  .cn-conquista { display: flex; align-items: center; gap: 12px; padding: clamp(8px, 1.6vmin, 14px) clamp(10px, 1.8vmin, 16px); border-radius: 18px; text-align: left;
+    background: #1A2440; border: 2px dashed rgba(255,194,75,.75); }
+  .cn-conquista .cn-emblema { flex: none; display: grid; place-items: center; width: clamp(64px, 10vmin, 84px); height: clamp(40px, 6vmin, 52px); border-radius: 12px; background: #0E1526; }
+  .cn-conquista .cn-emblema svg { width: 82%; height: auto; }
+  .cn-conquista small { display: block; font-family: ui-monospace, "Courier New", monospace; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--ambar); font-size: clamp(.58rem, .85vmin + .3rem, .75rem); }
+  .cn-conquista strong { display: block; font-weight: 800; font-size: clamp(1rem, 1.7vmin + .45rem, 1.35rem); line-height: 1.15; margin: 2px 0; }
+  .cn-conquista span { display: block; font-family: "Atkinson Hyperlegible", sans-serif; color: #A9B7CB; font-size: clamp(.8rem, 1.1vmin + .45rem, 1rem); line-height: 1.25; }
+  .c10-cartao-botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: clamp(2px, 1vmin, 10px); }
+  .c10-cartao-botoes .c10-bt { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: clamp(44px, 7vmin, 58px); border-radius: 999px;
+    font-size: clamp(1rem, 1.6vmin + .55rem, 1.3rem); padding: 0 12px; }
+  .c10-cartao-botoes .cn-sec { background: transparent; color: #fff; border: 2px solid rgba(163,219,247,.22); box-shadow: none; }
+  .c10-cartao-botoes .cn-sec svg { width: 1.15em; height: 1.15em; }
+  .c10-cartao-botoes .cn-pri { background: var(--ambar); color: #0A1322; border: 0; box-shadow: 0 5px 0 #B98A1F; }
+  .c10-cartao-botoes .cn-pri i { display: grid; place-items: center; width: 1.75em; aspect-ratio: 1; border-radius: 50%; background: #0A1322; }
+  .c10-cartao-botoes .cn-pri i svg { width: .6em; height: .6em; fill: var(--ambar); margin-left: .1em; }
+  /* deitado: o anel e o título à esquerda; os números, a conquista e os botões à direita */
+  @media (orientation: landscape) {
+    .c10-cartao { width: min(94%, 58rem); }
+    .cn-corpo { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: clamp(12px, 3vmin, 32px); }
+  }
   .c10-refaz { background: rgba(20,33,52,.9); color: #fff; border: 2px solid rgba(163,219,247,.4); animation: none; }
   .c11-mol { position: absolute; left: 0; right: 0; top: 17%; bottom: 14%; z-index: 2; }
   .c11-mol canvas { display: block; width: 100%; height: 100%; }
@@ -590,9 +650,12 @@
   @keyframes c11lTremor { 25% { translate: .8px -.6px; } 50% { translate: -.7px .7px; } 75% { translate: .6px .5px; } }
   @media (prefers-reduced-motion: reduce) { .c11l-svg .par .c11l-parsel { animation: none; } }
   /* o cartão da nota dos exemplos livres: os pontos de cada molécula */
-  .c16-pontos { list-style: none; margin: .4em 0 .8em; padding: 0; display: grid; grid-template-columns: repeat(3, auto); gap: 4px 18px; justify-content: center; }
-  .c16-pontos li { display: flex; gap: 8px; align-items: baseline; font-family: var(--display); }
-  .c16-pontos b { color: #FFC24B; }   /* as dicas da Ajuda e os passos do martelo: centradas no lugar delas */
+  /* os pontos de cada molécula (cartão dos exemplos livres): fichas em três colunas */
+  .c16-pontos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .c16-pontos li { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 5px 10px; border-radius: 10px; background: #1A2440; border: 1px solid rgba(163,219,247,.1);
+    font-family: var(--display); font-weight: 700; font-size: clamp(.85rem, 1.2vmin + .45rem, 1.05rem); }
+  .c16-pontos b { color: #FFC24B; }
+  .c16-pontos li.cheio b { color: #6EE7A0; }   /* as dicas da Ajuda e os passos do martelo: centradas no lugar delas */
   /* o relógio da montagem automática (o martelo): os segundos desde o começo, parando na pausa */
   .c11l-relogio { position: absolute; right: 18px; bottom: calc(18px + 74px); z-index: 7; margin: 0; padding: 4px 10px; border-radius: 10px; pointer-events: none;
     background: rgba(10,19,34,.75); color: #FFC24B; font: 800 1rem/1 var(--display); font-variant-numeric: tabular-nums; }
@@ -964,14 +1027,12 @@
     .c72-quiz.c12nq.centro .c4-opcoes { translate: calc(var(--pw, 356px) * .003) calc(var(--ph, 655px) * -.136); }
     .c11-titulo ~ .c12-fila:has(~ .c72-quiz.c113p:not(.saindo)) .c12-conta { translate: calc(var(--pw, 356px) * .019) calc(var(--ph, 655px) * .097); }
   }
-  .c10-cartao-nome { font-weight: 800; font-size: clamp(1.3rem, 2.6vmin + .7rem, 1.9rem); color: #fff; margin-bottom: .3em !important; }
-  .c10-cartao-tit { font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--celeste); font-size: clamp(.9rem, 1.4vmin + .55rem, 1.2rem); }
-  .c10-cartao-nota { font-weight: 800; line-height: 1; color: var(--ambar); font-size: clamp(4rem, 12vmin, 6.5rem); text-shadow: 0 0 30px rgba(255,194,75,.5); margin: .1em 0 .15em !important; }
-  .c10-cartao-msg { font-weight: 700; font-size: clamp(1.05rem, 1.8vmin + .6rem, 1.45rem); line-height: 1.3; }
-  .c10-cartao-sub { margin-top: 1em !important; font-weight: 700; color: #6EE7A0; font-size: clamp(.95rem, 1.4vmin + .55rem, 1.2rem); }
-  .c10-cartao ul { margin: .5em 0 0; padding: 0; list-style: none; text-align: left; display: inline-block; }
-  .c10-cartao li { position: relative; padding-left: 1.2em; margin: .35em 0; font-family: "Atkinson Hyperlegible", sans-serif; font-size: clamp(.95rem, 1.3vmin + .55rem, 1.15rem); line-height: 1.3; }
-  .c10-cartao li::before { content: "•"; position: absolute; left: .2em; color: var(--ambar); font-weight: 800; }
+  .c10-cartao-sub { font-weight: 700; color: #6EE7A0; font-size: clamp(.92rem, 1.3vmin + .52rem, 1.15rem); line-height: 1.35; }
+  .c10-cartao .cn-revisar { text-align: left; }
+  .c10-cartao .cn-revisar .c10-cartao-sub { color: var(--ambar); }
+  .c10-cartao ul.cn-temas { margin: .3em 0 0; padding: 0; list-style: none; text-align: left; }
+  .c10-cartao ul.cn-temas li { position: relative; padding-left: 1.2em; margin: .3em 0; font-family: "Atkinson Hyperlegible", sans-serif; font-size: clamp(.88rem, 1.2vmin + .5rem, 1.08rem); line-height: 1.3; }
+  .c10-cartao ul.cn-temas li::before { content: "•"; position: absolute; left: .2em; color: var(--ambar); font-weight: 800; }
   .c10-titulo { font-size: calc(clamp(2.2rem, 6vmin + 1rem, 4.4rem) * .7); }
   /* 10.12: estruturas de Lewis — o nome do elemento, o símbolo no meio, a área de toque, a mensagem e o "Confirmar" */
   .c1012-sub { position: absolute; left: 0; right: 0; top: 17%; margin: 0; text-align: center; z-index: 3; pointer-events: none;
@@ -1631,7 +1692,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v437 · 22/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v438 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -13204,6 +13265,61 @@ const Cena7A = {
    (a resposta errada do total; o esqueleto montado com o central errado; o "✓" com a molécula errada). O martelo zera o que
    ele faz pelo aluno: usado antes do esqueleto certo, o esqueleto e os elétrons; depois, só os elétrons. No fim do último
    exemplo, o cartão com a nota (0 a 10) e o quanto ficou em cada molécula. */
+/* ---------- O cartão da nota (o mesmo visual no fim do quiz e no fim dos exemplos livres) ----------
+   montar(o): o HTML. o = { aria, selo, sub, nota (texto), n (número), msg ("Título! texto"), stats: [[ícone, valor, rótulo]],
+   conquista: [título, texto] ou null, extra (HTML), botoes (HTML) } */
+const CartaoNota = {
+  IC: {
+    ok: ["#6EE7A0", `<path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#0A1322" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`],
+    raio: ["#FFC24B", `<path d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12z" fill="none" stroke="#0A1322" stroke-width="2.2" stroke-linejoin="round"/>`],
+    fogo: ["#FF8A7A", `<path d="M12 3c.5 3.5 4.5 5.5 4.5 10a4.5 4.5 0 0 1-9 0c0-2.2 1.2-3.8 2.5-5 .1 1.6.8 2.7 2 3.2C11.4 9 11 6 12 3z" fill="none" stroke="#0A1322" stroke-width="2" stroke-linejoin="round"/>`]
+  },
+  ESTRELA: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17.1l-5.9 3.2 1.3-6.5L2.5 9.3l6.6-.8z"/></svg>`,
+  estrelas(n) { return n >= 9 ? 3 : n >= 7 ? 2 : n >= 5 ? 1 : 0; },
+  iniciais(nome) { const p = String(nome || "").trim().split(/\s+/).filter(Boolean); return ((p[0] || "")[0] || "") + ((p.length > 1 ? p[p.length - 1][0] : (p[0] || "")[1]) || ""); },
+  // os confetes parados, de enfeite, em volta do anel
+  // (abaixo do nome e do selo: na altura do anel)
+  DECO: [[6, 24, 14, "#FF8A7A"], [13, 21, 7, "#fff"], [90, 25, 12, "#A3DBF7"], [92, 38, 16, "#8E8CF5"], [8, 42, 9, "#8E8CF5"], [84, 21, 6, "#6EE7A0"]],
+  montar(o) {
+    const [tit, ...resto] = o.msg.split("! "), on = this.estrelas(o.n);
+    const deco = this.DECO.map(([x, y, t, c]) => `<i style="left:${x}%;top:${y}%;width:${t}px;height:${t}px;background:${c}"></i>`).join("")
+      + `<i class="b" style="left:11%;top:31%;width:26px;background:#A3DBF7;rotate:-32deg"></i><i class="b" style="left:85%;top:45%;width:22px;background:#FF8A7A;rotate:24deg"></i>`
+      + `<i class="r" style="left:86%;top:31%;width:11px;height:11px;background:#FFC24B;rotate:45deg"></i><i class="r" style="left:15%;top:50%;width:9px;height:9px;background:#FFC24B;rotate:30deg"></i>`;
+    return `
+      <div class="c10-cartao" role="dialog" aria-label="${o.aria}">
+        <div class="cn-deco" aria-hidden="true">${deco}</div>
+        <div class="cn-topo">
+          ${Aluno.nome ? `<div class="cn-aluno"><span class="cn-avatar" aria-hidden="true"></span><span><p class="c10-cartao-nome"></p><small>${o.sub}</small></span></div>` : `<span></span>`}
+          <span class="cn-selo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>${o.selo}</span>
+        </div>
+        <div class="cn-corpo">
+          <div class="cn-esq">
+            <div class="cn-anel"><div class="cn-anel-in"><p class="c10-cartao-tit">Sua nota</p><p class="c10-cartao-nota">${o.nota}</p></div>
+              <div class="cn-estrelas" role="img" aria-label="${on} de 3 estrelas">${[0, 1, 2].map(i => this.ESTRELA.replace("<svg", `<svg class="${i < on ? "on" : ""}"`)).join("")}</div></div>
+            <p class="cn-titulo">${tit}${resto.length ? "!" : ""}</p>
+            <p class="c10-cartao-msg">${resto.join("! ")}</p>
+          </div>
+          <div class="cn-dir">
+            <div class="cn-stats">${o.stats.map(([ic, v, r]) => `<div class="cn-stat"><span class="cn-ic" style="background:${this.IC[ic][0]}"><svg viewBox="0 0 24 24" aria-hidden="true">${this.IC[ic][1]}</svg></span><b>${v}</b><small>${r}</small></div>`).join("")}</div>
+            ${o.conquista ? `<div class="cn-conquista"><span class="cn-emblema" aria-hidden="true"><svg viewBox="0 0 80 30"><circle cx="9" cy="15" r="7" fill="#F4F7FB"/><rect x="18" y="13.5" width="7" height="3" rx="1.5" fill="#A3DBF7"/><circle cx="37" cy="15" r="10" fill="#A3DBF7"/><rect x="50" y="9.5" width="8" height="2.4" rx="1.2" fill="#A3DBF7"/><rect x="50" y="13.8" width="8" height="2.4" rx="1.2" fill="#A3DBF7"/><rect x="50" y="18.1" width="8" height="2.4" rx="1.2" fill="#A3DBF7"/><circle cx="69" cy="15" r="9" fill="#8E8CF5"/></svg></span>
+              <span><small>Conquista desbloqueada</small><strong>${o.conquista[0]}</strong><span>${o.conquista[1]}</span></span></div>` : ""}
+            ${o.extra || ""}
+            <div class="c10-cartao-botoes">${o.botoes}</div>
+          </div>
+        </div>
+      </div>`;
+  },
+  // o nome e as iniciais entram como texto (nunca como HTML)
+  preencher(c) {
+    const nm = c.querySelector(".c10-cartao-nome"); if (nm) nm.textContent = Aluno.nome;
+    const av = c.querySelector(".cn-avatar"); if (av) av.textContent = this.iniciais(Aluno.nome).toUpperCase();
+  },
+  REFAZER: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.35-5.65"/><path d="M4 4v5h5"/></svg>`,
+  PLAY: `<i aria-hidden="true"><svg viewBox="0 0 12 14"><path d="M0 0L12 7L0 14Z"/></svg></i>`,
+  // a maior sequência de "true" seguidos numa lista
+  sequencia(lista) { let m = 0, a = 0; lista.forEach(v => { a = v ? a + 1 : 0; m = Math.max(m, a); }); return m; },
+  num(v) { return String(Math.round(v * 10) / 10).replace(".", ","); }
+};
 const PontosLivre = {
   PESO: { total: 2, esq: 3, el: 5 },
   NOMES: { hcn: "HCN", nf3: "NF₃", h2s: "H₂S", cs2: "CS₂", ch2o: "CH₂O", ccl4: "CCl₄", sio2: "SiO₂", ph3: "PH₃", o3: "O₃" },
@@ -13220,16 +13336,16 @@ const PontosLivre = {
     if (Palco.el.querySelector(".c10-cartao")) return;
     const n = this.nota(), txt = String(n).replace(".", ",");
     try { new Audio("audio/vfx/statistics.mp3").play().catch(() => {}); } catch (_) {}
-    Palco.adicionar(`
-      <div class="c10-cartao" role="dialog" aria-label="Sua nota nos exemplos">
-        ${Aluno.nome ? `<p class="c10-cartao-nome"></p>` : ""}
-        <p class="c10-cartao-tit">Sua nota</p>
-        <p class="c10-cartao-nota">${txt}</p>
-        <p class="c10-cartao-msg">${Placar.mensagem(n)}</p>
-        <ul class="c16-pontos">${ModoLivre.SEQ.map(m => `<li><span>${this.NOMES[m]}</span><b>${this.pontos(m)}/10</b></li>`).join("")}</ul>
-        <div class="c10-cartao-botoes"><button class="c10-bt c16-refaz">Refazer</button><button class="c10-bt c16-tchau">Despedida</button></div>
-      </div>`);
+    const SEQ = ModoLivre.SEQ, cheios = SEQ.map(m => this.pontos(m) === 10), soma = SEQ.reduce((s, m) => s + this.pontos(m), 0);
+    Palco.adicionar(CartaoNota.montar({
+      aria: "Sua nota nos exemplos", selo: "Exemplos concluídos", sub: "Fábrica de moléculas", nota: txt, n, msg: Placar.mensagem(n),
+      stats: [["ok", `${cheios.filter(Boolean).length}/${SEQ.length}`, "Perfeitos"], ["raio", `${soma}/${SEQ.length * 10}`, "Pontos"], ["fogo", CartaoNota.sequencia(cheios), "Sequência"]],
+      conquista: cheios.every(Boolean) ? ["Montador de Moléculas", "Todos os exemplos montados sem nenhum erro"] : null,
+      extra: `<ul class="c16-pontos">${SEQ.map(m => `<li class="${this.pontos(m) === 10 ? "cheio" : ""}"><span>${this.NOMES[m]}</span><b>${this.pontos(m)}/10</b></li>`).join("")}</ul>`,
+      botoes: `<button class="c10-bt cn-sec c16-refaz">${CartaoNota.REFAZER}Refazer</button><button class="c10-bt cn-pri c16-tchau">Despedida${CartaoNota.PLAY}</button>`
+    }));
     const c = Palco.el.lastElementChild;
+    CartaoNota.preencher(c);
     // "Despedida": o cartão sai e toca o 17 (e, em seguida, sozinho, o 17.1 — com o "Tchau!" e a imagem final)
     c.querySelector(".c16-tchau").addEventListener("click", e => {
       c.querySelectorAll("button").forEach(b => b.disabled = true);
@@ -13239,7 +13355,6 @@ const PontosLivre = {
         Player.terminou = false; Player.irPara(i, true);
       });
     });
-    const nm = c.querySelector(".c10-cartao-nome"); if (nm) nm.textContent = Aluno.nome;
     c.querySelector(".c16-refaz").addEventListener("click", e => {
       e.currentTarget.disabled = true;
       Espoca.botao(e.currentTarget).then(() => {
@@ -13294,19 +13409,19 @@ const Placar = {
     const n = this.nota(), temas = this.revisar();
     // o exercício de Lewis sai de trás: o cartão fica sozinho na tela, com o título
     Palco.el.querySelectorAll('.c1012-ex, .c1012-eletrons').forEach(el => Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }));
-    Palco.adicionar(`
-      <div class="c10-cartao" role="dialog" aria-label="Sua nota no quiz">
-        ${Aluno.nome ? `<p class="c10-cartao-nome"></p>` : ""}
-        <p class="c10-cartao-tit">Sua nota</p>
-        <p class="c10-cartao-nota">${n}</p>
-        <p class="c10-cartao-msg">${this.mensagem(n)}</p>
-        ${temas.length
-          ? `<p class="c10-cartao-sub">Vale estudar um pouco mais:</p><ul>${temas.map(t => `<li>${t}</li>`).join("")}</ul>`
-          : `<p class="c10-cartao-sub">Você acertou tudo de primeira. Nada para revisar: continue assim!</p>`}
-        <div class="c10-cartao-botoes"><button class="c10-bt c10-refaz">Refazer</button><button class="c10-bt c10-continua">Continuar</button></div>
-      </div>`);
+    const its = Object.values(this.itens).filter(i => i.certo), primeira = its.map(i => i.erros === 0);
+    const pts = its.reduce((s, i) => s + (i.erros === 0 ? 1 : i.erros === 1 ? .5 : .25), 0);
+    Palco.adicionar(CartaoNota.montar({
+      aria: "Sua nota no quiz", selo: "Quiz concluído", sub: "Resumo interativo", nota: n, n, msg: this.mensagem(n),
+      stats: [["ok", `${primeira.filter(Boolean).length}/${its.length}`, "Acertos"], ["raio", `${CartaoNota.num(pts)}/${its.length}`, "Pontos"], ["fogo", CartaoNota.sequencia(primeira), "Sequência"]],
+      conquista: its.length && primeira.every(Boolean) ? ["Mestre das Ligações", "Simples, dupla e tripla sem errar nenhuma"] : null,
+      extra: temas.length
+        ? `<div class="cn-revisar"><p class="c10-cartao-sub">Vale estudar um pouco mais:</p><ul class="cn-temas">${temas.map(t => `<li>${t}</li>`).join("")}</ul></div>`
+        : `<p class="c10-cartao-sub">Você acertou tudo de primeira. Nada para revisar: continue assim!</p>`,
+      botoes: `<button class="c10-bt cn-sec c10-refaz">${CartaoNota.REFAZER}Refazer</button><button class="c10-bt cn-pri c10-continua">Continuar${CartaoNota.PLAY}</button>`
+    }));
     const c = Palco.el.lastElementChild;
-    const nm = c.querySelector(".c10-cartao-nome"); if (nm) nm.textContent = Aluno.nome;   // (textContent: o nome entra como texto, nunca como HTML)
+    CartaoNota.preencher(c);   // (textContent: o nome entra como texto, nunca como HTML)
     // Refazer: o quiz recomeça da 1ª questão · Continuar: o próximo capítulo (as moléculas poliatômicas)
     // com o cartão, a narração 10.13; ela corta na hora em "Refazer" ou "Continuar" (ou se o cartão sair da tela)
     try { new Audio("audio/vfx/statistics.mp3").play().catch(() => {}); } catch (_) {}   // (o som do cartão da nota)
