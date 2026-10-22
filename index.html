@@ -1613,7 +1613,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v434 · 22/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v435 · 22/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10493,8 +10493,11 @@ const Cena113P = {
   $(sel) { return Palco.el.querySelector(sel); },
   // os elétrons ainda na fileira (índices entre os filhos dela)
   livres() {
-    return [...Cena12.fila().children].map((el, k) => [el, k])
+    const l = [...Cena12.fila().children].map((el, k) => [el, k])
       .filter(([el]) => el.classList.contains("c12-e") && !el.style.opacity && el.style.visibility !== "hidden").map(([, k]) => k);
+    // (o par arrastado da fileira — ArrastaFila — vai para o fim: é ele que os "slice(-2)" pegam)
+    const pr = (this.preferir || []).filter(k => l.includes(k));
+    return pr.length === 2 ? [...l.filter(k => !pr.includes(k)), ...pr] : l;
   },
   // qual: "todos" ou o par (0 = os dois primeiros, 1 = os dois seguintes); acendem e apagam depois de dur segundos
   brilhar(qual, dur) {
@@ -10578,12 +10581,14 @@ const Cena113P = {
     this.lados = Object.fromEntries(this.ladosPar().map(l => [l, 0]));
     Palco.el.querySelectorAll(".c121-esqueleto .c124-e").forEach(c => { const l = +c.getAttribute("cy") < cy ? "cima" : "baixo"; if (l in this.lados) this.lados[l] = 1; });
     if (Object.values(this.lados).every(Boolean)) return;
-    Palco.adicionar(`<div class="c84-toques" aria-label="Toque perto do átomo central para colocar os pares de elétrons"></div>`);
+    Palco.adicionar(`<div class="c84-toques" aria-label="Toque perto do átomo central, ou arraste um par da fileira até ele, para colocar os pares de elétrons"></div>`);
     this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    this.$(".c84-toques").style.touchAction = "none";   // (o arrasto dos pares não rola a página)
     Cena121.pulsarAtomo(["meio"], 1);   // convite: o central dá uma pulsada
   },
   toque(e) {
     if (Palco.pausado) return;
+    if (ArrastaFila.pegar(e, () => [Cena112L.naTela("meio")], p => this.toque(p))) return;   // (um par arrastado da fileira)
     const O = Cena112L.naTela("meio"); if (!O) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top, dx = x - O.x, dy = y - O.y;
     // só vale perto do central, em cima ou embaixo dele (dos lados ficam as ligações)
@@ -10683,10 +10688,12 @@ const Cena14P = {
     if (this.LADOS[o].every(l => this.feitos[l])) return;
     Palco.adicionar(`<div class="c84-toques" aria-label="Toque em cima, embaixo ou do lado de fora do O para colocar os pares de elétrons"></div>`);
     this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    this.$(".c84-toques").style.touchAction = "none";   // (o arrasto dos pares não rola a página)
     Cena121.pulsarAtomo([o], 1);   // convite: o O dá uma pulsada
   },
   toque(e) {
     if (Palco.pausado) return;
+    if (ArrastaFila.pegar(e, () => [Cena112L.naTela(this.o)], p => this.toque(p))) return;   // (um par arrastado da fileira)
     const A = Cena112L.naTela(this.o); if (!A) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top, dx = x - A.x, dy = y - A.y;
     if (Math.hypot(dx, dy) > A.R * 4.5) return;   // (só vale perto do O)
@@ -10768,6 +10775,58 @@ const ArrastaPar = {
     let melhor = null, d0 = 26;
     circs.forEach(c => { const r = c.getBoundingClientRect(), d = Math.hypot(cx - (r.left + r.width / 2), cy - (r.top + r.height / 2)); if (d < d0) { d0 = d; melhor = c; } });
     return melhor;
+  }
+};
+/* ---------- O arrasto de um par da fileira de baixo até um lado de um átomo (os pares não ligantes) ----------
+   Nas aulas (água, amônia, CO₂, SO₃) e nos exemplos livres: o dedo (ou o clique arrastando) pega um elétron livre da
+   fileira e o par dele vem junto; perto de um lado de um átomo, o par encaixa ali. Solto encaixado, vale como o toque
+   naquele lado (soltar recebe o ponto, como um toque); solto fora — ou num lado que não vale —, o par volta para a fileira.
+   atomos(): os átomos na tela ({ x, y, R }, no palco) */
+const ArrastaFila = {
+  pegar(e, atomos, soltar) {
+    const fila = Palco.el.querySelector(".c12-fila"); if (!fila || e.sintetico) return false;
+    const livres = Cena113P.livres(); if (livres.length < 2) return false;
+    let k = null, d0 = 24;
+    livres.forEach(i => { const r = fila.children[i].getBoundingClientRect(), d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)); if (d < d0) { d0 = d; k = i; } });
+    if (k === null) return false;
+    // o par dele: o vizinho da mesma dupla (se ainda estiver na fileira), senão o livre mais perto
+    const pos = livres.indexOf(k), outro = livres.includes(k ^ 1) ? (k ^ 1) : livres[pos > 0 ? pos - 1 : pos + 1];
+    const els = [k, outro].sort((a, b) => a - b).map(i => fila.children[i]), ids = [k, outro];
+    e.preventDefault();
+    const P = Palco.el.getBoundingClientRect(), rs = els.map(el => el.getBoundingClientRect());
+    const c0 = [(rs[0].left + rs[1].right) / 2, (rs[0].top + rs[0].bottom) / 2], x0 = e.clientX, y0 = e.clientY;
+    let d = [0, 0], alvo = null;
+    els.forEach(el => { el.getAnimations().forEach(a => a.cancel()); el.style.zIndex = "6"; });
+    fila.style.zIndex = "7";   // (o par arrastado passa por cima do desenho da molécula)
+    Vibra.tocar("pegar");
+    const mover = ev => {
+      d = [ev.clientX - x0, ev.clientY - y0]; alvo = null;
+      // perto de um lado de um átomo: o par encaixa ali (o meio dele no lugar do par)
+      const c = [c0[0] + d[0], c0[1] + d[1]];
+      let melhor = Infinity;
+      (atomos() || []).filter(Boolean).forEach(A => [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([vx, vy]) => {
+        const sx = P.left + A.x + vx * A.R * 1.45, sy = P.top + A.y + vy * A.R * 1.45, dd = Math.hypot(c[0] - sx, c[1] - sy);
+        if (dd < Math.max(A.R * .9, 28) && dd < melhor) { melhor = dd; alvo = [sx, sy]; }
+      }));
+      if (alvo) d = [alvo[0] - c0[0], alvo[1] - c0[1]];
+      els.forEach(el => { el.style.translate = `${d[0]}px ${d[1]}px`; });
+    };
+    const volta = () => els.forEach(el => {
+      const de = el.style.translate || "0px 0px"; el.style.translate = ""; el.style.zIndex = "";
+      Palco.animar(el, [{ translate: de }, { translate: "0px 0px" }], { duracao: .3, easing: "ease-out", fill: "none" });
+    });
+    const fim = ev => {
+      removeEventListener("pointermove", mover); removeEventListener("pointerup", fim); removeEventListener("pointercancel", fim);
+      fila.style.zIndex = "";
+      if (ev.type !== "pointerup" || !alvo) return volta();
+      Cena113P.preferir = ids;
+      try { soltar({ clientX: alvo[0], clientY: alvo[1], sintetico: true, preventDefault() {} }); } finally { Cena113P.preferir = null; }
+      // pegou (os dois saíram da fileira): o voo deles parte de onde estão; depois, o deslocamento sai (escondidos)
+      if (els.every(el => el.style.visibility === "hidden" || el.style.opacity === "0")) setTimeout(() => els.forEach(el => { el.style.translate = ""; el.style.zIndex = ""; }), 1500);
+      else volta();   // (o lado não valia: o aviso já apareceu; o par volta para a fileira)
+    };
+    addEventListener("pointermove", mover); addEventListener("pointerup", fim); addEventListener("pointercancel", fim);
+    return true;
   }
 };
 const Cena14D = {
@@ -10990,11 +11049,13 @@ const Cena15P = {
     if (this.completo()) return;
     Palco.adicionar(`<div class="c84-toques" aria-label="Toque em volta de um oxigênio para colocar um par de elétrons"></div>`);
     this.$(".c84-toques").addEventListener("pointerdown", e => this.toque(e));
+    this.$(".c84-toques").style.touchAction = "none";   // (o arrasto dos pares não rola a página)
     Cena121.pulsarAtomo(Object.keys(this.LADOS), 1);   // convite: os O dão uma pulsada
   },
   completo() { return Object.keys(this.LADOS).every(o => this.LADOS[o].every(l => this.feitos[o][l])); },
   toque(e) {
     if (Palco.pausado) return;
+    if (ArrastaFila.pegar(e, () => Object.keys(this.LADOS).map(l => Cena112L.naTela(l)), p => this.toque(p))) return;   // (um par arrastado da fileira)
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
     const S = Cena112L.naTela("meio");
     if (S && Math.hypot(x - S.x, y - S.y) < S.R * 1.25) { Cena84.circulo(x, y, ""); return Cena112L.erro(["meio"], "O átomo central é o último a estabilizar"); }
@@ -12035,6 +12096,7 @@ const ModoLivre = {
   baixa(e) {
     if (Palco.pausado || this.remontando) return;
     const P = Palco.el.getBoundingClientRect(), x = e.clientX - P.left, y = e.clientY - P.top;
+    if (this.at && ArrastaFila.pegar(e, () => Object.values(this.at || {}), p => this.toque(p))) return;   // (um par arrastado da fileira até um lado de um átomo)
     if (this.arrastarPar(e)) return;
     const l = this.podeArrastar() ? this.atomoEm(x, y) : null;
     if (!l) return this.toque(e);
