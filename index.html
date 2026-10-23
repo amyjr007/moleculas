@@ -526,7 +526,7 @@
   /* o cartão da nota (fim do quiz e fim dos exemplos livres): o aluno no alto, o anel âmbar com a nota e as estrelas, o título,
      os três números, a conquista (sem nenhum erro), o que revisar e os botões. Em pé, uma coluna; deitado, duas */
   .c10-cartao { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6;
-    width: min(94%, 34rem); max-height: 96%; overflow: auto; overflow-x: hidden; scrollbar-width: none;
+    width: min(92%, 27rem); max-height: 96%; overflow: auto; overflow-x: hidden; scrollbar-width: none;
     padding: clamp(14px, 2.6vmin, 26px) clamp(14px, 3vmin, 28px); border-radius: 28px; text-align: center;
     background: radial-gradient(70% 40% at 50% 22%, rgba(255,194,75,.07), transparent 70%), #121A2E;
     border: 1.5px solid rgba(163,219,247,.16); box-shadow: 0 24px 60px rgba(0,0,0,.6); color: #fff; font-family: var(--display); }
@@ -549,15 +549,16 @@
   .cn-corpo { display: flex; flex-direction: column; align-items: stretch; gap: clamp(8px, 1.8vmin, 16px); }
   .cn-esq { display: flex; flex-direction: column; align-items: center; }
   /* o anel da nota, com as estrelas encaixadas embaixo */
-  .cn-anel { position: relative; width: clamp(118px, 22vmin, 190px); aspect-ratio: 1; border-radius: 50%; padding: clamp(10px, 1.8vmin, 16px); background: var(--ambar);
-    box-shadow: 0 0 40px rgba(255,194,75,.25); margin-bottom: 14px; }
-  .cn-anel-in { width: 100%; height: 100%; border-radius: 50%; background: #16203A; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    outline: 2px dashed rgba(163,219,247,.18); outline-offset: -9px; }
-  .cn-anel .c10-cartao-tit { font-family: ui-monospace, "Courier New", monospace; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: var(--celeste); font-size: clamp(.6rem, .9vmin + .32rem, .8rem); }
-  .cn-anel .c10-cartao-nota { font-weight: 800; line-height: .95; color: var(--ambar); font-size: clamp(2.8rem, 9vmin, 4.8rem); letter-spacing: -.04em; margin: .05em 0 0 !important; }
-  .cn-estrelas { position: absolute; left: 50%; bottom: -16px; translate: -50% 0; display: flex; gap: 4px; padding: 5px 12px; border-radius: 999px; background: #121A2E; border: 1.5px solid rgba(163,219,247,.2); }
+  /* (o anel limpo: a borda âmbar grossa, o miolo azul-escuro, "SUA NOTA" e o número bem grande) */
+  .cn-anel { --t: clamp(120px, 26vmin, 200px); position: relative; width: var(--t); aspect-ratio: 1; border-radius: 50%; padding: calc(var(--t) * .065); background: #F2C25B;
+    margin-bottom: 18px; flex: none; }
+  .cn-anel-in { width: 100%; height: 100%; border-radius: 50%; background: #16213B; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .cn-anel .c10-cartao-tit { font-family: ui-monospace, "Courier New", monospace; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: #A9D6F5; font-size: calc(var(--t) * .062); }
+  .cn-anel .c10-cartao-nota { font-weight: 800; line-height: .9; color: #F2C25B; font-size: calc(var(--t) * .38); letter-spacing: -.05em; margin: .08em 0 .06em !important; }
+  .cn-estrelas { position: absolute; left: 50%; bottom: calc(var(--t) * -.09); translate: -50% 0; display: flex; gap: calc(var(--t) * .045); padding: calc(var(--t) * .03) calc(var(--t) * .09); border-radius: 999px; background: #16213B; border: 1.5px solid rgba(163,219,247,.28); }
   .cn-estrelas { width: max-content; }
-  .cn-estrelas svg { flex: none; width: clamp(18px, 3vmin, 26px); height: auto; fill: rgba(163,219,247,.18); }
+  .cn-estrelas svg { flex: none; width: calc(var(--t) * .1); height: auto; fill: rgba(163,219,247,.18); }
+  .cn-estrelas svg.on { fill: #F2C25B; }
   .cn-estrelas svg.on { fill: var(--ambar); }
   .cn-titulo { margin: .45em 0 .1em; font-weight: 800; font-size: clamp(1.6rem, 4vmin + .3rem, 2.5rem); letter-spacing: -.02em; color: var(--celeste); line-height: 1.05; }
   .cn-esq .c10-cartao-msg { font-family: "Atkinson Hyperlegible", sans-serif; font-weight: 400; font-size: clamp(.92rem, 1.4vmin + .5rem, 1.18rem); line-height: 1.35; color: #E6EEF8; max-width: 26em; }
@@ -585,11 +586,10 @@
   .c10-cartao-botoes .cn-pri { background: var(--ambar); color: #0A1322; border: 0; box-shadow: 0 5px 0 #B98A1F; }
   .c10-cartao-botoes .cn-pri i { display: grid; place-items: center; width: 1.75em; aspect-ratio: 1; border-radius: 50%; background: #0A1322; }
   .c10-cartao-botoes .cn-pri i svg { width: .6em; height: .6em; fill: var(--ambar); margin-left: .1em; }
-  /* deitado: o anel e o título à esquerda; os números, a conquista e os botões à direita */
-  @media (orientation: landscape) {
-    .c10-cartao { width: min(94%, 58rem); }
-    .cn-corpo { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: clamp(12px, 3vmin, 32px); }
-  }
+  /* o nome do aluno, simples, em cima do anel */
+  .cn-nome { font-weight: 800; color: #fff; font-size: clamp(1.05rem, 1.8vmin + .5rem, 1.45rem); margin-bottom: clamp(8px, 1.6vmin, 14px) !important; }
+  /* deitado e baixo (o palco de 448px): o anel um pouco menor, para tudo caber */
+  @media (orientation: landscape) and (max-height: 620px) { .cn-anel { --t: clamp(104px, 24vmin, 150px); } .cn-titulo { margin-top: .35em; } }
   .c10-refaz { background: rgba(20,33,52,.9); color: #fff; border: 2px solid rgba(163,219,247,.4); animation: none; }
   .c11-mol { position: absolute; left: 0; right: 0; top: 17%; bottom: 14%; z-index: 2; }
   .c11-mol canvas { display: block; width: 100%; height: 100%; }
@@ -1276,6 +1276,11 @@
     font-family: var(--display); font-weight: 800; font-size: 1.05rem;
   }
   .item-texto { font-weight: 700; font-size: 1.05rem; line-height: 1.3; }
+  /* os quizzes: o número (cheio) e o título em roxo, para se destacarem na lista */
+  .item-sumario.quiz { color: #5B21B6; }
+  .item-sumario.quiz .num { background: #5B21B6; border-color: #5B21B6; color: #fff; }
+  .item-sumario.quiz.atual { color: var(--ambar); }
+  .item-sumario.quiz.atual .num { background: var(--ambar); border-color: var(--ambar); color: var(--preto); }
 
   @media (max-height: 560px) {
     .btn-play { width: 40px; height: 40px; }
@@ -1391,7 +1396,12 @@
   .pop-nome-card button { margin-top: 16px; padding: .7em 1.6em; border: 0; border-radius: 999px; cursor: pointer;
     font: 800 1.1rem/1 var(--display); color: var(--preto); background: var(--ambar); }
   .pop-nome-card button:disabled { opacity: .4; cursor: default; }
-  .modal-q2 .quiz-score { font-family: var(--ff-display); font-weight: 700; color: var(--accent); font-size: clamp(38px,9vw,60px); line-height: 1; }
+  .modal-q2 .quiz-score { display: flex; flex-direction: column; align-items: center; font-family: var(--display); }
+  .modal-q2 .quiz-score .cn-anel { --t: clamp(130px, 30vmin, 190px); margin-bottom: 22px; }
+  .modal-q2 .quiz-result .cn-anel p { margin: 0; }
+  .modal-q2 .quiz-result .cn-anel .c10-cartao-tit { font-family: ui-monospace, "Courier New", monospace; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: #A9D6F5; font-size: calc(var(--t) * .062); }
+  .modal-q2 .quiz-result .cn-anel .c10-cartao-nota { font-family: var(--display); font-weight: 800; line-height: .9; color: #F2C25B; font-size: calc(var(--t) * .38); letter-spacing: -.05em; margin: .08em 0 .06em; }
+  .modal-q2 .q2-acertos { font-family: ui-monospace, "Courier New", monospace; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #93A3BA; font-size: 12px; margin-top: 4px !important; }
   .modal-q2 .quiz-result p { color: var(--ink-2); margin-top: 10px; font-size: 15px; }
   .modal-q2 .quiz-result .quiz-foot { justify-content: center; margin-top: 24px; }
 
@@ -1692,7 +1702,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v439 · 23/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v440 · 23/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2652,6 +2662,7 @@ const Quiz = (() => {
      O acerto gira, o erro não: errar marca a alternativa de vermelho e a tira do
      jogo; só o acerto traz o exemplo seguinte. */
   let exemplosTodos = 0;
+  const errados = new Set();   // os exemplos com algum erro ("questão:exemplo"), para a nota do fim
   modal.querySelectorAll(".q2-caso").forEach((caso, nq) => {
     const cubos = [...caso.querySelectorAll(".q2-cubo")];
     const giros = cubos.map(c => c.querySelector(".q2-giro"));
@@ -2682,6 +2693,7 @@ const Quiz = (() => {
       }));
     }
     function zera() {
+      [...errados].forEach(k => { if (k.startsWith(nq + ":")) errados.delete(k); });
       caso.querySelectorAll(".q2-alt").forEach(b => { b.classList.remove("correct", "wrong"); b.disabled = false; });
       caso.querySelectorAll(".q2-amostra").forEach(fig => fig._voltaLupa && fig._voltaLupa());
       travado = false;
@@ -2700,13 +2712,16 @@ const Quiz = (() => {
           if (f < total - 1) { som("transition_cube"); poe(f + 1); travado = false; return; }
           if (nq < questoes.length - 1) mostra(nq + 1, true);
           else {
-            placar.textContent = exemplosTodos + " / " + exemplosTodos;
+            // a nota: cada exemplo acertado de primeira vale um ponto (de 10), no mesmo anel do cartão do Resumo Interativo
+            const primeira = exemplosTodos - errados.size, nota = Math.max(1, Math.round(10 * primeira / exemplosTodos));
+            placar.innerHTML = CartaoNota.anel(nota, nota) + `<p class="q2-acertos">${primeira} de ${exemplosTodos} de primeira</p>`;
             document.getElementById("q2Aluno").textContent = Aluno.nome ? `Parabéns, ${Aluno.nome}!` : "";
             fim.classList.add("on");
           }
         }, 1250);
       } else {
         b.classList.add("wrong");
+        errados.add(nq + ":" + f);            // (este exemplo não foi de primeira: conta na nota)
         b.disabled = true;                    // fica marcada: o aluno vê o que já tentou
         som("error"); treme();
         vibe([12, 40, 12]);
@@ -3427,7 +3442,9 @@ const NARRACOES = [
         { tempo: 0, acao: () => { Cena10.limpar(); if (n === "10.8") Cena10.virar(tit); } },
         { tempo: inicio, acao: () => Cena10.questao(texto, dur) }
       ],
-      aoFim: () => { ui.semPlay(true); Cena10.opcoes(typeof opcoes === "function" ? opcoes() : opcoes, id, prox, { imagens }); } };
+      // (a última questão de cada parte — 10.7 e 10.11C —: o acerto traz o cartão com a nota da parte; "Continuar" segue)
+      aoFim: () => { ui.semPlay(true); Cena10.opcoes(typeof opcoes === "function" ? opcoes() : opcoes, id, prox,
+        { imagens, antes: n === "10.7" ? s => Placar.cartao("a", s) : n === "10.11C" ? s => Placar.cartao("b", s) : null }); } };
   }),
   // 3ª parte do resumo: a estrutura de Lewis (os eventos virão depois)
   { id: "dialogo10_12", titulo: "Quiz de estrutura de Lewis", src: "audio/audio_moleculas_10.12.mp3",
@@ -7746,8 +7763,9 @@ const Cena10 = {
   },
   // as alternativas da questão (sem repetir o texto da pergunta: ele já está na tela)
   // imagens: as alternativas são figuras (estruturas ou moléculas) em retângulos
-  opcoes(opcoes, de, para, { imagens = false } = {}) {
-    Cena71.pergunta("nitrogenio", { texto: "", opcoes, de, para });
+  // (antes: o que vem depois da festa do acerto e antes da próxima narração — no fim de cada parte, o cartão da nota)
+  opcoes(opcoes, de, para, { imagens = false, antes = null } = {}) {
+    Cena71.pergunta("nitrogenio", { texto: "", opcoes, de, para, antes });
     const q = this.$(".c72-quiz"); if (q) q.classList.add(imagens ? "imagens" : "longas");   // palavras: o estilo compacto cabe sempre
   },
 
@@ -13281,38 +13299,33 @@ const CartaoNota = {
   // (abaixo do nome e do selo: na altura do anel)
   DECO: [[6, 24, 14, "#FF8A7A"], [13, 21, 7, "#fff"], [90, 25, 12, "#A3DBF7"], [92, 38, 16, "#8E8CF5"], [8, 42, 9, "#8E8CF5"], [84, 21, 6, "#6EE7A0"]],
   montar(o) {
-    const [tit, ...resto] = o.msg.split("! "), on = this.estrelas(o.n);
-    const deco = this.DECO.map(([x, y, t, c]) => `<i style="left:${x}%;top:${y}%;width:${t}px;height:${t}px;background:${c}"></i>`).join("")
-      + `<i class="b" style="left:11%;top:31%;width:26px;background:#A3DBF7;rotate:-32deg"></i><i class="b" style="left:85%;top:45%;width:22px;background:#FF8A7A;rotate:24deg"></i>`
-      + `<i class="r" style="left:86%;top:31%;width:11px;height:11px;background:#FFC24B;rotate:45deg"></i><i class="r" style="left:15%;top:50%;width:9px;height:9px;background:#FFC24B;rotate:30deg"></i>`;
+    const [tit, ...resto] = o.msg.split("! ");
+    // (limpo: o nome, o anel com a nota e as estrelas, o título, a mensagem, o que revisar e os botões)
     return `
       <div class="c10-cartao" role="dialog" aria-label="${o.aria}">
-        <div class="cn-deco" aria-hidden="true">${deco}</div>
-        <div class="cn-topo">
-          ${Aluno.nome ? `<div class="cn-aluno"><span class="cn-avatar" aria-hidden="true"></span><span><p class="c10-cartao-nome"></p><small>${o.sub}</small></span></div>` : `<span></span>`}
-          <span class="cn-selo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>${o.selo}</span>
-        </div>
         <div class="cn-corpo">
           <div class="cn-esq">
-            <div class="cn-anel"><div class="cn-anel-in"><p class="c10-cartao-tit">Sua nota</p><p class="c10-cartao-nota">${o.nota}</p></div>
-              <div class="cn-estrelas" role="img" aria-label="${on} de 3 estrelas">${[0, 1, 2].map(i => this.ESTRELA.replace("<svg", `<svg class="${i < on ? "on" : ""}"`)).join("")}</div></div>
+            ${Aluno.nome ? `<p class="c10-cartao-nome cn-nome"></p>` : ""}
+            ${this.anel(o.nota, o.n)}
             <p class="cn-titulo">${tit}${resto.length ? "!" : ""}</p>
             <p class="c10-cartao-msg">${resto.join("! ")}</p>
           </div>
           <div class="cn-dir">
-            <div class="cn-stats">${o.stats.map(([ic, v, r]) => `<div class="cn-stat"><span class="cn-ic" style="background:${this.IC[ic][0]}"><svg viewBox="0 0 24 24" aria-hidden="true">${this.IC[ic][1]}</svg></span><b>${v}</b><small>${r}</small></div>`).join("")}</div>
-            ${o.conquista ? `<div class="cn-conquista"><span class="cn-emblema" aria-hidden="true"><svg viewBox="0 0 80 30"><circle cx="9" cy="15" r="7" fill="#F4F7FB"/><rect x="18" y="13.5" width="7" height="3" rx="1.5" fill="#A3DBF7"/><circle cx="37" cy="15" r="10" fill="#A3DBF7"/><rect x="50" y="9.5" width="8" height="2.4" rx="1.2" fill="#A3DBF7"/><rect x="50" y="13.8" width="8" height="2.4" rx="1.2" fill="#A3DBF7"/><rect x="50" y="18.1" width="8" height="2.4" rx="1.2" fill="#A3DBF7"/><circle cx="69" cy="15" r="9" fill="#8E8CF5"/></svg></span>
-              <span><small>Conquista desbloqueada</small><strong>${o.conquista[0]}</strong><span>${o.conquista[1]}</span></span></div>` : ""}
             ${o.extra || ""}
             <div class="c10-cartao-botoes">${o.botoes}</div>
           </div>
         </div>
       </div>`;
   },
-  // o nome e as iniciais entram como texto (nunca como HTML)
+  // o anel da nota com as estrelas (também no fim do quiz do 5)
+  anel(nota, n) {
+    const on = this.estrelas(n);
+    return `<div class="cn-anel"><div class="cn-anel-in"><p class="c10-cartao-tit">Sua nota</p><p class="c10-cartao-nota">${nota}</p></div>
+      <div class="cn-estrelas" role="img" aria-label="${on} de 3 estrelas">${[0, 1, 2].map(i => this.ESTRELA.replace("<svg", `<svg class="${i < on ? "on" : ""}"`)).join("")}</div></div>`;
+  },
+  // o nome entra como texto (nunca como HTML)
   preencher(c) {
     const nm = c.querySelector(".c10-cartao-nome"); if (nm) nm.textContent = Aluno.nome;
-    const av = c.querySelector(".cn-avatar"); if (av) av.textContent = this.iniciais(Aluno.nome).toUpperCase();
   },
   REFAZER: `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.35-5.65"/><path d="M4 4v5h5"/></svg>`,
   PLAY: `<i aria-hidden="true"><svg viewBox="0 0 12 14"><path d="M0 0L12 7L0 14Z"/></svg></i>`,
@@ -13382,15 +13395,23 @@ const Placar = {
   item(id) { return this.itens[id] || (this.itens[id] = { erros: 0, certo: false }); },
   erro(id) { const it = this.item(id); if (!it.certo) it.erros++; },
   acerto(id) { this.item(id).certo = true; },
-  nota() {
-    const its = Object.values(this.itens).filter(i => i.certo); if (!its.length) return 1;
+  // as três partes do resumo, cada uma com o seu cartão: a (10.1 a 10.7, o 31 do sumário), b (10.8 a 10.11C, o 32) e c (Lewis, o 33)
+  // (inicio: onde o "Refazer" recomeça a parte)
+  PARTES: {
+    a: { re: /^dialogo10_[1-7]$/, inicio: "dialogo10_1", nome: "Resumo interativo" },
+    b: { re: /^dialogo10_(8|9|10|11[ABC]?)$/, inicio: "dialogo10_8", nome: "Quiz de moléculas" },
+    c: { re: /^lewis_/, inicio: "dialogo10_12", nome: "Quiz de estrutura de Lewis" }
+  },
+  daParte(parte) { const p = this.PARTES[parte]; return Object.entries(this.itens).filter(([id]) => !p || p.re.test(id)); },
+  nota(parte) {
+    const its = this.daParte(parte).map(([, i]) => i).filter(i => i.certo); if (!its.length) return 1;
     const soma = its.reduce((s, i) => s + (i.erros === 0 ? 1 : i.erros === 1 ? .5 : .25), 0);
     return Math.max(1, Math.round(10 * soma / its.length));
   },
   // os temas das questões em que houve erro (sem repetir)
-  revisar() {
+  revisar(parte) {
     const temas = [];
-    Object.entries(this.itens).forEach(([id, i]) => {
+    this.daParte(parte).forEach(([id, i]) => {
       if (!i.erros) return;
       const t = (this.TEMAS.find(([re]) => re.test(id)) || [])[1];
       if (t && !temas.includes(t)) temas.push(t);
@@ -13403,18 +13424,15 @@ const Placar = {
     if (n >= 5) return "Bom trabalho! Você está no caminho certo.";
     return "Valeu pelo esforço! Com uma revisão, você chega lá.";
   },
-  // o cartão do fim do quiz
-  cartao() {
+  // o cartão do fim de cada parte (parte: "a", "b" ou "c"). Nas duas primeiras, "Continuar" segue para a parte seguinte
+  // (seguir: a próxima narração); na última, o próximo capítulo — e só nela toca a narração 10.13
+  cartao(parte = "c", seguir = null) {
     if (Palco.el.querySelector(".c10-cartao")) return;
-    const n = this.nota(), temas = this.revisar();
-    // o exercício de Lewis sai de trás: o cartão fica sozinho na tela, com o título
-    Palco.el.querySelectorAll('.c1012-ex, .c1012-eletrons').forEach(el => Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }));
-    const its = Object.values(this.itens).filter(i => i.certo), primeira = its.map(i => i.erros === 0);
-    const pts = its.reduce((s, i) => s + (i.erros === 0 ? 1 : i.erros === 1 ? .5 : .25), 0);
+    const n = this.nota(parte), temas = this.revisar(parte), P = this.PARTES[parte], final = parte === "c";
+    // o exercício de Lewis (ou a pergunta respondida) sai de trás: o cartão fica sozinho na tela, com o título
+    Palco.el.querySelectorAll('.c1012-ex, .c1012-eletrons, .c72-quiz').forEach(el => Palco.animar(el, [{ opacity: 1 }, { opacity: 0 }], { duracao: .4 }));
     Palco.adicionar(CartaoNota.montar({
-      aria: "Sua nota no quiz", selo: "Quiz concluído", sub: "Resumo interativo", nota: n, n, msg: this.mensagem(n),
-      stats: [["ok", `${primeira.filter(Boolean).length}/${its.length}`, "Acertos"], ["raio", `${CartaoNota.num(pts)}/${its.length}`, "Pontos"], ["fogo", CartaoNota.sequencia(primeira), "Sequência"]],
-      conquista: its.length && primeira.every(Boolean) ? ["Mestre das Ligações", "Simples, dupla e tripla sem errar nenhuma"] : null,
+      aria: "Sua nota: " + P.nome, nota: n, n, msg: this.mensagem(n),
       extra: temas.length
         ? `<div class="cn-revisar"><p class="c10-cartao-sub">Vale estudar um pouco mais:</p><ul class="cn-temas">${temas.map(t => `<li>${t}</li>`).join("")}</ul></div>`
         : `<p class="c10-cartao-sub">Você acertou tudo de primeira. Nada para revisar: continue assim!</p>`,
@@ -13422,24 +13440,33 @@ const Placar = {
     }));
     const c = Palco.el.lastElementChild;
     CartaoNota.preencher(c);   // (textContent: o nome entra como texto, nunca como HTML)
-    // Refazer: o quiz recomeça da 1ª questão · Continuar: o próximo capítulo (as moléculas poliatômicas)
-    // com o cartão, a narração 10.13; ela corta na hora em "Refazer" ou "Continuar" (ou se o cartão sair da tela)
+    // Refazer: a parte recomeça da 1ª questão dela (os pontos dela saem) · Continuar: a parte seguinte ou o próximo capítulo
+    // (no último cartão, a narração 10.13; ela corta na hora em "Refazer" ou "Continuar", ou se o cartão sair da tela)
     try { new Audio("audio/vfx/statistics.mp3").play().catch(() => {}); } catch (_) {}   // (o som do cartão da nota)
-    const fala = new Audio("audio/audio_moleculas_10.13.mp3");
-    try { Velocidade.aplicar(fala); } catch (_) {}
-    fala.play().catch(() => {});
-    const calar = () => { clearInterval(vigia); fala.pause(); };
-    const vigia = setInterval(() => { if (!c.isConnected || fala.ended) calar(); }, 250);
+    let calar = () => {};
+    if (final) {
+      const fala = new Audio("audio/audio_moleculas_10.13.mp3");
+      try { Velocidade.aplicar(fala); } catch (_) {}
+      fala.play().catch(() => {});
+      const vigia = setInterval(() => { if (!c.isConnected || fala.ended) calar(); }, 250);
+      calar = () => { clearInterval(vigia); fala.pause(); };
+    }
     c.querySelector(".c10-refaz").addEventListener("click", e => {
       calar();
       c.querySelectorAll("button").forEach(b => b.disabled = true);
+      this.daParte(parte).forEach(([id]) => delete this.itens[id]);
       // espoca primeiro (o recomeço limpa o palco, e o balão sumiria antes de estourar)
-      Espoca.botao(e.currentTarget).then(() => { Player.terminou = false; Player.irPara(NARRACOES.findIndex(n => n.id === "dialogo10_1"), false); });
+      Espoca.botao(e.currentTarget).then(() => { Player.terminou = false; Player.irPara(NARRACOES.findIndex(x => x.id === P.inicio), false); });
     });
-    c.querySelector(".c10-continua").addEventListener("click", () => {
+    c.querySelector(".c10-continua").addEventListener("click", e => {
       calar();
       c.querySelectorAll("button").forEach(b => b.disabled = true);
-      Cena11.chegar();
+      if (final) return Cena11.chegar();
+      Espoca.botao(e.currentTarget).then(() => {
+        Palco.animar(c, [{ opacity: 1 }, { opacity: 0 }], { duracao: .3 }).finished.then(() => c.remove(), () => {});
+        Palco.el.querySelectorAll(".c4-confete").forEach(x => x.remove());
+        if (seguir) seguir();
+      });
     });
     Palco.animar(c, [{ opacity: 0, transform: "translate(-50%, -46%) scale(.9)" }, { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }],
       { duracao: .5, easing: "cubic-bezier(.3,1.3,.5,1)" });
@@ -13589,7 +13616,7 @@ const Cena1012 = {
     // passada a festa, o próximo exemplo (se houver)
     const i = this.ORDEM.indexOf(this.chave), prox = this.ORDEM[i + 1];
     if (!prox) {   // o último exemplo: passada a festa, o cartão com a nota do quiz inteiro
-      Palco.animar(sim, [{ opacity: 1 }, { opacity: 1 }], { duracao: 2.6, fill: "none" }).finished.then(() => { if (sim.isConnected) Placar.cartao(); }, () => {});
+      Palco.animar(sim, [{ opacity: 1 }, { opacity: 1 }], { duracao: 2.6, fill: "none" }).finished.then(() => { if (sim.isConnected) Placar.cartao("c"); }, () => {});
       return;
     }
     Palco.animar(sim, [{ opacity: 1 }, { opacity: 1 }], { duracao: 2.6, fill: "none" }).finished.then(() => {
@@ -14052,10 +14079,14 @@ function posicionarQR() {
   if (!matchMedia("(max-aspect-ratio: 5/6), (max-width: 700px)").matches || !capa.classList.contains("ativa")) {
     ["left", "top", "right", "bottom", "translate"].forEach(p => qr.style.removeProperty(p)); svg.style.removeProperty("width"); return;
   }
+  // (no começo do giro do cubo — o Home —, a capa está virada: a medida é feita com ela parada, sem a animação, que recomeça
+  //  logo em seguida, do começo; assim o QR já entra no lugar e gira junto com o resto)
+  const anim = capa.style.animation; capa.style.animation = "none";
   const C = capa.getBoundingClientRect(), a = art.getBoundingClientRect(), q = QR_NO_DESENHO;
   svg.style.width = `${a.width * q.fw}px`;
   const cx = a.left - C.left + capa.scrollLeft + a.width * q.fx, cy = a.top - C.top + capa.scrollTop + a.height * q.fy;
   Object.assign(qr.style, { right: "auto", bottom: "auto", translate: "none", left: `${cx - qr.offsetWidth / 2}px`, top: `${cy - svg.getBoundingClientRect().height / 2}px` });
+  capa.style.animation = anim;
 }
 addEventListener("resize", posicionarQR);
 // (voltando ao app — outro app, tela bloqueada —, a tela pode ter mudado de tamanho: o QR é posto no lugar de novo)
@@ -14839,9 +14870,11 @@ function montarSumario() {
   // semNav / oculta: fica fora da lista (mas toca normalmente na sequência).
   // A numeração é corrida: 1, 2, 3… só com o que aparece na lista, sem pular número
   let k = 0;
+  // (os quizzes, em outra cor: a Hora do quiz, as três partes do resumo e os exemplos livres, que valem nota)
+  const QUIZ = ["dialogo5", "dialogo10_1", "dialogo10_8", "dialogo10_12", "dialogo16A"];
   const item = (n, i) => n.oculta || n.semNav ? "" : `
     <li>
-      <button class="item-sumario" data-indice="${i}">
+      <button class="item-sumario${QUIZ.includes(n.id) ? " quiz" : ""}" data-indice="${i}">
         <span class="num">${++k}</span>
         <span class="item-texto">${n.titulo}</span>
       </button>
