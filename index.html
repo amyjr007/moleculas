@@ -1702,7 +1702,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v444 · 23/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v445 · 23/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2714,8 +2714,16 @@ const Quiz = (() => {
           else {
             // a nota: cada exemplo acertado de primeira vale um ponto (de 10), no mesmo anel do cartão do Resumo Interativo
             const primeira = exemplosTodos - errados.size, nota = Math.max(1, Math.round(10 * primeira / exemplosTodos));
-            placar.innerHTML = CartaoNota.anel(nota, nota) + `<p class="q2-acertos">${primeira} de ${exemplosTodos} de primeira</p>`;
-            document.getElementById("q2Aluno").textContent = Aluno.nome ? `Parabéns, ${Aluno.nome}!` : "";
+            // o cartão no mesmo padrão dos outros quizzes (o nome, o anel, o título e a mensagem, o resumo e os botões)
+            const msg = nota >= 9 ? "Excelente! Você leu todas as moléculas e todas as fórmulas."
+              : nota >= 7 ? "Muito bem! Você leu quase todas as fórmulas de primeira."
+              : nota >= 5 ? "Bom trabalho! Você está no caminho certo." : "Valeu pelo esforço! Com uma revisão, você chega lá.";
+            fim.innerHTML = CartaoNota.montar({ aria: "Sua nota no quiz", nota, n: nota, msg,
+              extra: primeira === exemplosTodos
+                ? `<p class="c10-cartao-sub">Você acertou tudo de primeira. Nada para revisar: continue assim!</p>`
+                : `<div class="cn-revisar"><p class="c10-cartao-sub">Você acertou ${primeira} de ${exemplosTodos} de primeira. Vale olhar de novo as fórmulas das moléculas.</p></div>`,
+              botoes: `<button type="button" class="c10-bt cn-sec" id="q2Refaz">${CartaoNota.REFAZER}Refazer</button><button type="button" class="c10-bt cn-pri" id="q2Continua">Continuar${CartaoNota.PLAY}</button>` });
+            CartaoNota.preencher(fim);
             fim.classList.add("on");
             som("statistics");   // (o som do cartão da nota, como nos outros quizzes)
           }
@@ -2763,7 +2771,12 @@ const Quiz = (() => {
     mostra(0);
     if (aberto()) iniciaDica();                        // Refazer: a dica volta se a lupa ainda não foi tocada
   }
-  document.getElementById("q2Refaz").addEventListener("click", recomeca);
+  // (os botões do cartão do fim nascem com ele: o clique é ouvido no quadro do fim)
+  fim.addEventListener("click", e => {
+    const b = e.target.closest("#q2Refaz, #q2Continua"); if (!b || b.disabled) return;
+    b.disabled = true;   // (o balão espoca e então a ação, como nos outros cartões)
+    Espoca.botao(b).then(() => { if (b.id === "q2Refaz") recomeca(); else fechar(true); });
+  });
 
   /* ── A TELA VIRA UM CUBO ──
      Abrir: a página sobe e o quiz vem de baixo, já na 1ª questão.
@@ -2819,7 +2832,6 @@ const Quiz = (() => {
   }
   const aberto = () => modal.classList.contains("open");
   modal.querySelector("[data-close]").addEventListener("click", () => fechar());
-  document.getElementById("q2Continua").addEventListener("click", () => fechar(true));
 
   mostra(0);
   return { abrir, fechar, aberto };
