@@ -1702,7 +1702,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v441 · 23/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v442 · 23/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -2717,6 +2717,7 @@ const Quiz = (() => {
             placar.innerHTML = CartaoNota.anel(nota, nota) + `<p class="q2-acertos">${primeira} de ${exemplosTodos} de primeira</p>`;
             document.getElementById("q2Aluno").textContent = Aluno.nome ? `Parabéns, ${Aluno.nome}!` : "";
             fim.classList.add("on");
+            som("statistics");   // (o som do cartão da nota, como nos outros quizzes)
           }
         }, 1250);
       } else {
