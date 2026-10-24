@@ -1019,6 +1019,9 @@
     .c11-passo-bt.n3 { translate: calc(var(--pw, 356px) * -.007) calc(var(--ph, 655px) * -.074); }
     /* o total de elétrons ("8 e⁻", em tempo real: água, amônia e metano): embaixo da fileira */
     #conteudoPalco .c12-conta.vivo { bottom: auto; top: calc(100% + .5em); }
+    /* nos exemplos livres (H₂S em diante): à esquerda dos pares, como no Chromebook (menor e mais perto deles: as fileiras
+       largas — NF₃, CCl₄ — deixam pouco espaço até a borda) */
+    #conteudoPalco .c12-fila[class*="lv-"]:not(.lv-co2) .c12-conta.vivo { top: auto; bottom: 50%; left: auto; right: calc(100% + .45em); transform: translateY(50%); font-size: .95rem; }
     /* 11.3: "Quantos elétrons faltam?" e as opções sobem */
     .c72-quiz.c113p .c72-pergunta { translate: calc(var(--pw, 356px) * .003) calc(var(--ph, 655px) * -.077); }
     .c72-quiz.c113p .c4-opcoes { translate: calc(var(--pw, 356px) * .004) calc(var(--ph, 655px) * -.056); }
@@ -1700,7 +1703,7 @@
         <button type="submit" id="popNomeOk" disabled>Começar</button>
       </form>
     </div>
-    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v446 · 24/10/2026</span>
+    <button class="btn-iniciar" id="btnIniciar" type="button"><span class="ico"><svg viewBox="0 0 12 14" aria-hidden="true"><path d="M0 0L12 7L0 14Z" fill="currentColor"/></svg></span><span class="lbl">Iniciar</span></button>    <span class="versao" id="versao">v447 · 24/10/2026</span>
     <div class="credit">
       <span class="avatar"><img src="imagens/amauri_jr.jpg" alt="Foto de Amauri Junior"></span>
       <span class="credit-txt"><small>Designed by</small><strong>Amauri Junior</strong></span>
@@ -10019,8 +10022,9 @@ const Cena12 = {
       const vistos = [...c.parentElement.querySelectorAll(".c12-e")].filter(e => { const cs = getComputedStyle(e); return cs.visibility !== "hidden" && parseFloat(cs.opacity) > .5; }).length;
       if (n.textContent !== String(vistos)) n.textContent = vistos;
       // zerou (depois de já ter tido elétrons): 1s depois, a conta some em fade
+      // (nos exemplos livres ele fica, mesmo no 0: o "voltar" e o "refazer" devolvem elétrons à fileira)
       if (vistos) c.dataset.teve = "1";
-      else if (c.dataset.teve && !c.dataset.sumindo) {
+      else if (c.dataset.teve && !c.dataset.sumindo && !/\blv-(?!co2\b)/.test(c.parentElement.className)) {
         c.dataset.sumindo = "1";
         Palco.animar(c, [{ opacity: 1 }, { opacity: 1, offset: .55 }, { opacity: 0 }], { duracao: 1.8, easing: "ease-in", fill: "none" })
           .finished.then(() => { if (c.isConnected) c.remove(); }, () => {});
@@ -11979,6 +11983,8 @@ const ModoLivre = {
     Cena12.fila(this.n).classList.add("lv-" + this.mol);   // (no celular, cada exemplo ajusta a fileira: ver o CSS das lv-…)
     const passo = Math.min(.15, 3 / this.n);   // (muitos elétrons — o CCl₄, 32 — descem mais depressa)
     for (let k = 0; k < this.n; k++) Palco.animar(Palco.el, [{}, {}], { duracao: .4 + k * passo, fill: "none" }).finished.then(() => Cena12.eletron(this.cfg.letra(k), k), () => {});
+    // o total de e⁻ da fileira, em tempo real, à esquerda dos pares (entra quando o primeiro chega)
+    Palco.animar(Palco.el, [{}, {}], { duracao: 1.3, fill: "none" }).finished.then(() => { if (this.ativo) Cena12.conta("so"); }, () => {});
     Palco.animar(Palco.el, [{}, {}], { duracao: .6 + this.n * passo + .6, fill: "none" }).finished.then(() => {
       if (!this.ativo) return;
       Cena133.comecar(this.cfg.montagem); Palco.animar(Palco.el, [{}, {}], { duracao: .35, fill: "none" }).finished.then(() => Cena133.hidrogenios(), () => {});
